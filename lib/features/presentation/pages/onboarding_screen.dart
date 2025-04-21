@@ -1,3 +1,5 @@
+// ignore_for_file: unused_local_variable
+
 import 'package:company_project/features/presentation/pages/auth/register_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
