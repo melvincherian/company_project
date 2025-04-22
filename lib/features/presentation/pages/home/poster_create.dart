@@ -1,6 +1,6 @@
+import 'package:company_project/features/presentation/pages/home/Logo/logo_making_screen.dart';
 import 'package:company_project/features/presentation/pages/home/create_post.dart';
 import 'package:company_project/features/presentation/pages/home/poster/create_poster_template.dart';
-import 'package:company_project/features/presentation/widgets/appbar_clip.dart';
 import 'package:flutter/material.dart';
 
 class PosterScreen extends StatelessWidget {
@@ -99,9 +99,14 @@ class PosterScreen extends StatelessWidget {
                     label: 'Create Template',
                   ),
                ),
-                FeatureCard(
-                  icon: Icons.design_services,
-                  label: 'Logo Design',
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>LogoMakingScreen()));
+                  },
+                  child: FeatureCard(
+                    icon: Icons.design_services,
+                    label: 'Logo Design',
+                  ),
                 ),
                 FeatureCard(
                   icon: Icons.video_file,

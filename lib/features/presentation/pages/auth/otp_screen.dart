@@ -1,4 +1,3 @@
-import 'package:company_project/features/presentation/pages/home/home_screen.dart';
 import 'package:company_project/features/presentation/pages/home/navbar_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
@@ -8,17 +7,21 @@ class ScreenOtp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final screenWidth = size.width;
+    final screenHeight = size.height;
+
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 230, 228, 228),
       body: Stack(
         clipBehavior: Clip.none,
         children: [
           Positioned(
-            top: -300,
-            left: -185,
+            top: -screenHeight * 0.4,
+            left: -screenWidth * 0.48,
             child: Container(
-              width: 790,
-              height: 790,
+              width: screenWidth * 2,
+              height: screenWidth * 2,
               decoration: const BoxDecoration(
                 shape: BoxShape.circle,
                 color: Color(0xFFFFCE00),
@@ -26,22 +29,23 @@ class ScreenOtp extends StatelessWidget {
             ),
           ),
 
-          // Image
+        
           Positioned(
-            top: 110,
-            left: 55,
+            top: screenHeight * 0.10,
+            left: screenWidth * 0.15,
             child: Image.network(
               'https://img.freepik.com/free-vector/cyber-security-shield-with-smart-phone_78370-3595.jpg?semt=ais_hybrid&w=740',
-              width: 300,
-              height: 300,
+              width: screenWidth * 0.7,
+              height: screenHeight * 0.4,
+              fit: BoxFit.cover,
             ),
           ),
 
           Positioned(
             bottom: -15,
             child: Container(
-              height: 350,
-              width: 410,
+              height: screenHeight * 0.42,
+              width: screenWidth,
               padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 20),
               decoration: const BoxDecoration(
                 color: Color.fromARGB(255, 243, 243, 243),
@@ -83,8 +87,8 @@ class ScreenOtp extends StatelessWidget {
                           animationType: AnimationType.fade,
                           pinTheme: PinTheme(
                             shape: PinCodeFieldShape.underline,
-                            fieldHeight: 70,
-                            fieldWidth: 40,
+                            fieldHeight: screenHeight * 0.08,
+                            fieldWidth: screenWidth * 0.1,
                             activeColor: Colors.grey,
                             inactiveColor: Colors.grey,
                             selectedColor: Colors.black,
@@ -95,14 +99,15 @@ class ScreenOtp extends StatelessWidget {
                       ),
                     ],
                   ),
-                   Row(
+                  Row(
                     mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context)=>NavbarScreen()));
+                          Navigator.push(context,
+                              MaterialPageRoute(builder: (context) =>const NavbarScreen()));
                         },
-                        child: Text(
+                        child: const Text(
                           "Resend OTP",
                           style: TextStyle(
                             color: Colors.grey,

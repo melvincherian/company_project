@@ -157,6 +157,14 @@ class HomeScreen extends StatelessWidget {
                             ),
                           )),
                 ),
+                SizedBox(height: 15,),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  children: [
+                    Text('Upcoming Festivals',style: TextStyle(fontWeight: FontWeight.bold,fontSize: 19),),
+                  ],
+                ),
+                SizedBox(height: 15,),
                 SizedBox(
                   height: 50,
                   child: ListView.builder(

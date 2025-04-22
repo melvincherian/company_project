@@ -16,11 +16,11 @@ class NavbarScreen extends StatelessWidget {
 
   final bottomnavbarProvider=Provider.of<BottomNavbarProvider>(context);
 
-  final  pages=[
+  final  pages= [
     HomeScreen(),
     CategoryScreen(),
     PosterScreen(),
-    ProfileScreen(),
+    VirtualBusinessScreen(),
     AddUser(),
 
     
@@ -41,14 +41,14 @@ class NavbarScreen extends StatelessWidget {
           onTap: (index){
             bottomnavbarProvider.setIndex(index);
           },
-          items:   [
+          items:const   [
                   Icon(Icons.home,size: 30,color: Colors.grey,),
                   Icon(Icons.category,size: 30,color: Colors.grey,),
                   Icon(Icons.post_add,size: 30,color: Colors.grey,),
                   Icon(Icons.person,size: 30,color: Colors.grey,),
                   Icon(Icons.book,size: 30,color: Colors.grey,),
           ],
-          animationDuration: Duration(milliseconds: 300),
+          animationDuration:const Duration(milliseconds: 300),
           animationCurve: Curves.easeOut,
           ),
     );

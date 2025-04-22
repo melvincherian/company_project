@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
 class AnimationScreen extends StatelessWidget {
-
   final List<Map<String, dynamic>> animationOptions = const [
     {'icon': Icons.flip, 'label': 'FlipinX'},
     {'icon': Icons.flip_camera_android, 'label': 'FlipinY'},
@@ -18,15 +17,18 @@ class AnimationScreen extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
           child: Padding(
-        padding: EdgeInsets.all(16),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                IconButton(onPressed: () {}, icon: Icon(Icons.arrow_back_ios)),
-                Icon(Icons.layers),
-                SizedBox(
+                IconButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    }, icon: const Icon(Icons.arrow_back_ios)),
+                const Icon(Icons.layers),
+                const SizedBox(
                   width: 70,
                 ),
                 const Spacer(),
@@ -78,52 +80,119 @@ class AnimationScreen extends StatelessWidget {
               ),
             )),
             const Text(
-                'Animation',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                ),
+              'Animation',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
               ),
+            ),
+            const SizedBox(height: 12),
+             Container(
+              padding: const EdgeInsets.all(16),
+              decoration: const BoxDecoration(
+                color: Colors.black,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        "Animation",
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    
+                    ],
+                  ),
+                  SizedBox(height: 16),
 
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 100,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: animationOptions.length,
-                  separatorBuilder: (_, __) => const SizedBox(width: 10),
-                  itemBuilder: (context, index) {
-                    final option = animationOptions[index];
-                    return Container(
-                      width: 80,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      padding: const EdgeInsets.symmetric(
-                          vertical: 12, horizontal: 8),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(option['icon'], color: Colors.blue),
-                          const SizedBox(height: 8),
-                          Text(
-                            option['label'],
-                            style: const TextStyle(
-                                fontSize: 12, color: Colors.black),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
+                  // Buttons
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                       
+                        _buildBrandButton(Icons.flip, "FlipinX"),
+                        _buildBrandButton(Icons.flip_camera_android, "FlipinY"),
+                        _buildBrandButton(Icons.vibration, "Wobble"),
+                        _buildBrandButton(Icons.rotate_right, "Rollin"),
+                        _buildBrandButton(Icons.zoom_out_map, "Zoom"),
+                         _buildBrandButton(Icons.zoom_in, "ZoomIn"),
+                      ],
+                    ),
+                  ),
+                ],
               ),
-            
+            )
+            // SizedBox(
+            //   height: 100,
+            //   child: ListView.separated(
+            //     scrollDirection: Axis.horizontal,
+            //     itemCount: animationOptions.length,
+            //     separatorBuilder: (_, __) => const SizedBox(width: 10),
+            //     itemBuilder: (context, index) {
+            //       final option = animationOptions[index];
+            //       return Container(
+            //         width: 80,
+            //         decoration: BoxDecoration(
+            //           color: Colors.white,
+            //           borderRadius: BorderRadius.circular(12),
+            //         ),
+            //         padding:
+            //             const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+            //         child: Column(
+            //           mainAxisAlignment: MainAxisAlignment.center,
+            //           children: [
+            //             Icon(option['icon'], color: Colors.blue),
+            //             const SizedBox(height: 8),
+            //             Text(
+            //               option['label'],
+            //               style: const TextStyle(
+            //                   fontSize: 12, color: Colors.black),
+            //               textAlign: TextAlign.center,
+            //             ),
+            //           ],
+            //         ),
+            //       );
+            //     },
+            //   ),
+            // ),
           ],
         ),
       )),
+    );
+
+    
+  }
+  Widget _buildBrandButton(IconData icon, String label) {
+    return Column(
+      children: [
+        Container(
+          padding: EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: Colors.black),
+        ),
+        SizedBox(height: 6),
+        SizedBox(
+          width: 70,
+          child: Text(
+            label,
+            style: TextStyle(color: Colors.white, fontSize: 10),
+            textAlign: TextAlign.center,
+          ),
+        )
+      ],
     );
   }
 }
