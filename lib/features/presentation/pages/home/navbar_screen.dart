@@ -21,7 +21,7 @@ class NavbarScreen extends StatelessWidget {
     CategoryScreen(),
     PosterScreen(),
     VirtualBusinessScreen(),
-    AddUser(),
+    PlanDetails()
 
     
   ];

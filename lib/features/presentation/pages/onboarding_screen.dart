@@ -115,7 +115,7 @@ class SampleScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(10)),
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=>RegisterScreen()));
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>const RegisterScreen()));
                   },
                   child: const Text(
                     'Continue',

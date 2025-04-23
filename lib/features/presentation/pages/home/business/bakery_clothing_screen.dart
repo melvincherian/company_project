@@ -1,3 +1,4 @@
+import 'package:company_project/features/presentation/pages/home/business/business_detail_screen.dart';
 import 'package:flutter/material.dart';
 
 class BakeryCards extends StatelessWidget {
@@ -7,8 +8,15 @@ class BakeryCards extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: const BackButton(),
-        title: const Text('Bakery & Clothing Cards'),
+        leading: IconButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            icon: Icon(Icons.arrow_back_ios)),
+        title: const Text(
+          'Bakery & Clothing Cards',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: Padding(
@@ -91,51 +99,32 @@ class BusinessCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Conference Title
-          const Text(
-            "BUSINESS CONFERENCE",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+    
+
+          GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context)=>const BusinessDetailScreen()));
+            },
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                'https://s3-alpha-sig.figma.com/img/4a7b/1cfa/0f786a0abe78d4b2afdba27b4863f29a?Expires=1746403200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=sf0T-1o1kfke-z9y738n5-VQ6ipQoapjOAGQd36kb~rMEfa51o-R6O7K4VKqFScAEuN0qpZer7XCj68DoV3PstVHrIr-K5--aorSK0LIJYKA9X-xUQ5CbN-rGizqnaLxMl9UsvkkfKkkFmD5~H4FraNGI5jToPoN~PX77~cScAzEk20OSdYePSSNqzqxJuW3YnFcr6NiCOUW7XO4jmNpy0qlqrC6k~8-OIwd9WmdGGxq46ao99HcvjE~5MSAIGu7YmykHX4Xbmjw1tC01Oc-SW7rFnRLUj82rKHnow3ruJOSTYHlEA~WVmB7cWNag6NBpHV1TVAy1F9EYQWqv9jpfA__',
+                height: 240,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
           ),
-          // const SizedBox(height: 4),
-          // const Text(
-          //   "ATTENDING\nSPEAKERS",
-          //   style: TextStyle(fontSize: 10),
-          // ),
-          const SizedBox(height: 8),
-          // Speaker Image
-          // Center(
-          //   // child: CircleAvatar(
-          //   //   radius: 35,
-          //   //   backgroundImage: NetworkImage('https://s3-alpha-sig.figma.com/img/4a7b/1cfa/0f786a0abe78d4b2afdba27b4863f29a?Expires=1746403200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=sf0T-1o1kfke-z9y738n5-VQ6ipQoapjOAGQd36kb~rMEfa51o-R6O7K4VKqFScAEuN0qpZer7XCj68DoV3PstVHrIr-K5--aorSK0LIJYKA9X-xUQ5CbN-rGizqnaLxMl9UsvkkfKkkFmD5~H4FraNGI5jToPoN~PX77~cScAzEk20OSdYePSSNqzqxJuW3YnFcr6NiCOUW7XO4jmNpy0qlqrC6k~8-OIwd9WmdGGxq46ao99HcvjE~5MSAIGu7YmykHX4Xbmjw1tC01Oc-SW7rFnRLUj82rKHnow3ruJOSTYHlEA~WVmB7cWNag6NBpHV1TVAy1F9EYQWqv9jpfA__')
-          //   // ),
-          // ),
-          // const SizedBox(height: 8),
-          // const Text(
-          //   "SPEAKER\nMatthew Smith",
-          //   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-          // ),
-          // const SizedBox(height: 4),
-          // const Text(
-          //   "01.14.20XX",
-          //   style: TextStyle(fontWeight: FontWeight.w600),
-          // ),
-          // const SizedBox(height: 4),
-          // const Text(
-          //   "CITY VIEW HALL,\nNew York USA",
-          //   style: TextStyle(fontSize: 10),
-          // ),
-          // const Text(
-          //   "Open Gates: 5PM\nFree Drinks",
-          //   style: TextStyle(fontSize: 10),
-          // ),
           const Spacer(),
-          // Pricing Section
-          Row(
+          const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: const [
+            children: [
               Text("₹250", style: TextStyle(fontWeight: FontWeight.bold)),
-              Text("₹350", style: TextStyle(decoration: TextDecoration.lineThrough, fontSize: 12)),
-              Text("40% Off", style: TextStyle(color: Colors.green, fontSize: 12)),
+              Text("₹350",
+                  style: TextStyle(
+                      decoration: TextDecoration.lineThrough, fontSize: 12)),
+              Text("40% Off",
+                  style: TextStyle(color: Colors.green, fontSize: 12)),
             ],
           )
         ],
