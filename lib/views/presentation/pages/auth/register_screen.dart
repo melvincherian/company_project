@@ -440,6 +440,8 @@
 // }
 
 
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:company_project/controller/auth_controller.dart';
 import 'package:company_project/helper/storage_helper.dart';
 import 'package:company_project/views/presentation/pages/auth/otp_screen.dart';
@@ -583,22 +585,20 @@ class RegisterScreen extends StatelessWidget {
                                     
                                     final isSuccess = await controller.loginUser(context, mobile);
                                     
-                                    // Close loading dialog
                                     Navigator.pop(context);
                                     
                                     if (isSuccess) {
-                                      // Check if user is already verified/completed onboarding
                                       final isVerified = await AuthPreferences.isUserVerified();
                                       
                                       if (isVerified) {
-                                        // If verified, go directly to home screen
+                                   
                                         Navigator.pushAndRemoveUntil(
                                           context,
-                                          MaterialPageRoute(builder: (context) => NavbarScreen()),
+                                          MaterialPageRoute(builder: (context) =>const NavbarScreen()),
                                           (route) => false,
                                         );
                                       } else {
-                                        // If not verified, go to OTP screen
+                                       
                                         Navigator.push(
                                           context,
                                           MaterialPageRoute(builder: (context) => const ScreenOtp()),

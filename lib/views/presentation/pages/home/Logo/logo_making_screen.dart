@@ -1,4 +1,5 @@
 import 'package:company_project/views/presentation/pages/home/Logo/edit_logo.dart';
+import 'package:company_project/views/presentation/pages/home/Logo/edit_logo2.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 
@@ -125,11 +126,16 @@ class LogoTile extends StatelessWidget {
           elevation: 4,
           child: ClipRRect(
             borderRadius: BorderRadius.circular(14),
-            child: Image.network(
-              'https://s3-alpha-sig.figma.com/img/749a/63d6/9697825d9370d3aa37338c6f45d73082?Expires=1746403200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=mFNw~oFq2My~ihdJhfvWb8GCWkTTzACoj6tA8dmFUfU7-59sEAFf-IIv6z7HDwUwSjXM34kQ9e-5-OR4b5L9xS2ll~1a5a-qU8bgvMxqbdSK01qm1ddjaIK0oPAX4JWFKCdv8jOIxS2Rh6ibUh9Fc7pJg~KlRdADVS6CNaA05ddCFTGxHDHlY~WdcakYhVi--rdIZ8z~H7k-9BX6ntzBD-cOCQ-Xc0QWz6hIBVRneKzkUZ5DmmFrLIkclljxNijLsHpOCOYH5-wODw8eDpzWEAOO~LaHmyKGRrTNtulGndSk-z~R4vm1LGe6eBDpIJTmWijTPu1-Z3eiF~wq0lKZuQ__',
-              height: 100,
-              width: double.infinity,
-              fit: BoxFit.cover,
+            child: GestureDetector(
+              onTap: () {
+                _showBottomPopupsecond(context);
+              },
+              child: Image.network(
+                'https://s3-alpha-sig.figma.com/img/749a/63d6/9697825d9370d3aa37338c6f45d73082?Expires=1746403200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=mFNw~oFq2My~ihdJhfvWb8GCWkTTzACoj6tA8dmFUfU7-59sEAFf-IIv6z7HDwUwSjXM34kQ9e-5-OR4b5L9xS2ll~1a5a-qU8bgvMxqbdSK01qm1ddjaIK0oPAX4JWFKCdv8jOIxS2Rh6ibUh9Fc7pJg~KlRdADVS6CNaA05ddCFTGxHDHlY~WdcakYhVi--rdIZ8z~H7k-9BX6ntzBD-cOCQ-Xc0QWz6hIBVRneKzkUZ5DmmFrLIkclljxNijLsHpOCOYH5-wODw8eDpzWEAOO~LaHmyKGRrTNtulGndSk-z~R4vm1LGe6eBDpIJTmWijTPu1-Z3eiF~wq0lKZuQ__',
+                height: 100,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
         ),
@@ -200,6 +206,74 @@ class LogoTile extends StatelessWidget {
                   child: OutlinedButton(
                     onPressed: () {
                        Navigator.push(context, MaterialPageRoute(builder: (context)=>const EditLogo()));
+                    
+                    },
+                    child: const Text("Edit Logo",style: TextStyle(color: Colors.black),),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.deepPurple,
+                      
+                    ),
+                    onPressed: () {
+                    
+                      Navigator.pop(context);
+                    },
+                    child: const Text("Download Logo",style: TextStyle(color: Colors.white),),
+                  ),
+                ),
+              ],
+            )
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showBottomPopupsecond(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 30),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Logo with border
+            DottedBorder(
+              borderType: BorderType.RRect,
+              radius: const Radius.circular(20),
+              dashPattern: const [6, 4],
+              color: Colors.orange,
+              strokeWidth: 1.5,
+              child: Padding(
+                padding: const EdgeInsets.all(12.0),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Image.network(
+                    'https://s3-alpha-sig.figma.com/img/749a/63d6/9697825d9370d3aa37338c6f45d73082?Expires=1746403200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=mFNw~oFq2My~ihdJhfvWb8GCWkTTzACoj6tA8dmFUfU7-59sEAFf-IIv6z7HDwUwSjXM34kQ9e-5-OR4b5L9xS2ll~1a5a-qU8bgvMxqbdSK01qm1ddjaIK0oPAX4JWFKCdv8jOIxS2Rh6ibUh9Fc7pJg~KlRdADVS6CNaA05ddCFTGxHDHlY~WdcakYhVi--rdIZ8z~H7k-9BX6ntzBD-cOCQ-Xc0QWz6hIBVRneKzkUZ5DmmFrLIkclljxNijLsHpOCOYH5-wODw8eDpzWEAOO~LaHmyKGRrTNtulGndSk-z~R4vm1LGe6eBDpIJTmWijTPu1-Z3eiF~wq0lKZuQ__',
+                    height: 120,
+                    width: 120,
+                    fit: BoxFit.contain,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+
+            // Buttons
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () {
+                       Navigator.push(context, MaterialPageRoute(builder: (context)=>const EditLogotwo()));
                     
                     },
                     child: const Text("Edit Logo",style: TextStyle(color: Colors.black),),

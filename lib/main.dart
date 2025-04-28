@@ -8,7 +8,6 @@ import 'package:company_project/providers/festival_provider.dart';
 import 'package:company_project/providers/poster_provider.dart';
 import 'package:company_project/providers/ugadi_provider.dart';
 import 'package:company_project/views/presentation/pages/auth/splash_screen.dart';
-import 'package:company_project/views/presentation/pages/onboarding_screen.dart';
 import 'package:company_project/views/presentation/widgets/navbar/bottom_navbar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
