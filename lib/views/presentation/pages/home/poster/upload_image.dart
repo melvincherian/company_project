@@ -201,9 +201,9 @@ class _UploadImageState extends State<UploadImage> {
 
   Future<void> pickMultipleImages() async {
     try {
-      final List<XFile>? pickedFiles = await _picker.pickMultiImage();
+      final List<XFile> pickedFiles = await _picker.pickMultiImage();
       
-      if (pickedFiles != null && pickedFiles.isNotEmpty) {
+      if (pickedFiles.isNotEmpty) {
         setState(() {
           _images = pickedFiles.map((file) => File(file.path)).toList();
           _currentIndex = 0;
@@ -312,7 +312,7 @@ class _UploadImageState extends State<UploadImage> {
         child: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(height: 30,),
+              const SizedBox(height: 30,),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Row(

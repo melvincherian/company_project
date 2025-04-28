@@ -594,7 +594,7 @@ class RegisterScreen extends StatelessWidget {
                                         // If verified, go directly to home screen
                                         Navigator.pushAndRemoveUntil(
                                           context,
-                                          MaterialPageRoute(builder: (context) => NavbarScreen()),
+                                          MaterialPageRoute(builder: (context) => const NavbarScreen()),
                                           (route) => false,
                                         );
                                       } else {
@@ -648,10 +648,10 @@ class RegisterScreen extends StatelessWidget {
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.center,
                                       children: [
-                                      Text("Don't Have an account?"),
+                                      const Text("Don't Have an account?"),
                                       TextButton(onPressed: (){
-                                        Navigator.push(context, MaterialPageRoute(builder: (context)=>SignupScreen()));
-                                      }, child: Text('SignUp'))
+                                        Navigator.push(context, MaterialPageRoute(builder: (context)=>const SignupScreen()));
+                                      }, child: const Text('SignUp'))
                                     ],
                                     ),
                                     const SizedBox(height: 12),

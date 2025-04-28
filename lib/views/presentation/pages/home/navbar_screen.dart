@@ -20,7 +20,7 @@ class NavbarScreen extends StatelessWidget {
       CategoryScreen(),
       const PosterScreen(),
       const VirtualBusinessScreen(),
-      PlaningDetailsScreen()
+      const PlaningDetailsScreen()
     ];
 
     return Scaffold(

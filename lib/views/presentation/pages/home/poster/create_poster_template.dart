@@ -1,27 +1,20 @@
 // ignore_for_file: prefer_const_constructors_in_immutables, use_key_in_widget_constructors
 
-import 'dart:io';
 
 import 'package:company_project/models/deitor_item.dart';
 import 'package:company_project/models/poster_model.dart';
 import 'package:company_project/models/poster_size_model.dart';
-import 'package:company_project/models/poster_template_model.dart';
 import 'package:company_project/views/presentation/pages/home/poster/add_element_screen.dart';
 import 'package:company_project/views/presentation/pages/home/poster/add_image.dart';
 import 'package:company_project/views/presentation/pages/home/poster/add_shape.dart';
 import 'package:company_project/views/presentation/pages/home/poster/animation_screen.dart';
 import 'package:company_project/views/presentation/pages/home/poster/audio_screen.dart';
 import 'package:company_project/views/presentation/pages/home/poster/brand_screen.dart';
-import 'package:company_project/views/presentation/widgets/bottom_navbar.dart';
 import 'package:company_project/views/presentation/widgets/sticker_widget.dart';
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
-import 'package:flutter/material.dart';
 import 'package:screenshot/screenshot.dart';
 // import 'package:image_gallery_saver/image_gallery_saver.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'dart:typed_data';
-import 'package:path_provider/path_provider.dart';
 
 // class PosterTemplate extends StatefulWidget {
 //   const PosterTemplate({super.key});
@@ -1147,7 +1140,7 @@ class _PosterTemplateState extends State<PosterTemplate> with SingleTickerProvid
                               await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => AudioScreen()));
+                                      builder: (context) => const AudioScreen()));
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                     content: Text('Audio added to poster')),
@@ -1176,7 +1169,7 @@ class _PosterTemplateState extends State<PosterTemplate> with SingleTickerProvid
                               await Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                      builder: (context) => FlyerScreen()));
+                                      builder: (context) => const FlyerScreen()));
                             },
                             child: const BottomNavbaritem(
                                 icon: Icons.info_outline, label: 'Brand Info'),
@@ -1190,7 +1183,7 @@ class _PosterTemplateState extends State<PosterTemplate> with SingleTickerProvid
                                   shape: const RoundedRectangleBorder(
                                       borderRadius: BorderRadius.vertical(
                                           top: Radius.circular(20))),
-                                  builder: (context) => StickerPicker());
+                                  builder: (context) => const StickerPicker());
 
                               if (result != null) {
                                 _addStickerItem(result);

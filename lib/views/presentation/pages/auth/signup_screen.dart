@@ -118,7 +118,7 @@ class SignupScreen extends StatelessWidget {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
-                             Navigator.push(context, MaterialPageRoute(builder: (context)=>ScreenOtp()));
+                             Navigator.push(context, MaterialPageRoute(builder: (context)=>const ScreenOtp()));
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.black,

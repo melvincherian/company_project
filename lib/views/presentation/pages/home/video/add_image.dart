@@ -55,7 +55,7 @@ class AddImage extends StatelessWidget {
                 children: [
                   IconButton(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context)=>UploadImage()));
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>const UploadImage()));
                     },
                     icon: const Icon(Icons.add),
                   ),
