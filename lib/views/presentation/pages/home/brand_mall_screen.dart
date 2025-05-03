@@ -131,7 +131,7 @@ class LogoDesignCard extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 onPressed: () {
-                   Navigator.push(context, MaterialPageRoute(builder: (context)=>const MyProfile()));
+                  //  Navigator.push(context, MaterialPageRoute(builder: (context)=>const MyProfile()));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF7E57C2), // Purple button color

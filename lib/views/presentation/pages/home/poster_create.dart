@@ -229,10 +229,10 @@ class PosterScreen extends StatelessWidget {
                     children: [
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => const CreatePost())
-                          );
+                          // Navigator.push(
+                          //   context,
+                          //   MaterialPageRoute(builder: (context) => const CreatePost())
+                          // );
                         },
                         child: const _TabButton(text: 'Create Poster', selected: true)
                       ),
@@ -257,9 +257,14 @@ class PosterScreen extends StatelessWidget {
                       MaterialPageRoute(builder: (context) => const PosterTemplate(isCustom: false))
                     );
                   },
-                  child: const FeatureCard(
-                    icon: Icons.dashboard_customize_outlined,
-                    label: 'Create Template',
+                  child: GestureDetector(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>CreatePost()));
+                    },
+                    child: const FeatureCard(
+                      icon: Icons.dashboard_customize_outlined,
+                      label: 'Create Template',
+                    ),
                   ),
                 ),
                 GestureDetector(

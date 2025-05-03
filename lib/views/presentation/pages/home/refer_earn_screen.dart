@@ -1,3 +1,4 @@
+import 'package:company_project/views/presentation/pages/home/reward_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import for Clipboard
 
@@ -121,7 +122,7 @@ class ReferEarnScreen extends StatelessWidget {
               // Redeem Now Button
               ElevatedButton(
                 onPressed: () {
-
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>const RewardScreen()));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryColor,

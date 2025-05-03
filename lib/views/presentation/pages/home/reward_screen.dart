@@ -1,4 +1,3 @@
-import 'package:company_project/views/presentation/pages/home/partner_screen.dart';
 import 'package:flutter/material.dart';
 
 class RewardScreen extends StatelessWidget {
@@ -11,7 +10,9 @@ class RewardScreen extends StatelessWidget {
         title: const Text('Rewards Redemption',
         style: TextStyle(fontWeight: FontWeight.bold),
         ),
-        leading: IconButton(onPressed: (){}, icon: const Icon(Icons.arrow_back_ios))
+        leading: IconButton(onPressed: (){
+          Navigator.of(context).pop();
+        }, icon: const Icon(Icons.arrow_back_ios))
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -164,7 +165,7 @@ class RewardScreen extends StatelessWidget {
                           width: double.infinity,
                           child: ElevatedButton(
                             onPressed: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (context)=>const PartnerScreen()));
+                              // Navigator.push(context, MaterialPageRoute(builder: (context)=>const PartnerScreen()));
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.blue,

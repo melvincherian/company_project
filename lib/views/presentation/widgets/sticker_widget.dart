@@ -11,11 +11,20 @@ class StickerPicker extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Text('Stickers',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold
-            )
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Select Stickers',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold
+                )
+              ),
+              // Text('Choose from gallery'),
+              IconButton(onPressed: (){
+
+              }, icon: Icon(Icons.camera_alt_rounded))
+            ],
           ),
           const SizedBox(height: 16),
           GridView.builder(

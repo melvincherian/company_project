@@ -3,14 +3,14 @@ import 'package:http/http.dart' as http;
 
 class CategoryPosterService {
   // Replace with your actual API base URL
-  final String baseUrl = 'https://your-api-url.com/api';
+  final String baseUrl = 'https://posterbnaobackend.onrender.com/api/category/getall-cateogry';
   
 Future<List<dynamic>> fetchPostersByCategory(String category) async {
   print('Fetching posters for category: $category');
   try {
-    final encodedCategory = Uri.encodeComponent(category.toLowerCase());
+ 
     final response = await http.get(
-      Uri.parse('https://posterbnaobackend.onrender.com/api/poster/$encodedCategory'),
+      Uri.parse('https://posterbnaobackend.onrender.com/api/category/getall-cateogry'),
       headers: {
         'Content-Type': 'application/json',
       },

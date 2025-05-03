@@ -1,41 +1,29 @@
-import 'dart:convert';
+import 'package:company_project/models/festival_model.dart';
+import 'package:company_project/services/api/festival_services.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+
 
 class FestivalProvider extends ChangeNotifier {
+  List<FestivalModel> _templates = [];
   bool _isLoading = false;
-  String? _error;
-  String? _responseMessage;
+  String? _errorMessage;
 
+  List<FestivalModel> get templates => _templates;
   bool get isLoading => _isLoading;
-  String? get error => _error;
-  String? get responseMessage => _responseMessage;
+  String? get errorMessage => _errorMessage;
 
-  final String _url = 'https://posterbnaobackend.onrender.com/api/poster/festival';
-
-  Future<void> postFestivalData(Map<String, dynamic> data) async {
+  Future<void> fetchFestivalTemplates(DateTime festivalDate) async {
     _isLoading = true;
-    _error = null;
-    _responseMessage = null;
+    _errorMessage = null;
     notifyListeners();
 
     try {
-      final response = await http.post(
-        Uri.parse(_url),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode(data),
-      );
-
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        _responseMessage = jsonDecode(response.body)['message'] ?? 'Success';
-      } else {
-        _error = 'Failed to post data. Code: ${response.statusCode}';
-      }
+      _templates = await FestivalServices.fetchFestivalTemplates(festivalDate);
     } catch (e) {
-      _error = 'Error: $e';
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      _errorMessage = e.toString();
     }
+
+    _isLoading = false;
+    notifyListeners();
   }
 }

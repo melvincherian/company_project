@@ -101,83 +101,168 @@
 
 
 
-import 'package:flutter/material.dart';
+import 'dart:io';
 
-class AddImage extends StatelessWidget {
-  const AddImage({super.key});
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+
+// class AddImage extends StatelessWidget {
+//   const AddImage({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     List<String> backgroundImages = List.generate(
+//       15,
+//       (index) =>
+//           'https://via.placeholder.com/400x600/CCCCCC/808080?text=Background${index + 1}',
+//     );
+
+//     return Scaffold(
+//       appBar: AppBar(title: const Text('Add Background')),
+//       body: Column(
+//         children: [
+//           Padding(
+//             padding: const EdgeInsets.all(16.0),
+//             child: Row(
+//               children: [
+//                 Expanded(
+//                   child: TextField(
+//                     decoration: InputDecoration(
+//                       hintText: 'Search backgrounds',
+//                       prefixIcon: const Icon(Icons.search),
+//                       border: OutlineInputBorder(
+//                         borderRadius: BorderRadius.circular(12),
+//                       ),
+//                     ),
+//                   ),
+//                 ),
+//                 const SizedBox(width: 16),
+//                 ElevatedButton.icon(
+//                   onPressed: () {
+//                     // Upload from gallery logic
+//                     ScaffoldMessenger.of(context).showSnackBar(
+//                       const SnackBar(content: Text('Upload from gallery')),
+//                     );
+//                   },
+//                   icon: const Icon(Icons.upload),
+//                   label: const Text('Upload'),
+//                   style: ElevatedButton.styleFrom(
+//                     backgroundColor: Colors.indigo,
+//                     foregroundColor: Colors.white,
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//           Expanded(
+//             child: GridView.builder(
+//               padding: const EdgeInsets.all(16),
+//               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+//                 crossAxisCount: 2,
+//                 crossAxisSpacing: 16,
+//                 mainAxisSpacing: 16,
+//                 childAspectRatio: 0.75,
+//               ),
+//               itemCount: backgroundImages.length,
+//               itemBuilder: (context, index) {
+//                 return GestureDetector(
+//                   onTap: () {
+//                     Navigator.pop(context, backgroundImages[index]);
+//                   },
+//                   child: ClipRRect(
+//                     borderRadius: BorderRadius.circular(12),
+//                     child: Image.network(
+//                       backgroundImages[index],
+//                       fit: BoxFit.cover,
+//                     ),
+//                   ),
+//                 );
+//               },
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
+
+
+class BackGroundImage extends StatefulWidget {
+  const BackGroundImage({super.key});
+
+  @override
+  State<BackGroundImage> createState() => _BackGroundImageState();
+}
+
+class _BackGroundImageState extends State<BackGroundImage> {
+  File? _imageFile;
+
+  Future<void> _pickImage(ImageSource source) async {
+    final picker = ImagePicker();
+    final pickedImage = await picker.pickImage(source: source);
+    if (pickedImage != null) {
+      setState(() {
+        _imageFile = File(pickedImage.path);
+      });
+    }
+  }
+
+  void _showPickOptionsDialog(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (_) => SafeArea(
+        child: Wrap(
+          children: [
+            ListTile(
+              leading: const Icon(Icons.camera_alt),
+              title: const Text('Take a photo'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: const Text('Pick from gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    List<String> backgroundImages = List.generate(
-      15,
-      (index) =>
-          'https://via.placeholder.com/400x600/CCCCCC/808080?text=Background${index + 1}',
-    );
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('Add Background')),
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    decoration: InputDecoration(
-                      hintText: 'Search backgrounds',
-                      prefixIcon: const Icon(Icons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
+    return GestureDetector(
+      onTap: () => _showPickOptionsDialog(context),
+      child: Container(
+        width: double.infinity,
+        height: double.infinity,
+        decoration: _imageFile != null
+            ? BoxDecoration(
+                image: DecorationImage(
+                  image: FileImage(_imageFile!),
+                  fit: BoxFit.cover,
                 ),
-                const SizedBox(width: 16),
-                ElevatedButton.icon(
-                  onPressed: () {
-                    // Upload from gallery logic
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Upload from gallery')),
-                    );
-                  },
-                  icon: const Icon(Icons.upload),
-                  label: const Text('Upload'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.indigo,
-                    foregroundColor: Colors.white,
-                  ),
+              )
+            : const BoxDecoration(
+                color: Colors.grey,
+                image: DecorationImage(
+                  image: NetworkImage(''), 
+                  fit: BoxFit.cover,
                 ),
-              ],
-            ),
-          ),
-          Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.all(16),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
-                childAspectRatio: 0.75,
               ),
-              itemCount: backgroundImages.length,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context, backgroundImages[index]);
-                  },
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.network(
-                      backgroundImages[index],
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                );
-              },
-            ),
+        child: const Center(
+          child: Text(
+            'Select from where you want to pick up',
+            style: TextStyle(color: Colors.black, fontSize: 18,),
           ),
-        ],
+        ),
       ),
     );
   }

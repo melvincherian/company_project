@@ -1,8 +1,17 @@
-// // ignore_for_file: use_build_context_synchronously
+// import 'dart:convert';
+
+// import 'package:company_project/providers/date_time_provider.dart';
 // import 'package:company_project/providers/poster_provider.dart';
+// import 'package:company_project/providers/story_provider.dart';
 // import 'package:company_project/views/presentation/pages/home/details_screen.dart';
+// import 'package:company_project/views/presentation/pages/home/poster/create_poster_template.dart';
+// import 'package:company_project/views/presentation/widgets/add_story.dart';
+// import 'package:company_project/views/presentation/widgets/date_selector_screen.dart';
+// import 'package:company_project/views/presentation/widgets/story_screen.dart';
 // import 'package:flutter/material.dart';
 // import 'package:provider/provider.dart';
+// import 'package:company_project/models/story_model.dart';
+// import 'package:http/http.dart' as http;
 
 // class HomeScreen extends StatefulWidget {
 //   const HomeScreen({super.key});
@@ -12,37 +21,177 @@
 // }
 
 // class _HomeScreenState extends State<HomeScreen> {
-// @override
-// void initState() {
-//   super.initState();
-//   print('HomeScreen init - about to fetch posters');
-//   Future.microtask(() {
-//     print('Inside microtask - calling provider');
-//     final provider = Provider.of<PosterProvider>(context, listen: false);
-//     provider.fetchPosters().then((_) {
-//       print('Fetch completed - poster count: ${provider.posters.length}');
+//   final String currentUserId = '680634a4bb1d44fb0c93aae2';
+//    bool _isLoading = false;
+//   Map<String, List<Map<String, dynamic>>> _categorizedPosters = {};
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     print('HomeScreen init - about to fetch posters and stories');
+//     Future.microtask(() {
+//       print('Inside microtask - calling providers');
+//       final posterProvider =
+//           Provider.of<PosterProvider>(context, listen: false);
+//       final storyProvider = Provider.of<StoryProvider>(context, listen: false);
+
+//       posterProvider.fetchPosters().then((_) {
+//         print(
+//             'Fetch posters completed - poster count: ${posterProvider.posters.length}');
+//       });
+
+//       storyProvider.fetchStories().then((_) {
+//         print(
+//             'Fetch stories completed - story count: ${storyProvider.stories.length}');
+//       });
 //     });
-//   });
-// }
+
+//         WidgetsBinding.instance.addPostFrameCallback((_) {
+//       _fetchFestivalPosters(context.read<DateTimeProvider>().selectedDate);
+//     });
+//   }
+
+//     String _formatDate(DateTime date) {
+//     return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+//   }
+
+
+  
+//   // Fetch festival posters from API based on selected date
+//   Future<void> _fetchFestivalPosters(DateTime date) async {
+//     setState(() {
+//       _isLoading = true;
+//       _categorizedPosters = {};
+//     });
+
+//     try {
+//       final response = await http.post(
+//         Uri.parse('https://posterbnaobackend.onrender.com/api/poster/festival'),
+//         headers: {'Content-Type': 'application/json'},
+//         body: jsonEncode({'festivalDate': _formatDate(date)}),
+//       );
+
+//       if (response.statusCode == 200) {
+//         final List<dynamic> posters = jsonDecode(response.body);
+        
+//         // Group posters by category
+//         final Map<String, List<Map<String, dynamic>>> categorizedPosters = {};
+        
+//         for (var poster in posters) {
+//           final category = poster['categoryName'];
+//           if (!categorizedPosters.containsKey(category)) {
+//             categorizedPosters[category] = [];
+//           }
+//           categorizedPosters[category]?.add(poster);
+//         }
+        
+//         setState(() {
+//           _categorizedPosters = categorizedPosters;
+//           _isLoading = false;
+//         });
+//       } else {
+//         // Handle error
+//         setState(() {
+//           _isLoading = false;
+//         });
+//         ScaffoldMessenger.of(context).showSnackBar(
+//           const SnackBar(content: Text('Failed to load festival posters')),
+//         );
+//       }
+//     } catch (e) {
+//       setState(() {
+//         _isLoading = false;
+//       });
+//       ScaffoldMessenger.of(context).showSnackBar(
+//         SnackBar(content: Text('Error: ${e.toString()}')),
+//       );
+//     }
+//   }
+
+//   void _openAddStory() {
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (context) => AddStoryWidget(
+//           userId: currentUserId,
+//           onStoryAdded: () {
+//             // Refresh stories after adding
+//             Provider.of<StoryProvider>(context, listen: false).fetchStories();
+//           },
+//         ),
+//       ),
+//     );
+//   }
+
+//   void _openStoryViewer(int index) {
+//     final storyProvider = Provider.of<StoryProvider>(context, listen: false);
+
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (context) => StoryViewerScreen(
+//           stories: storyProvider.stories,
+//           initialIndex: index,
+//         ),
+//       ),
+//     );
+//   }
 
 //   @override
 //   Widget build(BuildContext context) {
-//       final posterprovider = Provider.of<PosterProvider>(context);
-  
-//   print('Building HomeScreen - Provider isLoading: ${posterprovider.isLoading}');
-//   print('Building HomeScreen - Provider error: ${posterprovider.error}');
-//   print('Building HomeScreen - Poster count: ${posterprovider.posters.length}');
-  
-//   final posters = posterprovider.posters;
-//   final ugadiPosters = posters
-//     .where((poster) => poster.categoryName.toLowerCase() == 'ugadi')
-//     .toList();
-//   final nonUgadiPosters = posters
-//     .where((poster) => poster.categoryName.toLowerCase() != 'ugadi')
-//     .toList();
-    
-//   print('Ugadi poster count: ${ugadiPosters.length}');
-//   print('Non-Ugadi poster count: ${nonUgadiPosters.length}');
+//     final posterProvider = Provider.of<PosterProvider>(context);
+//     final storyProvider = Provider.of<StoryProvider>(context);
+
+//     print(
+//         'Building HomeScreen - PosterProvider isLoading: ${posterProvider.isLoading}');
+//     print(
+//         'Building HomeScreen - PosterProvider error: ${posterProvider.error}');
+//     print(
+//         'Building HomeScreen - Poster count: ${posterProvider.posters.length}');
+//     print('Building HomeScreen - Story count: ${storyProvider.stories.length}');
+
+//     final posters = posterProvider.posters;
+//     final stories = storyProvider.stories;
+
+//     final ugadiPosters = posters
+//         .where((poster) => poster.categoryName.toLowerCase() == 'ugadi')
+//         .toList();
+
+//     // Separate lists for clothing, beauty and chemical
+//     final clothingPosters = posters
+//         .where((poster) => poster.categoryName.toLowerCase() == 'clothing')
+//         .toList();
+
+//     final beautyPosters = posters
+//         .where((poster) => poster.categoryName.toLowerCase() == 'beauty')
+//         .toList();
+
+//     final chemicalPosters = posters
+//         .where((poster) => poster.categoryName.toLowerCase() == 'chemical')
+//         .toList();
+
+//     print('Ugadi poster count: ${ugadiPosters.length}');
+//     print('Clothing poster count: ${clothingPosters.length}');
+//     print('Beauty poster count: ${beautyPosters.length}');
+//     print('Chemical poster count: ${chemicalPosters.length}');
+//     print('Storieeeeeeeeeeeeeeeeeees: ${stories}');
+
+//     bool _currentUserHasStory() {
+//       final storyProvider = Provider.of<StoryProvider>(context, listen: false);
+//       return storyProvider.stories
+//           .any((story) => story.userId == currentUserId);
+//     }
+
+//     // Add this method to get current user's story
+//     Story? _getCurrentUserStory() {
+//       final storyProvider = Provider.of<StoryProvider>(context, listen: false);
+//       try {
+//         return storyProvider.stories
+//             .firstWhere((story) => story.userId == currentUserId);
+//       } catch (e) {
+//         return null;
+//       }
+//     }
 
 //     return Scaffold(
 //       body: SingleChildScrollView(
@@ -59,7 +208,7 @@
 //                         const CircleAvatar(
 //                           radius: 25,
 //                           backgroundImage: NetworkImage(
-//                             'https://s3-alpha-sig.figma.com/img/4030/79b6/b3230e238d25d0e18c175d870e3223de?Expires=1745798400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=XFySyNNVp3PIu-XaWNdAbIr4ipi8vE4GvLA984rKxzrxcgvMnQ3sKQf37zHJAFsI1a46RUbURiGjrAYwrhXnaLXN~KvgpTungrOfy5WeGmRoTfswG64j5e~G-aYWYO3ZhyUpp-rJyncxufgg4f7StZ-NKtQ7Mp1GM2hNvNVVvr2r0QLxoH4rJMfzqklSsDodO8V02IG-cm~-hWHq-MNdZIMyboqBZ-RThbeU3-0T5pG1YVP9X66yQbUo59mcGyn22laQ0sSwMlvla~NNe8N7pqq88AnFs0cySqZExNz2tI31U4YNDLLxRLV4dA6BPvYBWcGtFptCtQttxXLijvxo7A__',
+//                             'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQBvqzyx_zoi6q2c0Gd1XnE7wysD9PGOLe3-A&s',
 //                           ),
 //                         ),
 //                         const SizedBox(width: 12),
@@ -120,18 +269,15 @@
 //                     ],
 //                   ),
 //                 ),
-//                 const SizedBox(
-//                   height: 15,
-//                 ),
+//                 const SizedBox(height: 15),
 //                 Container(
 //                   height: 140,
 //                   width: double.infinity,
 //                   decoration: BoxDecoration(
 //                       borderRadius: BorderRadius.circular(20),
 //                       image: const DecorationImage(
-//                           image: NetworkImage(
-//                             'https://s3-alpha-sig.figma.com/img/4db5/04a1/da2c0272db46bf139b7be4d117bf4487?Expires=1745798400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=Xtl5w3ekVoQ5pF-dngqC9b0aDQLbXZe-01RIu8NM5R-q7lOS7BB-WH3BZq-HXgBnyn6u8v-8KmtXbp3TH8HypbC1RHV20mK349uX5cUbmnW1PaU2agjjKzk9oAS116IM~U5feRKf~5uR2XY6HuEFckUXXTXcz1k-j415gh5p-t7okCAHN2-EjDajLkiw53cIZ1HKtniPBIKOLPb2l7YiXdKZzw1KjPHs8eX6uJXj~GBwTgwQhfntvC7W5jU8Z1IaZTjkhdJGrxAfWSp9-TFR-M~SFr-6GA4V~qaLs4PvY7xbBiC46U0pqtfSzWQ~BasllLKaY0ssP4LgUmKtatP-vw__',
-//                           ),
+//                           image: AssetImage(
+//                               'assets/assets/4db504a1da2c0272db46bf139b7be4d117bf4487.png'),
 //                           fit: BoxFit.cover)),
 //                   child: Stack(
 //                     children: [
@@ -148,13 +294,9 @@
 //                                     fontWeight: FontWeight.bold,
 //                                     color: Colors.white),
 //                               ),
-//                               const SizedBox(
-//                                 height: 8,
-//                               ),
+//                               const SizedBox(height: 8),
 //                               ElevatedButton(
-//                                   onPressed: () {
-
-//                                   },
+//                                   onPressed: () {},
 //                                   style: ElevatedButton.styleFrom(
 //                                       backgroundColor: Colors.white,
 //                                       foregroundColor: Colors.black,
@@ -170,37 +312,157 @@
 //                     ],
 //                   ),
 //                 ),
+
+//                 // Stories Section - UPDATED
 //                 SizedBox(
 //                   height: 120,
 //                   child: ListView.builder(
-//                       scrollDirection: Axis.horizontal,
-//                       itemCount: 4,
-//                       itemBuilder: (context, index) => const Padding(
-//                             padding: EdgeInsets.symmetric(horizontal: 14),
-//                             child: Column(
-//                               children: [
-//                                 SizedBox(
-//                                   height: 16,
-//                                 ),
-//                                 CircleAvatar(
-//                                   radius: 30,
-//                                   backgroundImage: NetworkImage(
-//                                       'https://s3-alpha-sig.figma.com/img/a092/3fb0/85f706b30752e1c21ad66b14ce160e67?Expires=1745798400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=KwBBfdas3pCqKgG54~kj~3aVD6BFd66U1REkY8Ug~rQX1ZXyPlQyHjDa6beeL3CkV9FO~IDjygcgUFyO-Jq0UlKEkt4kOBoPlv2mpud-UD9RWweXFUSlc~C1UwPBTYgfpvlXUQzbtm3F6Fl3Ay-D2cGWFmT~r0pb9FTTlKSBfFsTIbYIrvM5Iyt1EeDSesHkmZBv8XlSiIwcbo309PuFywTYAiNdhqY0z12-31~12SGejo~niRFv-U7abHecL6Dw3Q9PRFCmSvL~TM4Ht0Vt1tyyuogxpIF-75qbSKnZ8JgL4jbhAN~HIOGab5B~ODdC7D27NXAWJwSrmlYSSnawuA__'),
-//                                 ),
-//                                 SizedBox(
-//                                   height: 4,
-//                                 ),
-//                                 Text(
-//                                   'Your Story',
-//                                   style: TextStyle(color: Colors.black),
-//                                 )
-//                               ],
+//                     scrollDirection: Axis.horizontal,
+//                     itemCount: stories.length +
+//                         (!_currentUserHasStory()
+//                             ? 1
+//                             : 0), // Add 1 for "Add Story" if user has no story
+//                     itemBuilder: (context, index) {
+//                       // First position shows either "Add Story" or user's own story
+//                       if (index == 0) {
+//                         // If user has no story, show "Add Story" button
+//                         if (!_currentUserHasStory()) {
+//                           return Padding(
+//                             padding: const EdgeInsets.symmetric(horizontal: 14),
+//                             child: GestureDetector(
+//                               onTap: _openAddStory,
+//                               child: Column(
+//                                 children: [
+//                                   const SizedBox(height: 16),
+//                                   Stack(
+//                                     children: [
+//                                       CircleAvatar(
+//                                         radius: 30,
+//                                         backgroundColor: Colors.grey[300],
+//                                         child: const Icon(
+//                                           Icons.add,
+//                                           size: 32,
+//                                           color: Colors.black87,
+//                                         ),
+//                                       ),
+//                                     ],
+//                                   ),
+//                                   const SizedBox(height: 4),
+//                                   const Text(
+//                                     'Add Story',
+//                                     style: TextStyle(color: Colors.black),
+//                                   )
+//                                 ],
+//                               ),
 //                             ),
-//                           )),
+//                           );
+//                         } else {
+//                           // Show user's own story first
+//                           final userStory = _getCurrentUserStory()!;
+//                           return Padding(
+//                             padding: const EdgeInsets.symmetric(horizontal: 14),
+//                             child: GestureDetector(
+//                               onTap: () {
+//                                 // Find the index of this story in the overall stories list
+//                                 final storyIndex = stories
+//                                     .indexWhere((s) => s.id == userStory.id);
+//                                 _openStoryViewer(storyIndex);
+//                               },
+//                               child: Column(
+//                                 children: [
+//                                   const SizedBox(height: 16),
+//                                   Container(
+//                                     decoration: BoxDecoration(
+//                                       shape: BoxShape.circle,
+//                                       border: Border.all(
+//                                         color: const Color(0xFF6C4EF9),
+//                                         width: 2,
+//                                       ),
+//                                     ),
+//                                     child: CircleAvatar(
+//                                       radius: 30,
+//                                       backgroundImage: NetworkImage(
+//                                         'https://posterbnaobackend.onrender.com/${userStory.image}',
+//                                       ),
+//                                       onBackgroundImageError:
+//                                           (exception, stackTrace) {
+//                                         print(
+//                                             'Error loading story image: $exception');
+//                                       },
+//                                     ),
+//                                   ),
+//                                   const SizedBox(height: 4),
+//                                   const Text(
+//                                     'Your Story',
+//                                     style: TextStyle(color: Colors.black),
+//                                   )
+//                                 ],
+//                               ),
+//                             ),
+//                           );
+//                         }
+//                       } else {
+//                         // For other users' stories
+//                         // Adjust index based on whether user has story
+//                         final adjustedIndex =
+//                             _currentUserHasStory() ? index : index - 1;
+
+//                         // Filter out current user's story from the list shown here
+//                         final filteredStories = stories.toList();
+//                         // .where((s) => s.userId == currentUserId)
+//                         // .toList();
+
+//                         if (adjustedIndex < filteredStories.length) {
+//                           final story = filteredStories[adjustedIndex];
+
+//                           // Find the index of this story in the overall stories list for viewer
+//                           final viewerIndex =
+//                               stories.indexWhere((s) => s.id == story.id);
+
+//                           return Padding(
+//                             padding: const EdgeInsets.symmetric(horizontal: 14),
+//                             child: GestureDetector(
+//                               onTap: () => _openStoryViewer(viewerIndex),
+//                               child: Column(
+//                                 children: [
+//                                   const SizedBox(height: 16),
+//                                   Container(
+//                                     decoration: BoxDecoration(
+//                                       shape: BoxShape.circle,
+//                                       border: Border.all(
+//                                         color: const Color(0xFF6C4EF9),
+//                                         width: 2,
+//                                       ),
+//                                     ),
+//                                     child: CircleAvatar(
+//                                       radius: 30,
+//                                       backgroundImage: NetworkImage(
+//                                         'https://posterbnaobackend.onrender.com/${story.image}',
+//                                       ),
+//                                       onBackgroundImageError:
+//                                           (exception, stackTrace) {
+//                                         print(
+//                                             'Error loading story image: $exception');
+//                                       },
+//                                     ),
+//                                   ),
+//                                   const SizedBox(height: 4),
+//                                   const Text(
+//                                     'Story',
+//                                     style: TextStyle(color: Colors.black),
+//                                   )
+//                                 ],
+//                               ),
+//                             ),
+//                           );
+//                         }
+//                         return const SizedBox
+//                             .shrink(); // Fallback for any out-of-bounds indices
+//                       }
+//                     },
+//                   ),
 //                 ),
-//                 const SizedBox(
-//                   height: 15,
-//                 ),
+//                 const SizedBox(height: 15),
 //                 const Row(
 //                   mainAxisAlignment: MainAxisAlignment.start,
 //                   children: [
@@ -211,42 +473,18 @@
 //                     ),
 //                   ],
 //                 ),
-//                 const SizedBox(
-//                   height: 15,
-//                 ),
-//                 SizedBox(
-//                   height: 50,
-//                   child: ListView.builder(
-//                       scrollDirection: Axis.horizontal,
-//                      itemCount: 5,
-//                       itemBuilder: (context, index) {
-//                         final isSelected = index == 0;
-//                         return Padding(
-//                           padding: const EdgeInsets.symmetric(horizontal: 6),
-//                           child: Container(
-//                             width: 60,
-//                             height: 90,
-//                             alignment: Alignment.center,
-//                             decoration: BoxDecoration(
-//                                 color:
-//                                     isSelected ? Colors.blue[50] : Colors.white,
-//                                 border: Border.all(color: Colors.grey.shade300),
-//                                 borderRadius: BorderRadius.circular(12)),
-//                             child: Column(
-//                               mainAxisAlignment: MainAxisAlignment.center,
-//                               children: [
-//                                 Text(
-//                                   ['Sun', 'Mon', 'Tue', 'Wed', 'Thu'][index],
-//                                   style: const TextStyle(
-//                                       fontWeight: FontWeight.bold),
-//                                 ),
-//                                 Text('${13 + index}')
-//                               ],
-//                             ),
-//                           ),
-//                         );
-//                       }),
-//                 ),
+//                 const SizedBox(height: 15),
+//                 Consumer<DateTimeProvider>(
+//                     builder: (context, dateTimeProvider, _) {
+//                   return DateSelectorRow(
+//                     selectedDate: dateTimeProvider.selectedDate,
+//                     onDateSelected: (date) {
+//                       dateTimeProvider.setStartDate(date);
+//                     },
+//                   );
+//                 }),
+
+//                 // Ugadi Posters Section
 //                 Row(
 //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
 //                   children: [
@@ -256,145 +494,227 @@
 //                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
 //                     ),
 //                     TextButton(
-//                         onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailsScreen()));},
-//                         child: const Text(
-//                           'View All',
-//                           style: TextStyle(color: Colors.black),
+//                         onPressed: () {
+//                           Navigator.push(
+//                               context,
+//                               MaterialPageRoute(
+//                                   builder: (context) => const DetailsScreen(
+//                                       category: 'ugadiposter')));
+//                         },
+//                         child: Row(
+//                           children: [
+//                             const Text(
+//                               'View All',
+//                               style: TextStyle(color: Colors.black),
+//                             ),
+//                             Icon(
+//                               Icons.arrow_forward_ios,
+//                               size: 19,
+//                               color: Colors.black,
+//                             )
+//                           ],
 //                         ))
 //                   ],
 //                 ),
-//                 SizedBox(
-//                   height: 150,
-//                   child: ListView.builder(
-//                     scrollDirection: Axis.horizontal,
-//                     itemCount: ugadiPosters.length,
-//                     itemBuilder: (context, index) {
-//                       final poster = ugadiPosters[index];
+//                 _buildPosterList(ugadiPosters),
 
-//                       return Container(
-//                         width: 120,
-//                         margin: const EdgeInsets.only(right: 12),
-//                         decoration: BoxDecoration(
-//                           borderRadius: BorderRadius.circular(12),
-//                           color: const Color.fromARGB(255, 169, 137, 126),
-//                           boxShadow: const [
-//                             BoxShadow(color: Colors.black12, blurRadius: 4)
-//                           ],
-//                         ),
-//                         child: Column(
-//                           crossAxisAlignment: CrossAxisAlignment.start,
-//                           children: [
-//                             ClipRRect(
-//                               borderRadius: const BorderRadius.vertical(
-//                                   top: Radius.circular(12)),
-//                               child: Image.network(
-//                                 poster.images[0],
-//                                 height: 100,
-//                                 width: 120,
-//                                 fit: BoxFit.cover,
-//                               ),
-//                             ),
-//                             Padding(
-//                               padding: const EdgeInsets.all(6.0),
-//                               child: Padding(
-//                                 padding: const EdgeInsets.all(10.0),
-//                                 child: Row(
-//                                   mainAxisAlignment:
-//                                       MainAxisAlignment.spaceBetween,
-//                                   children: [
-//                                     Text(
-//                                       poster.price == 0
-//                                           ? 'Free'
-//                                           : '₹ ${poster.price}',
-//                                       style: const TextStyle(fontSize: 12),
-//                                     ),
-//                                   ],
-//                                 ),
-//                               ),
-//                             ),
-//                           ],
-//                         ),
-//                       );
-//                     },
-//                   ),
-//                 ),
+//                 // Clothing Posters Section
 //                 Row(
 //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
 //                   children: [
 //                     const Text(
-//                       'Clothing/Beauty/Chemical',
+//                       'Clothing',
 //                       style:
 //                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
 //                     ),
 //                     TextButton(
-//                       onPressed: () {Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailsScreen()));},
-//                       child: const Text(
-//                         'View All',
-//                         style: TextStyle(color: Colors.black),
+//                       onPressed: () {
+//                         Navigator.push(
+//                             context,
+//                             MaterialPageRoute(
+//                                 builder: (context) => const DetailsScreen(
+//                                       category: 'clothingposter',
+//                                     )));
+//                       },
+//                       child: Row(
+//                         children: [
+//                           const Text(
+//                             'View All',
+//                             style: TextStyle(color: Colors.black),
+//                           ),
+//                           Icon(
+//                             Icons.arrow_forward_ios,
+//                             size: 19,
+//                             color: Colors.black,
+//                           )
+//                         ],
 //                       ),
 //                     )
 //                   ],
 //                 ),
-//                 SizedBox(
-//                   height: 150,
-//                   child: ListView.builder(
-//                     scrollDirection: Axis.horizontal,
-//                     itemCount: nonUgadiPosters.length,
-//                     itemBuilder: (context, index) {
-//                       final poster = nonUgadiPosters[index];
+//                 _buildPosterList(clothingPosters),
 
-//                       return Container(
-//                         width: 120,
-//                         margin: const EdgeInsets.only(right: 12),
-//                         decoration: BoxDecoration(
-//                           borderRadius: BorderRadius.circular(12),
-//                           color: const Color.fromARGB(255, 169, 137, 126),
-//                           boxShadow: const [
-//                             BoxShadow(color: Colors.black12, blurRadius: 4)
-//                           ],
-//                         ),
-//                         child: Column(
-//                           crossAxisAlignment: CrossAxisAlignment.start,
-//                           children: [
-//                             ClipRRect(
-//                               borderRadius: const BorderRadius.vertical(
-//                                   top: Radius.circular(12)),
-//                               child: Image.network(
-//                                 poster.images[0],
-//                                 height: 100,
-//                                 width: 120,
-//                                 fit: BoxFit.cover,
-//                               ),
-//                             ),
-//                             Padding(
-//                               padding: const EdgeInsets.all(6.0),
-//                               child: Padding(
-//                                 padding: const EdgeInsets.all(10.0),
-//                                 child: Row(
-//                                   mainAxisAlignment:
-//                                       MainAxisAlignment.spaceBetween,
-//                                   children: [
-//                                     Text(
-//                                       poster.price == 0
-//                                           ? 'Free'
-//                                           : '₹ ${poster.price}',
-//                                       style: const TextStyle(fontSize: 12),
-//                                     ),
-//                                   ],
-//                                 ),
-//                               ),
-//                             )
-//                           ],
-//                         ),
-//                       );
-//                     },
-//                   ),
+//                 // Beauty Posters Section
+//                 Row(
+//                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                   children: [
+//                     const Text(
+//                       'Beauty',
+//                       style:
+//                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//                     ),
+//                     TextButton(
+//                       onPressed: () {
+//                         Navigator.push(
+//                             context,
+//                             MaterialPageRoute(
+//                                 builder: (context) => const DetailsScreen(
+//                                       category: 'beautyposter',
+//                                     )));
+//                       },
+//                       child: Row(
+//                         children: [
+//                           const Text(
+//                             'View All',
+//                             style: TextStyle(color: Colors.black),
+//                           ),
+//                           Icon(
+//                             Icons.arrow_forward_ios,
+//                             size: 19,
+//                             color: Colors.black,
+//                           )
+//                         ],
+//                       ),
+//                     )
+//                   ],
 //                 ),
+//                 _buildPosterList(beautyPosters),
+
+//                 // Chemical Posters Section
+//                 Row(
+//                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                   children: [
+//                     const Text(
+//                       'Chemical',
+//                       style:
+//                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+//                     ),
+//                     TextButton(
+//                       onPressed: () {
+//                         Navigator.push(
+//                             context,
+//                             MaterialPageRoute(
+//                                 builder: (context) => const DetailsScreen(
+//                                     category: 'chemicalposter')));
+//                       },
+//                       child: Row(
+//                         children: [
+//                           const Text(
+//                             'View All',
+//                             style: TextStyle(color: Colors.black),
+//                           ),
+//                           Icon(
+//                             Icons.arrow_forward_ios,
+//                             size: 19,
+//                             color: Colors.black,
+//                           )
+//                         ],
+//                       ),
+//                     )
+//                   ],
+//                 ),
+//                 _buildPosterList(chemicalPosters),
 //               ],
 //             ),
 //           ),
 //         ),
 //       ),
+//     );
+//   }
+
+//   // Extracted method to build poster list to avoid code duplication
+//   Widget _buildPosterList(List posters) {
+//     return SizedBox(
+//       height: 150,
+//       child: posters.isEmpty
+//           ? const Center(
+//               child: Text(
+//                 'No posters available',
+//                 style: TextStyle(color: Colors.grey),
+//               ),
+//             )
+//           : ListView.builder(
+//               scrollDirection: Axis.horizontal,
+//               itemCount: posters.length,
+//               itemBuilder: (context, index) {
+//                 final poster = posters[index];
+//                 return Container(
+//                   width: 120,
+//                   margin: const EdgeInsets.only(right: 12),
+//                   decoration: BoxDecoration(
+//                     borderRadius: BorderRadius.circular(12),
+//                     color: const Color.fromARGB(255, 169, 137, 126),
+//                     boxShadow: const [
+//                       BoxShadow(color: Colors.black12, blurRadius: 4)
+//                     ],
+//                   ),
+//                   child: Column(
+//                     crossAxisAlignment: CrossAxisAlignment.start,
+//                     children: [
+//                       ClipRRect(
+//                         borderRadius: const BorderRadius.vertical(
+//                             top: Radius.circular(12)),
+//                         child: GestureDetector(
+//                           onTap: () {
+//                             Navigator.push(
+//                               context,
+//                               MaterialPageRoute(
+//                                 builder: (context) => PosterTemplate(
+//                                   poster: poster,
+//                                   isCustom: false,
+//                                 ),
+//                               ),
+//                             );
+//                           },
+//                           child: Image.network(
+//                             poster.images[0],
+//                             height: 100,
+//                             width: 120,
+//                             fit: BoxFit.cover,
+//                             errorBuilder: (context, error, stackTrace) {
+//                               return Container(
+//                                 height: 100,
+//                                 width: 120,
+//                                 color: Colors.grey[300],
+//                                 child: const Icon(Icons.image_not_supported),
+//                               );
+//                             },
+//                           ),
+//                         ),
+//                       ),
+//                       Padding(
+//                         padding: const EdgeInsets.all(6.0),
+//                         child: Padding(
+//                           padding: const EdgeInsets.all(10.0),
+//                           child: Row(
+//                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                             children: [
+//                               Text(
+//                                 poster.price == 0
+//                                     ? 'Free'
+//                                     : '₹ ${poster.price}',
+//                                 style: const TextStyle(
+//                                     fontSize: 12, color: Colors.white),
+//                               ),
+//                             ],
+//                           ),
+//                         ),
+//                       ),
+//                     ],
+//                   ),
+//                 );
+//               },
+//             ),
 //     );
 //   }
 // }
@@ -406,11 +726,24 @@
 
 
 
-// ignore_for_file: use_build_context_synchronously
+
+
+
+import 'dart:convert';
+
+import 'package:company_project/models/poster_model.dart';
+import 'package:company_project/providers/date_time_provider.dart';
 import 'package:company_project/providers/poster_provider.dart';
+import 'package:company_project/providers/story_provider.dart';
 import 'package:company_project/views/presentation/pages/home/details_screen.dart';
+import 'package:company_project/views/presentation/pages/home/poster/create_poster_template.dart';
+import 'package:company_project/views/presentation/widgets/add_story.dart';
+import 'package:company_project/views/presentation/widgets/date_selector_screen.dart';
+import 'package:company_project/views/presentation/widgets/story_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:company_project/models/story_model.dart';
+import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -420,49 +753,259 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  final String currentUserId = '680634a4bb1d44fb0c93aae2';
+  bool _isLoading = false;
+  Map<String, List<Map<String, dynamic>>> _categorizedPosters = {};
+
   @override
   void initState() {
     super.initState();
-    print('HomeScreen init - about to fetch posters');
+    print('HomeScreen init - about to fetch posters and stories');
     Future.microtask(() {
-      print('Inside microtask - calling provider');
-      final provider = Provider.of<PosterProvider>(context, listen: false);
-      provider.fetchPosters().then((_) {
-        print('Fetch completed - poster count: ${provider.posters.length}');
+      print('Inside microtask - calling providers');
+      final posterProvider =
+          Provider.of<PosterProvider>(context, listen: false);
+      final storyProvider = Provider.of<StoryProvider>(context, listen: false);
+
+      posterProvider.fetchPosters().then((_) {
+        print(
+            'Fetch posters completed - poster count: ${posterProvider.posters.length}');
+      });
+
+      storyProvider.fetchStories().then((_) {
+        print(
+            'Fetch stories completed - story count: ${storyProvider.stories.length}');
       });
     });
+
+    // Fetch festival posters for the selected date when screen initializes
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _fetchFestivalPosters(context.read<DateTimeProvider>().selectedDate);
+    });
+  }
+
+  // Format date for API request
+  String _formatDate(DateTime date) {
+    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+  }
+
+  // Fetch festival posters from API based on selected date
+  Future<void> _fetchFestivalPosters(DateTime date) async {
+    setState(() {
+      _isLoading = true;
+      _categorizedPosters = {};
+    });
+
+    try {
+      final response = await http.post(
+        Uri.parse('https://posterbnaobackend.onrender.com/api/poster/festival'),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'festivalDate': _formatDate(date)}),
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> posters = jsonDecode(response.body);
+        
+        // Group posters by category
+        final Map<String, List<Map<String, dynamic>>> categorizedPosters = {};
+        
+        for (var poster in posters) {
+          final category = poster['categoryName'];
+          if (!categorizedPosters.containsKey(category)) {
+            categorizedPosters[category] = [];
+          }
+          categorizedPosters[category]?.add(poster);
+        }
+        
+        setState(() {
+          _categorizedPosters = categorizedPosters;
+          _isLoading = false;
+        });
+        
+        print('Fetched festival posters: ${posters.length}');
+        print('Categories found: ${categorizedPosters.keys.toList()}');
+      } else {
+        // Handle error
+        setState(() {
+          _isLoading = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to load festival posters')),
+        );
+      }
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: ${e.toString()}')),
+      );
+    }
+  }
+
+  // Build a horizontal list of festival posters for a specific category
+  Widget _buildFestivalPosterList(String category, List<Map<String, dynamic>> posters) {
+    return SizedBox(
+      height: 150,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: posters.length,
+        itemBuilder: (context, index) {
+          final poster = posters[index];
+          return Container(
+            width: 120,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              color: const Color.fromARGB(255, 169, 137, 126),
+              boxShadow: const [
+                BoxShadow(color: Colors.black12, blurRadius: 4)
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ClipRRect(
+                  borderRadius: const BorderRadius.vertical(
+                      top: Radius.circular(12)),
+                  child: GestureDetector(
+                    onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PosterTemplate(
+                                  poster: TemplateModel.fromJson(poster), // Pass the selected poster
+                                  isCustom: false,
+                                ),
+                              ),
+                            );
+                    },
+                    child: Image.network(
+                      poster['images'][0],
+                      height: 100,
+                      width: 120,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 100,
+                          width: 120,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.image_not_supported),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(6.0),
+                  child: Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          poster['price'] == 0
+                              ? 'Free'
+                              : '₹ ${poster['price']}',
+                          style: const TextStyle(
+                              fontSize: 12, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  void _openAddStory() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => AddStoryWidget(
+          userId: currentUserId,
+          onStoryAdded: () {
+            // Refresh stories after adding
+            Provider.of<StoryProvider>(context, listen: false).fetchStories();
+          },
+        ),
+      ),
+    );
+  }
+
+  void _openStoryViewer(int index) {
+    final storyProvider = Provider.of<StoryProvider>(context, listen: false);
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => StoryViewerScreen(
+          stories: storyProvider.stories,
+          initialIndex: index,
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final posterprovider = Provider.of<PosterProvider>(context);
-    
-    print('Building HomeScreen - Provider isLoading: ${posterprovider.isLoading}');
-    print('Building HomeScreen - Provider error: ${posterprovider.error}');
-    print('Building HomeScreen - Poster count: ${posterprovider.posters.length}');
-    
-    final posters = posterprovider.posters;
+    final posterProvider = Provider.of<PosterProvider>(context);
+    final storyProvider = Provider.of<StoryProvider>(context);
+
+    print(
+        'Building HomeScreen - PosterProvider isLoading: ${posterProvider.isLoading}');
+    print(
+        'Building HomeScreen - PosterProvider error: ${posterProvider.error}');
+    print(
+        'Building HomeScreen - Poster count: ${posterProvider.posters.length}');
+    print('Building HomeScreen - Story count: ${storyProvider.stories.length}');
+
+    final posters = posterProvider.posters;
+    final stories = storyProvider.stories;
+
     final ugadiPosters = posters
         .where((poster) => poster.categoryName.toLowerCase() == 'ugadi')
         .toList();
-    
+
     // Separate lists for clothing, beauty and chemical
     final clothingPosters = posters
         .where((poster) => poster.categoryName.toLowerCase() == 'clothing')
         .toList();
-    
+
     final beautyPosters = posters
         .where((poster) => poster.categoryName.toLowerCase() == 'beauty')
         .toList();
-    
+
     final chemicalPosters = posters
         .where((poster) => poster.categoryName.toLowerCase() == 'chemical')
         .toList();
-    
+
     print('Ugadi poster count: ${ugadiPosters.length}');
     print('Clothing poster count: ${clothingPosters.length}');
     print('Beauty poster count: ${beautyPosters.length}');
     print('Chemical poster count: ${chemicalPosters.length}');
+    print('Storieeeeeeeeeeeeeeeeeees: ${stories}');
+
+    bool _currentUserHasStory() {
+      final storyProvider = Provider.of<StoryProvider>(context, listen: false);
+      return storyProvider.stories
+          .any((story) => story.userId == currentUserId);
+    }
+
+    // Add this method to get current user's story
+    Story? _getCurrentUserStory() {
+      final storyProvider = Provider.of<StoryProvider>(context, listen: false);
+      try {
+        return storyProvider.stories
+            .firstWhere((story) => story.userId == currentUserId);
+      } catch (e) {
+        return null;
+      }
+    }
 
     return Scaffold(
       body: SingleChildScrollView(
@@ -479,7 +1022,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         const CircleAvatar(
                           radius: 25,
                           backgroundImage: NetworkImage(
-                            'https://s3-alpha-sig.figma.com/img/4030/79b6/b3230e238d25d0e18c175d870e3223de?Expires=1745798400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=XFySyNNVp3PIu-XaWNdAbIr4ipi8vE4GvLA984rKxzrxcgvMnQ3sKQf37zHJAFsI1a46RUbURiGjrAYwrhXnaLXN~KvgpTungrOfy5WeGmRoTfswG64j5e~G-aYWYO3ZhyUpp-rJyncxufgg4f7StZ-NKtQ7Mp1GM2hNvNVVvr2r0QLxoH4rJMfzqklSsDodO8V02IG-cm~-hWHq-MNdZIMyboqBZ-RThbeU3-0T5pG1YVP9X66yQbUo59mcGyn22laQ0sSwMlvla~NNe8N7pqq88AnFs0cySqZExNz2tI31U4YNDLLxRLV4dA6BPvYBWcGtFptCtQttxXLijvxo7A__',
+                            'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQBvqzyx_zoi6q2c0Gd1XnE7wysD9PGOLe3-A&s',
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -547,9 +1090,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(20),
                       image: const DecorationImage(
-                          image: NetworkImage(
-                            'https://s3-alpha-sig.figma.com/img/4db5/04a1/da2c0272db46bf139b7be4d117bf4487?Expires=1745798400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=Xtl5w3ekVoQ5pF-dngqC9b0aDQLbXZe-01RIu8NM5R-q7lOS7BB-WH3BZq-HXgBnyn6u8v-8KmtXbp3TH8HypbC1RHV20mK349uX5cUbmnW1PaU2agjjKzk9oAS116IM~U5feRKf~5uR2XY6HuEFckUXXTXcz1k-j415gh5p-t7okCAHN2-EjDajLkiw53cIZ1HKtniPBIKOLPb2l7YiXdKZzw1KjPHs8eX6uJXj~GBwTgwQhfntvC7W5jU8Z1IaZTjkhdJGrxAfWSp9-TFR-M~SFr-6GA4V~qaLs4PvY7xbBiC46U0pqtfSzWQ~BasllLKaY0ssP4LgUmKtatP-vw__',
-                          ),
+                          image: AssetImage(
+                              'assets/assets/4db504a1da2c0272db46bf139b7be4d117bf4487.png'),
                           fit: BoxFit.cover)),
                   child: Stack(
                     children: [
@@ -584,29 +1126,155 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                   ),
                 ),
+
+                // Stories Section - UPDATED
                 SizedBox(
                   height: 120,
                   child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: 4,
-                      itemBuilder: (context, index) => const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 14),
-                            child: Column(
-                              children: [
-                                SizedBox(height: 16),
-                                CircleAvatar(
-                                  radius: 30,
-                                  backgroundImage: NetworkImage(
-                                      'https://s3-alpha-sig.figma.com/img/a092/3fb0/85f706b30752e1c21ad66b14ce160e67?Expires=1745798400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=KwBBfdas3pCqKgG54~kj~3aVD6BFd66U1REkY8Ug~rQX1ZXyPlQyHjDa6beeL3CkV9FO~IDjygcgUFyO-Jq0UlKEkt4kOBoPlv2mpud-UD9RWweXFUSlc~C1UwPBTYgfpvlXUQzbtm3F6Fl3Ay-D2cGWFmT~r0pb9FTTlKSBfFsTIbYIrvM5Iyt1EeDSesHkmZBv8XlSiIwcbo309PuFywTYAiNdhqY0z12-31~12SGejo~niRFv-U7abHecL6Dw3Q9PRFCmSvL~TM4Ht0Vt1tyyuogxpIF-75qbSKnZ8JgL4jbhAN~HIOGab5B~ODdC7D27NXAWJwSrmlYSSnawuA__'),
-                                ),
-                                SizedBox(height: 4),
-                                Text(
-                                  'Your Story',
-                                  style: TextStyle(color: Colors.black),
-                                )
-                              ],
+                    scrollDirection: Axis.horizontal,
+                    itemCount: stories.length +
+                        (!_currentUserHasStory()
+                            ? 1
+                            : 0), // Add 1 for "Add Story" if user has no story
+                    itemBuilder: (context, index) {
+                      // First position shows either "Add Story" or user's own story
+                      if (index == 0) {
+                        // If user has no story, show "Add Story" button
+                        if (!_currentUserHasStory()) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            child: GestureDetector(
+                              onTap: _openAddStory,
+                              child: Column(
+                                children: [
+                                  const SizedBox(height: 16),
+                                  Stack(
+                                    children: [
+                                      CircleAvatar(
+                                        radius: 30,
+                                        backgroundColor: Colors.grey[300],
+                                        child: const Icon(
+                                          Icons.add,
+                                          size: 32,
+                                          color: Colors.black87,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'Add Story',
+                                    style: TextStyle(color: Colors.black),
+                                  )
+                                ],
+                              ),
                             ),
-                          )),
+                          );
+                        } else {
+                          // Show user's own story first
+                          final userStory = _getCurrentUserStory()!;
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            child: GestureDetector(
+                              onTap: () {
+                                // Find the index of this story in the overall stories list
+                                final storyIndex = stories
+                                    .indexWhere((s) => s.id == userStory.id);
+                                _openStoryViewer(storyIndex);
+                              },
+                              child: Column(
+                                children: [
+                                  const SizedBox(height: 16),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: const Color(0xFF6C4EF9),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: CircleAvatar(
+                                      radius: 30,
+                                      backgroundImage: NetworkImage(
+                                        'https://posterbnaobackend.onrender.com/${userStory.image}',
+                                      ),
+                                      onBackgroundImageError:
+                                          (exception, stackTrace) {
+                                        print(
+                                            'Error loading story image: $exception');
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'Your Story',
+                                    style: TextStyle(color: Colors.black),
+                                  )
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+                      } else {
+                        // For other users' stories
+                        // Adjust index based on whether user has story
+                        final adjustedIndex =
+                            _currentUserHasStory() ? index : index - 1;
+
+                        // Filter out current user's story from the list shown here
+                        final filteredStories = stories.toList();
+                        // .where((s) => s.userId == currentUserId)
+                        // .toList();
+
+                        if (adjustedIndex < filteredStories.length) {
+                          final story = filteredStories[adjustedIndex];
+
+                          // Find the index of this story in the overall stories list for viewer
+                          final viewerIndex =
+                              stories.indexWhere((s) => s.id == story.id);
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 14),
+                            child: GestureDetector(
+                              onTap: () => _openStoryViewer(viewerIndex),
+                              child: Column(
+                                children: [
+                                  const SizedBox(height: 16),
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: const Color(0xFF6C4EF9),
+                                        width: 2,
+                                      ),
+                                    ),
+                                    child: CircleAvatar(
+                                      radius: 30,
+                                      backgroundImage: NetworkImage(
+                                        'https://posterbnaobackend.onrender.com/${story.image}',
+                                      ),
+                                      onBackgroundImageError:
+                                          (exception, stackTrace) {
+                                        print(
+                                            'Error loading story image: $exception');
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  const Text(
+                                    'Story',
+                                    style: TextStyle(color: Colors.black),
+                                  )
+                                ],
+                              ),
+                            ),
+                          );
+                        }
+                        return const SizedBox
+                            .shrink(); // Fallback for any out-of-bounds indices
+                      }
+                    },
+                  ),
                 ),
                 const SizedBox(height: 15),
                 const Row(
@@ -620,126 +1288,224 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 const SizedBox(height: 15),
-                SizedBox(
-                  height: 50,
-                  child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                     itemCount: 5,
-                      itemBuilder: (context, index) {
-                        final isSelected = index == 0;
-                        return Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
-                          child: Container(
-                            width: 60,
-                            height: 90,
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                                color:
-                                    isSelected ? Colors.blue[50] : Colors.white,
-                                border: Border.all(color: Colors.grey.shade300),
-                                borderRadius: BorderRadius.circular(12)),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Text(
-                                  ['Sun', 'Mon', 'Tue', 'Wed', 'Thu'][index],
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.bold),
-                                ),
-                                Text('${13 + index}')
-                              ],
-                            ),
-                          ),
-                        );
-                      }),
+                Consumer<DateTimeProvider>(
+                  builder: (context, dateTimeProvider, _) {
+                    return DateSelectorRow(
+                      selectedDate: dateTimeProvider.selectedDate,
+                      onDateSelected: (date) {
+                        dateTimeProvider.setStartDate(date);
+                        // Fetch festival posters when date is changed
+                        _fetchFestivalPosters(date);
+                      },
+                    );
+                  }
                 ),
+                
+                // Festival posters based on selected date
+                const SizedBox(height: 20),
+                _isLoading 
+                  ? const Center(child: CircularProgressIndicator())
+                  : _categorizedPosters.isEmpty
+                      ? const Center(
+                          child: Text(
+                            'No festivals found for selected date',
+                            style: TextStyle(fontSize: 16, color: Colors.grey),
+                          ),
+                        )
+                      : Column(
+                          children: _categorizedPosters.entries.map((entry) {
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // Category header
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      entry.key, // Category name
+                                      style: const TextStyle(
+                                        fontSize: 18, 
+                                        fontWeight: FontWeight.bold
+                                      ),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => DetailsScreen(
+                                              category: entry.key.toLowerCase() + 'poster',
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                      child: const Row(
+                                        children: [
+                                           Text(
+                                            'View All',
+                                            style: TextStyle(color: Colors.black),
+                                          ),
+                                          Icon(
+                                            Icons.arrow_forward_ios,
+                                            size: 19,
+                                            color: Colors.black,
+                                          )
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                // Festival poster list for this category
+                                _buildFestivalPosterList(entry.key, entry.value),
+                                const SizedBox(height: 10),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+
+                // Regular category sections
+                // Only show these if we want to display regular categories alongside festival categories
                 
                 // Ugadi Posters Section
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Ugadi',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    TextButton(
-                        onPressed: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => const DetailsScreen(category: 'ugadiposter')));
-                        },
-                        child: const Text(
-                          'View All',
-                          style: TextStyle(color: Colors.black),
-                        ))
-                  ],
-                ),
-                _buildPosterList(ugadiPosters),
-                
-                // Clothing Posters Section
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Clothing',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const DetailsScreen(category: 'clothingposter',)));
-                      },
-                      child: const Text(
-                        'View All',
-                        style: TextStyle(color: Colors.black),
-                      ),
-                    )
-                  ],
-                ),
-                _buildPosterList(clothingPosters),
-                
-                // Beauty Posters Section
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Beauty',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const DetailsScreen(category: 'beautyposter',)));
-                      },
-                      child: const Text(
-                        'View All',
-                        style: TextStyle(color: Colors.black),
-                      ),
-                    )
-                  ],
-                ),
-                _buildPosterList(beautyPosters),
-                
-                // Chemical Posters Section
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Chemical',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) => const DetailsScreen(category: 'chemicalposter')));
-                      },
-                      child: const Text(
-                        'View All',
-                        style: TextStyle(color: Colors.black),
-                      ),
-                    )
-                  ],
-                ),
-                _buildPosterList(chemicalPosters),
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //   children: [
+                //     const Text(
+                //       'Ugadi',
+                //       style:
+                //           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                //     ),
+                //     TextButton(
+                //         onPressed: () {
+                //           Navigator.push(
+                //               context,
+                //               MaterialPageRoute(
+                //                   builder: (context) => const DetailsScreen(
+                //                       category: 'ugadiposter')));
+                //         },
+                //         child: Row(
+                //           children: [
+                //             const Text(
+                //               'View All',
+                //               style: TextStyle(color: Colors.black),
+                //             ),
+                //             Icon(
+                //               Icons.arrow_forward_ios,
+                //               size: 19,
+                //               color: Colors.black,
+                //             )
+                //           ],
+                //         ))
+                //   ],
+                // ),
+                // _buildPosterList(ugadiPosters),
+
+                // // Clothing Posters Section
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //   children: [
+                //     const Text(
+                //       'Clothing',
+                //       style:
+                //           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                //     ),
+                //     TextButton(
+                //       onPressed: () {
+                //         Navigator.push(
+                //             context,
+                //             MaterialPageRoute(
+                //                 builder: (context) => const DetailsScreen(
+                //                       category: 'clothingposter',
+                //                     )));
+                //       },
+                //       child: Row(
+                //         children: [
+                //           const Text(
+                //             'View All',
+                //             style: TextStyle(color: Colors.black),
+                //           ),
+                //           Icon(
+                //             Icons.arrow_forward_ios,
+                //             size: 19,
+                //             color: Colors.black,
+                //           )
+                //         ],
+                //       ),
+                //     )
+                //   ],
+                // ),
+                // _buildPosterList(clothingPosters),
+
+                // // Beauty Posters Section
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //   children: [
+                //     const Text(
+                //       'Beauty',
+                //       style:
+                //           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                //     ),
+                //     TextButton(
+                //       onPressed: () {
+                //         Navigator.push(
+                //             context,
+                //             MaterialPageRoute(
+                //                 builder: (context) => const DetailsScreen(
+                //                       category: 'beautyposter',
+                //                     )));
+                //       },
+                //       child: Row(
+                //         children: [
+                //           const Text(
+                //             'View All',
+                //             style: TextStyle(color: Colors.black),
+                //           ),
+                //           Icon(
+                //             Icons.arrow_forward_ios,
+                //             size: 19,
+                //             color: Colors.black,
+                //           )
+                //         ],
+                //       ),
+                //     )
+                //   ],
+                // ),
+                // _buildPosterList(beautyPosters),
+
+                // // Chemical Posters Section
+                // Row(
+                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                //   children: [
+                //     const Text(
+                //       'Chemical',
+                //       style:
+                //           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                //     ),
+                //     TextButton(
+                //       onPressed: () {
+                //         Navigator.push(
+                //             context,
+                //             MaterialPageRoute(
+                //                 builder: (context) => const DetailsScreen(
+                //                     category: 'chemicalposter')));
+                //       },
+                //       child: Row(
+                //         children: [
+                //           const Text(
+                //             'View All',
+                //             style: TextStyle(color: Colors.black),
+                //           ),
+                //           Icon(
+                //             Icons.arrow_forward_ios,
+                //             size: 19,
+                //             color: Colors.black,
+                //           )
+                //         ],
+                //       ),
+                //     )
+                //   ],
+                // ),
+                // _buildPosterList(chemicalPosters),
               ],
             ),
           ),
@@ -747,7 +1513,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
     );
   }
-  
+
   // Extracted method to build poster list to avoid code duplication
   Widget _buildPosterList(List posters) {
     return SizedBox(
@@ -780,19 +1546,32 @@ class _HomeScreenState extends State<HomeScreen> {
                       ClipRRect(
                         borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(12)),
-                        child: Image.network(
-                          poster.images[0],
-                          height: 100,
-                          width: 120,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              height: 100,
-                              width: 120,
-                              color: Colors.grey[300],
-                              child: const Icon(Icons.image_not_supported),
+                        child: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PosterTemplate(
+                                  poster: poster,
+                                  isCustom: false,
+                                ),
+                              ),
                             );
                           },
+                          child: Image.network(
+                            poster.images[0],
+                            height: 100,
+                            width: 120,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                height: 100,
+                                width: 120,
+                                color: Colors.grey[300],
+                                child: const Icon(Icons.image_not_supported),
+                              );
+                            },
+                          ),
                         ),
                       ),
                       Padding(
@@ -806,7 +1585,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                 poster.price == 0
                                     ? 'Free'
                                     : '₹ ${poster.price}',
-                                style: const TextStyle(fontSize: 12),
+                                style: const TextStyle(
+                                    fontSize: 12, color: Colors.white),
                               ),
                             ],
                           ),

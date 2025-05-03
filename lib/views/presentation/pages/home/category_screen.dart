@@ -453,9 +453,11 @@
 // ignore_for_file: prefer_const_constructors_in_immutables, unused_local_variable
 
 import 'package:company_project/providers/beauty_provider.dart';
+import 'package:company_project/providers/category_poster_provider.dart';
 import 'package:company_project/providers/chemical_provider.dart';
 import 'package:company_project/providers/clothing_provider.dart';
 import 'package:company_project/providers/ugadi_provider.dart';
+import 'package:company_project/views/presentation/pages/home/details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -475,12 +477,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
     'Chemical'
   ];
 
-  final Map<String, List<String>> sectionItems = {
-    'Ugadi Special': ['Ugadi1', 'Ugadi2', 'Ugadi3'],
-    'Chemical': ['Chemical1', 'Chemical2', 'Chemical3'],
-    'Clothing': ['Clothing1', 'Clothing2', 'Clothing3'],
-    'Beauty': ['Beauty1', 'Beauty2', 'Beauty3']
-  };
+
 
   @override
   void initState() {
@@ -703,13 +700,15 @@ class _CategoryScreenState extends State<CategoryScreen> {
         Row(
           children: [
             TextButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailsScreen(category: 'beauty')));
+              },
               child: const Text(
                 'View All',
                 style: TextStyle(color: Colors.black),
               ),
             ),
-            const Icon(Icons.arrow_forward_ios)
+            const Icon(Icons.arrow_forward_ios,size: 18,)
           ],
         ),
       ],
@@ -744,61 +743,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget buildSection(String title, List<String> items, double screenWidth) {
-    final itemWidth = screenWidth < 600 ? 120.0 : 150.0;
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: EdgeInsets.symmetric(vertical: screenWidth * 0.025),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  fontSize: screenWidth < 600 ? 18 : 22,
-                  fontWeight: FontWeight.w600
-                ),
-              ),
-              const Text(
-                'View all',
-                style: TextStyle(
-                  color: Colors.blue,
-                  fontWeight: FontWeight.w500
-                ),
-              ),
-            ],
-          ),
-        ),
-        SizedBox(
-          height: screenWidth < 600 ? 140 : 170,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              return Container(
-                width: itemWidth,
-                margin: EdgeInsets.only(right: screenWidth * 0.025),
-                decoration: BoxDecoration(
-                  color: Colors.orangeAccent,
-                  borderRadius: BorderRadius.circular(12),
-                  image: const DecorationImage(
-                    image: NetworkImage(
-                      'https://s3-alpha-sig.figma.com/img/1f3a/2ea2/0e854d5fb1e4924513dfcce9ccefa3e0?Expires=1745798400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=HHgEXFEt4br9HgPFlB0zYc0rxkawN2j-ucMirhXKUSqLT9YpxRlPsDimsuFsMVhWNmS5zpGT3PKSp2f8lV8g1vx5-ujAG~n3zuM~8JQdUFOJMvnuyG6XhBoC29hcmoEVEE~3NZUW~t5nJTCWuDLa0QalSUuX2C1KlN1eTeRBOKf6edb31XpFoS7ibDZ4-FjVGXMfDGlPk3k7-OZGcUfTK7kBaHgwdJVPtn-Lz2gcRY--QnNHphtrYzt~XHu37N4gMmPadnFc8hRfJAqMW3VSWHeWAg~kgFzlsvqwZ5tQb1uBRQnqUgPHntIPKGNWSyuRnZH43PGCjnpsIHfX7RuhCg__'
-                    ),
-                    fit: BoxFit.cover
-                  )
-                ),
-              );
-            }
-          ),
-        )
-      ],
     );
   }
 }

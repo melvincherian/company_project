@@ -1,8 +1,150 @@
+import 'dart:io';
+import 'package:company_project/models/brand_data_model.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:image_picker/image_picker.dart';
+// Import the data model
 
-class EditBrand extends StatelessWidget {
+class EditBrand extends StatefulWidget {
   const EditBrand({super.key});
+
+  @override
+  State<EditBrand> createState() => _EditBrandState();
+}
+
+class _EditBrandState extends State<EditBrand> {
+  File? _logoImage;
+  File? _extraElementImage;
+  
+  // Text controllers for form fields
+  final TextEditingController _businessNameController = TextEditingController();
+  final TextEditingController _mobileNumberController = TextEditingController(text: "8051281283");
+  final TextEditingController _addressController = TextEditingController(text: "KJNAK JNAN KXAJNX");
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _websiteController = TextEditingController();
+  final TextEditingController _productsServicesController = TextEditingController();
+  final TextEditingController _taglineController = TextEditingController();
+  
+  // Track selected social media
+  final List<String> _selectedSocialMedia = [];
+  
+  // Social media options with their icons
+  final List<Map<String, dynamic>> _socialMediaOptions = [
+    {'name': 'facebook', 'icon': FontAwesomeIcons.facebook},
+    {'name': 'instagram', 'icon': FontAwesomeIcons.instagram},
+    {'name': 'whatsapp', 'icon': FontAwesomeIcons.whatsapp},
+    {'name': 'youtube', 'icon': FontAwesomeIcons.youtube},
+    {'name': 'linkedin', 'icon': FontAwesomeIcons.linkedin},
+    {'name': 'twitter', 'icon': FontAwesomeIcons.xTwitter},
+  ];
+
+  @override
+  void dispose() {
+    // Dispose controllers
+    _businessNameController.dispose();
+    _mobileNumberController.dispose();
+    _addressController.dispose();
+    _emailController.dispose();
+    _websiteController.dispose();
+    _productsServicesController.dispose();
+    _taglineController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickImage(bool isLogo) async {
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
+
+    if (pickedFile != null) {
+      setState(() {
+        if (isLogo) {
+          _logoImage = File(pickedFile.path);
+        } else {
+          _extraElementImage = File(pickedFile.path);
+        }
+      });
+    }
+  }
+
+  Widget _buildImagePicker(String label, bool isLogo) {
+    File? imageFile = isLogo ? _logoImage : _extraElementImage;
+
+    return Column(
+      children: [
+        Stack(
+          children: [
+            Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.grey.shade300),
+                borderRadius: BorderRadius.circular(10),
+                image: imageFile != null
+                    ? DecorationImage(
+                        image: FileImage(imageFile), fit: BoxFit.cover)
+                    : null,
+              ),
+              child: imageFile == null
+                  ? const Icon(Icons.image, size: 40, color: Colors.grey)
+                  : null,
+            ),
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: GestureDetector(
+                onTap: () => _pickImage(isLogo),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  padding: const EdgeInsets.all(4),
+                  child: const Icon(Icons.camera_alt,
+                      size: 18, color: Colors.deepPurple),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Text(label, style: const TextStyle(fontSize: 12)),
+      ],
+    );
+  }
+
+  Widget _buildTextField(
+    String hint, {
+    int maxLength = 100,
+    TextInputType keyboardType = TextInputType.text,
+    String? initialValue,
+    TextEditingController? controller,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: TextFormField(
+        controller: controller,
+        maxLength: maxLength,
+        keyboardType: keyboardType,
+        decoration: InputDecoration(
+          labelText: hint,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          counterText: '',
+        ),
+      ),
+    );
+  }
+
+  // Toggle social media selection
+  void _toggleSocialMedia(String name) {
+    setState(() {
+      if (_selectedSocialMedia.contains(name)) {
+        _selectedSocialMedia.remove(name);
+      } else {
+        _selectedSocialMedia.add(name);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -36,22 +178,23 @@ class EditBrand extends StatelessWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        _buildImagePicker("Upload Logo"),
-                        _buildImagePicker("Extra Elements"),
+                        _buildImagePicker("Upload Logo", true),
+                        _buildImagePicker("Extra Elements", false),
                       ],
                     ),
                     const SizedBox(height: 20),
-                    _buildTextField("Business Name"),
+                    _buildTextField("Business Name", controller: _businessNameController),
                     _buildTextField("Mobile Number",
                         maxLength: 20,
                         keyboardType: TextInputType.phone,
-                        initialValue: "76597587565"),
+                        controller: _mobileNumberController),
                     _buildTextField("Address",
-                        maxLength: 20, initialValue: "KJNAK JNAN KXAJNX"),
-                    _buildTextField("Email"),
-                    _buildTextField("Website"),
-                    _buildTextField("Products & Services"),
-                    _buildTextField("Tagline"),
+                        maxLength: 20,
+                        controller: _addressController),
+                    _buildTextField("Email", controller: _emailController),
+                    _buildTextField("Website", controller: _websiteController),
+                    _buildTextField("Products & Services", controller: _productsServicesController),
+                    _buildTextField("Tagline", controller: _taglineController),
                     const SizedBox(height: 20),
                     const Text(
                       "Select Social Media Icons to Highlight \non Post",
@@ -60,52 +203,25 @@ class EditBrand extends StatelessWidget {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 10),
-                    const Wrap(
+                    Wrap(
                       alignment: WrapAlignment.center,
                       spacing: 16,
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: Color(0xFF8C52FF),
-                          child: FaIcon(FontAwesomeIcons.facebook,
-                              size: 23, color: Colors.white),
-                        ),
-                        CircleAvatar(
-                          backgroundColor: Color(0xFF8C52FF),
-                          child: FaIcon(FontAwesomeIcons.instagram,
-                              size: 23, color: Colors.white),
-                        ),
-                        CircleAvatar(
-                          backgroundColor: Color(0xFF8C52FF),
-                          child: FaIcon(FontAwesomeIcons.whatsapp,
-                              size: 23, color: Colors.white),
-                        ),
-                        CircleAvatar(
-                          backgroundColor: Color(0xFF8C52FF),
-                          child: FaIcon(FontAwesomeIcons.youtube,
-                              size: 23, color: Colors.white),
-                        ),
-                        
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          
-                          children: [
-                           
-                            CircleAvatar(
-                              backgroundColor: Color(0xFF8C52FF),
-                              child: FaIcon(FontAwesomeIcons.linkedin,
-                                  size: 23, color: Colors.white),
+                      children: _socialMediaOptions.map((social) {
+                        final isSelected = _selectedSocialMedia.contains(social['name']);
+                        return GestureDetector(
+                          onTap: () => _toggleSocialMedia(social['name']),
+                          child: CircleAvatar(
+                            backgroundColor: isSelected 
+                              ? const Color(0xFF8C52FF) 
+                              : Colors.grey.shade400,
+                            child: FaIcon(
+                              social['icon'],
+                              size: 23, 
+                              color: Colors.white
                             ),
-                            SizedBox(
-                              width: 14,
-                            ),
-                            CircleAvatar(
-                              backgroundColor: Color(0xFF8C52FF),
-                              child: FaIcon(FontAwesomeIcons.xTwitter,
-                                  size: 23, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                      ],
+                          ),
+                        );
+                      }).toList(),
                     ),
                     const SizedBox(height: 30),
                     Container(
@@ -118,7 +234,24 @@ class EditBrand extends StatelessWidget {
                         ),
                       ),
                       child: ElevatedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          // Create brand data object
+                          final brandData = BrandData(
+                            logoImage: _logoImage,
+                            extraElementImage: _extraElementImage,
+                            businessName: _businessNameController.text,
+                            mobileNumber: _mobileNumberController.text,
+                            address: _addressController.text,
+                            email: _emailController.text,
+                            website: _websiteController.text,
+                            productsServices: _productsServicesController.text,
+                            tagline: _taglineController.text,
+                            selectedSocialMedia: List.from(_selectedSocialMedia),
+                          );
+                          
+                          // Return the brand data to the previous screen
+                          Navigator.pop(context, brandData);
+                        },
                         style: ElevatedButton.styleFrom(
                           elevation: 0,
                           backgroundColor: Colors.transparent,
@@ -137,63 +270,6 @@ class EditBrand extends StatelessWidget {
               ),
             ],
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildImagePicker(String label) {
-    return Column(
-      children: [
-        Stack(
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: const Icon(Icons.image, size: 40, color: Colors.grey),
-            ),
-            Positioned(
-              bottom: 0,
-              right: 0,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: Colors.grey.shade300),
-                ),
-                padding: const EdgeInsets.all(4),
-                child: const Icon(Icons.camera_alt,
-                    size: 18, color: Colors.deepPurple),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(label, style: const TextStyle(fontSize: 12)),
-      ],
-    );
-  }
-
-  Widget _buildTextField(
-    String hint, {
-    int maxLength = 100,
-    TextInputType keyboardType = TextInputType.text,
-    String? initialValue,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: TextFormField(
-        initialValue: initialValue,
-        maxLength: maxLength,
-        keyboardType: keyboardType,
-        decoration: InputDecoration(
-          labelText: hint,
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-          counterText: '',
         ),
       ),
     );

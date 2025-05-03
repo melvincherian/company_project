@@ -1,4 +1,5 @@
-import 'package:company_project/views/presentation/pages/home/reward_screen.dart';
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
 import 'package:flutter_switch/flutter_switch.dart';
 class SettingsScreen extends StatefulWidget {
@@ -27,7 +28,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           children: <Widget>[
             GestureDetector(
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context)=>const RewardScreen()));
+                // Navigator.push(context, MaterialPageRoute(builder: (context)=>const RewardScreen()));
               },
               child: _buildSettingsItem(
                 context,

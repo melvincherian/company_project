@@ -1,4 +1,5 @@
 import 'package:company_project/views/presentation/pages/home/business/bakery_clothing_screen.dart';
+import 'package:company_project/views/presentation/pages/home/business/business_detail_screen.dart';
 import 'package:flutter/material.dart';
 
 class VirtualBusinessScreen extends StatelessWidget {
@@ -69,7 +70,12 @@ class VirtualBusinessScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(context, MaterialPageRoute(builder: (context)=>const BakeryCards()));
             },
-            child: const Text('View All', style: TextStyle(color: Colors.black))),
+            child: Row(
+              children: [
+                const Text('View All', style: TextStyle(color: Colors.black)),
+                Icon(Icons.arrow_forward_ios,size: 19,)
+              ],
+            )),
         ],
       ),
     );
@@ -83,13 +89,13 @@ class VirtualBusinessScreen extends StatelessWidget {
         itemCount: 5,
         padding: const EdgeInsets.only(left: 12),
         itemBuilder: (context, index) {
-          return _businessCard();
+          return _businessCard(context);
         },
       ),
     );
   }
 
-  Widget _businessCard() {
+  Widget _businessCard(context) {
     return Container(
       width: 200,
       margin: const EdgeInsets.only(right: 12),
@@ -109,7 +115,11 @@ class VirtualBusinessScreen extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Image.network('https://s3-alpha-sig.figma.com/img/4a7b/1cfa/0f786a0abe78d4b2afdba27b4863f29a?Expires=1746403200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=sf0T-1o1kfke-z9y738n5-VQ6ipQoapjOAGQd36kb~rMEfa51o-R6O7K4VKqFScAEuN0qpZer7XCj68DoV3PstVHrIr-K5--aorSK0LIJYKA9X-xUQ5CbN-rGizqnaLxMl9UsvkkfKkkFmD5~H4FraNGI5jToPoN~PX77~cScAzEk20OSdYePSSNqzqxJuW3YnFcr6NiCOUW7XO4jmNpy0qlqrC6k~8-OIwd9WmdGGxq46ao99HcvjE~5MSAIGu7YmykHX4Xbmjw1tC01Oc-SW7rFnRLUj82rKHnow3ruJOSTYHlEA~WVmB7cWNag6NBpHV1TVAy1F9EYQWqv9jpfA__',fit: BoxFit.cover,height: 125,width: 300,),
+          GestureDetector(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context)=>BusinessDetailScreen()));
+            },
+            child: Image.network('https://s3-alpha-sig.figma.com/img/4a7b/1cfa/0f786a0abe78d4b2afdba27b4863f29a?Expires=1746403200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=sf0T-1o1kfke-z9y738n5-VQ6ipQoapjOAGQd36kb~rMEfa51o-R6O7K4VKqFScAEuN0qpZer7XCj68DoV3PstVHrIr-K5--aorSK0LIJYKA9X-xUQ5CbN-rGizqnaLxMl9UsvkkfKkkFmD5~H4FraNGI5jToPoN~PX77~cScAzEk20OSdYePSSNqzqxJuW3YnFcr6NiCOUW7XO4jmNpy0qlqrC6k~8-OIwd9WmdGGxq46ao99HcvjE~5MSAIGu7YmykHX4Xbmjw1tC01Oc-SW7rFnRLUj82rKHnow3ruJOSTYHlEA~WVmB7cWNag6NBpHV1TVAy1F9EYQWqv9jpfA__',fit: BoxFit.cover,height: 125,width: 300,)),
           const SizedBox(height: 8),
           const Text(
             'BUSINESS CONFERENCE',

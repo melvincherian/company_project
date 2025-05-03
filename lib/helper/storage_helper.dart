@@ -1,3 +1,5 @@
+// ignore_for_file: avoid_print
+
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:company_project/models/user_model.dart';
@@ -22,6 +24,8 @@ class AuthPreferences {
       
       // Set logged in status
       await prefs.setBool(isLoggedInKey, true);
+
+      print('hhhhhhhhhhhhhhhhhhhhhhhhh${getUserData()}');
       
       return true;
     } catch (e) {

@@ -1,4 +1,7 @@
 import 'package:company_project/providers/auth_provider.dart';
+import 'package:company_project/views/cutomers/add_customers.dart';
+import 'package:company_project/views/cutomers/create_invoice_screen.dart';
+import 'package:company_project/views/cutomers/subscription_screen.dart';
 import 'package:company_project/views/presentation/pages/auth/register_screen.dart';
 import 'package:company_project/views/presentation/pages/home/add_user.dart';
 import 'package:company_project/views/presentation/pages/home/brand_mall_screen.dart';
@@ -113,6 +116,38 @@ class PlaningDetailsScreen extends StatelessWidget {
                                 builder: (context) => const SettingsScreen()));
                       },
                       child: _menuTile(Icons.settings, "Settings")),
+
+                                  const Divider(),
+                  GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const AddCustomers()));
+                      },
+                      child: _menuTile(Icons.person_2, "Add Customer")),
+
+                       const Divider(),
+                  GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const SubscriptionScreen()));
+                      },
+                      child: _menuTile(Icons.subscript, "Subscription")),
+
+                                      const Divider(),
+                  GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => const CreateInvoiceScreen()));
+                      },
+                      child: _menuTile(Icons.receipt_long_outlined, "Create Invoice")),
+
+                      
                   const Divider(),
                   _menuTile(Icons.mail, "Contact Us"),
                   const Divider(),
