@@ -452,17 +452,312 @@
 
 // ignore_for_file: prefer_const_constructors_in_immutables, unused_local_variable
 
-import 'package:company_project/providers/beauty_provider.dart';
-import 'package:company_project/providers/category_poster_provider.dart';
-import 'package:company_project/providers/chemical_provider.dart';
-import 'package:company_project/providers/clothing_provider.dart';
-import 'package:company_project/providers/ugadi_provider.dart';
+// import 'package:company_project/providers/beauty_provider.dart';
+// import 'package:company_project/providers/category_poster_provider.dart';
+// import 'package:company_project/providers/chemical_provider.dart';
+// import 'package:company_project/providers/clothing_provider.dart';
+// import 'package:company_project/providers/ugadi_provider.dart';
+// import 'package:company_project/views/presentation/pages/home/details_screen.dart';
+// import 'package:flutter/material.dart';
+// import 'package:provider/provider.dart';
+
+// class CategoryScreen extends StatefulWidget {
+//   CategoryScreen({super.key});
+
+//   @override
+//   State<CategoryScreen> createState() => _CategoryScreenState();
+// }
+
+// class _CategoryScreenState extends State<CategoryScreen> {
+//   final List<String> categories = [
+//     'Business Ads',
+//     'Education',
+//     'Ugadi',
+//     'Beauty',
+//     'Chemical'
+//   ];
+
+
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     Future.microtask(() =>
+//         Provider.of<ChemicalProvider>(context, listen: false).fetchChemicals());
+//     Future.microtask(() =>
+//         Provider.of<ClothingProvider>(context, listen: false).fetchClothing());
+//     Future.microtask(() =>
+//         Provider.of<BeautyProvider>(context, listen: false).fetchBeauty());
+//     Future.microtask(
+//         () => Provider.of<UgadiProvider>(context, listen: false).fetchUgadi());
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     // Get the screen size using MediaQuery
+//     final MediaQueryData mediaQuery = MediaQuery.of(context);
+//     final screenWidth = mediaQuery.size.width;
+//     final screenHeight = mediaQuery.size.height;
+    
+//     // Define responsive sizes based on screen width
+//     final double paddingSize = screenWidth * 0.04; // 4% of screen width
+//     final double itemWidth = screenWidth < 600 ? 120 : 150; // Increase item width on larger screens
+//     final double itemHeight = screenWidth < 600 ? 100 : 120; // Increase item height on larger screens
+//     final double titleFontSize = screenWidth < 600 ? 26 : 32; // Larger title font on bigger screens
+//     final double sectionTitleSize = screenWidth < 600 ? 18 : 22; // Larger section titles on bigger screens
+    
+//     final chemicalProvider = Provider.of<ChemicalProvider>(context);
+//     final clothingProvider = Provider.of<ClothingProvider>(context);
+//     final beautyProvider = Provider.of<BeautyProvider>(context);
+//     final ugadiProvider = Provider.of<UgadiProvider>(context);
+
+//     final chemicals = chemicalProvider.chemical;
+//     final clothing = clothingProvider.clothing;
+//     final beauty = beautyProvider.beauty;
+//     final ugady = ugadiProvider.ugadi;
+
+//     final chemicalposters = chemicals.where(
+//         (chemicals) => chemicals.categoryName.toLowerCase() == 'chemical');
+//     final clothingposters = clothing
+//         .where((clothing) => clothing.categoryName.toLowerCase() == 'clothing');
+//     final beautyposters =
+//         beauty.where((beauty) => beauty.categoryName.toLowerCase() == 'beauty');
+//     final ugadiposters =
+//         beauty.where((ugady) => ugady.categoryName.toLowerCase() == 'ugady');
+
+//     return Scaffold(
+//       body: SafeArea(
+//           child: SingleChildScrollView(
+//         padding: EdgeInsets.all(paddingSize),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: [
+//                 Text(
+//                   'Categories',
+//                   style: TextStyle(
+//                     fontSize: titleFontSize,
+//                     fontWeight: FontWeight.bold,
+//                   ),
+//                 ),
+//                 Row(
+//                   children: [
+//                     Container(
+//                       padding: EdgeInsets.all(screenWidth * 0.02),
+//                       decoration: BoxDecoration(
+//                         border: Border.all(color: Colors.black),
+//                         borderRadius: BorderRadius.circular(12),
+//                       ),
+//                       child: const Icon(Icons.translate),
+//                     ),
+//                     SizedBox(
+//                       width: screenWidth * 0.03,
+//                     ),
+//                     CircleAvatar(
+//                       backgroundColor: Colors.grey[200],
+//                       child: const Icon(Icons.search),
+//                     )
+//                   ],
+//                 )
+//               ],
+//             ),
+//             SizedBox(
+//               height: screenHeight * 0.025,
+//             ),
+//             SingleChildScrollView(
+//               scrollDirection: Axis.horizontal,
+//               child: Row(
+//                   children: categories.map((cat) {
+//                 return Padding(
+//                   padding: EdgeInsets.only(right: screenWidth * 0.02),
+//                   child: Chip(
+//                     label: Text(cat),
+//                     backgroundColor: cat == 'Business Ads'
+//                         ? const Color.fromARGB(255, 107, 22, 255)
+//                         : const Color.fromARGB(255, 250, 250, 250),
+//                     labelStyle: TextStyle(
+//                         color:
+//                             cat == 'Business Ads' ? Colors.white : Colors.grey),
+//                   ),
+//                 );
+//               }).toList()),
+//             ),
+//             SizedBox(
+//               height: screenHeight * 0.025,
+//             ),
+//             _buildSectionHeader('Ugadi Special', context, sectionTitleSize, screenWidth),
+//             SizedBox(
+//               height: itemHeight + 10,
+//               child: Consumer<UgadiProvider>(
+//                 builder: (context, provider, child) {
+//                   if (provider.isLoading) {
+//                     return const Center(child: CircularProgressIndicator());
+//                   } else if (provider.error != null) {
+//                     return Center(child: Text("Error: ${provider.error}"));
+//                   } else {
+//                     final ugadiposters = provider.ugadi;
+//                     return ListView.builder(
+//                       scrollDirection: Axis.horizontal,
+//                       itemCount: ugadiposters.length,
+//                       itemBuilder: (context, index) {
+//                         final poster = ugadiposters[index];
+//                         return _buildItemCard(poster, itemWidth, itemHeight, screenWidth);
+//                       },
+//                     );
+//                   }
+//                 },
+//               ),
+//             ),
+//             _buildSectionHeader('Chemical', context, sectionTitleSize, screenWidth),
+//             SizedBox(
+//               height: itemHeight + 10,
+//               child: Consumer<ChemicalProvider>(
+//                 builder: (context, provider, child) {
+//                   if (provider.isLoading) {
+//                     return const Center(child: CircularProgressIndicator());
+//                   } else if (provider.error != null) {
+//                     return Center(child: Text("Error: ${provider.error}"));
+//                   } else {
+//                     final chemicalposters = provider.chemical;
+
+//                     return ListView.builder(
+//                       scrollDirection: Axis.horizontal,
+//                       itemCount: chemicalposters.length,
+//                       itemBuilder: (context, index) {
+//                         final poster = chemicalposters[index];
+//                         return _buildItemCard(poster, itemWidth, itemHeight, screenWidth);
+//                       },
+//                     );
+//                   }
+//                 },
+//               ),
+//             ),
+//             _buildSectionHeader('Clothing', context, sectionTitleSize, screenWidth),
+//             SizedBox(
+//               height: itemHeight + 10,
+//               child: Consumer<ClothingProvider>(
+//                 builder: (context, provider, child) {
+//                   if (provider.isLoading) {
+//                     return const Center(child: CircularProgressIndicator());
+//                   } else if (provider.error != null) {
+//                     return Center(child: Text("Error: ${provider.error}"));
+//                   } else {
+//                     final clothingposters = provider.clothing;
+
+//                     return ListView.builder(
+//                       scrollDirection: Axis.horizontal,
+//                       itemCount: clothingposters.length,
+//                       itemBuilder: (context, index) {
+//                         final poster = clothingposters[index];
+//                         return _buildItemCard(poster, itemWidth, itemHeight, screenWidth);
+//                       },
+//                     );
+//                   }
+//                 },
+//               ),
+//             ),
+//             _buildSectionHeader('Beauty', context, sectionTitleSize, screenWidth),
+//             SizedBox(
+//               height: itemHeight + 10,
+//               child: Consumer<BeautyProvider>(
+//                 builder: (context, provider, child) {
+//                   if (provider.isLoading) {
+//                     return const Center(child: CircularProgressIndicator());
+//                   } else if (provider.error != null) {
+//                     return Center(child: Text("Error: ${provider.error}"));
+//                   } else {
+//                     final beautyposters = provider.beauty;
+
+//                     return ListView.builder(
+//                       scrollDirection: Axis.horizontal,
+//                       itemCount: beautyposters.length,
+//                       itemBuilder: (context, index) {
+//                         final poster = beautyposters[index];
+//                         return _buildItemCard(poster, itemWidth, itemHeight, screenWidth);
+//                       },
+//                     );
+//                   }
+//                 },
+//               ),
+//             ),
+//           ],
+//         ),
+//       )),
+//     );
+//   }
+
+//   // Helper method to build a consistent section header with responsive spacing
+//   Widget _buildSectionHeader(String title, BuildContext context, double fontSize, double screenWidth) {
+//     return Row(
+//       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//       children: [
+//         Text(
+//           title,
+//           style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
+//         ),
+//         Row(
+//           children: [
+//             TextButton(
+//               onPressed: () {
+//                 Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailsScreen(category: 'ugadi')));
+//               },
+//               child: const Text(
+//                 'View All',
+//                 style: TextStyle(color: Colors.black),
+//               ),
+//             ),
+//             const Icon(Icons.arrow_forward_ios,size: 18,)
+//           ],
+//         ),
+//       ],
+//     );
+//   }
+
+//   // Helper method to build item cards with responsive dimensions
+//   Widget _buildItemCard(dynamic poster, double width, double height, double screenWidth) {
+//     return Container(
+//       width: width,
+//       margin: EdgeInsets.only(right: screenWidth * 0.03),
+//       decoration: BoxDecoration(
+//         borderRadius: BorderRadius.circular(12),
+//         color: const Color.fromARGB(255, 247, 158, 106),
+//         boxShadow: const [BoxShadow(color: Colors.black12)],
+//       ),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           ClipRRect(
+//             borderRadius: const BorderRadius.vertical(
+//               top: Radius.circular(12),
+//             ),
+//             child: Image.network(
+//               poster.images.isNotEmpty
+//                   ? poster.images[0]
+//                   : 'https://via.placeholder.com/120x100',
+//               height: height,
+//               width: width,
+//               fit: BoxFit.cover,
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
+
+
+
+
+import 'package:company_project/providers/category_providerr.dart';
 import 'package:company_project/views/presentation/pages/home/details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 class CategoryScreen extends StatefulWidget {
-  CategoryScreen({super.key});
+  const CategoryScreen({super.key});
 
   @override
   State<CategoryScreen> createState() => _CategoryScreenState();
@@ -474,22 +769,24 @@ class _CategoryScreenState extends State<CategoryScreen> {
     'Education',
     'Ugadi',
     'Beauty',
-    'Chemical'
+    'Chemical',
+    'Clothing'
   ];
 
-
+  // Categories to display in the screen sections
+  final List<String> displayCategories = [
+    'ugadi',
+    'chemical',
+    'clothing',
+    'beauty'
+  ];
 
   @override
   void initState() {
     super.initState();
-    Future.microtask(() =>
-        Provider.of<ChemicalProvider>(context, listen: false).fetchChemicals());
-    Future.microtask(() =>
-        Provider.of<ClothingProvider>(context, listen: false).fetchClothing());
-    Future.microtask(() =>
-        Provider.of<BeautyProvider>(context, listen: false).fetchBeauty());
-    Future.microtask(
-        () => Provider.of<UgadiProvider>(context, listen: false).fetchUgadi());
+    // Fetch all categories data at once
+    Future.microtask(() => Provider.of<CategoryProviderr>(context, listen: false)
+        .fetchMultipleCategories(displayCategories));
   }
 
   @override
@@ -505,191 +802,121 @@ class _CategoryScreenState extends State<CategoryScreen> {
     final double itemHeight = screenWidth < 600 ? 100 : 120; // Increase item height on larger screens
     final double titleFontSize = screenWidth < 600 ? 26 : 32; // Larger title font on bigger screens
     final double sectionTitleSize = screenWidth < 600 ? 18 : 22; // Larger section titles on bigger screens
-    
-    final chemicalProvider = Provider.of<ChemicalProvider>(context);
-    final clothingProvider = Provider.of<ClothingProvider>(context);
-    final beautyProvider = Provider.of<BeautyProvider>(context);
-    final ugadiProvider = Provider.of<UgadiProvider>(context);
-
-    final chemicals = chemicalProvider.chemical;
-    final clothing = clothingProvider.clothing;
-    final beauty = beautyProvider.beauty;
-    final ugady = ugadiProvider.ugadi;
-
-    final chemicalposters = chemicals.where(
-        (chemicals) => chemicals.categoryName.toLowerCase() == 'chemical');
-    final clothingposters = clothing
-        .where((clothing) => clothing.categoryName.toLowerCase() == 'clothing');
-    final beautyposters =
-        beauty.where((beauty) => beauty.categoryName.toLowerCase() == 'beauty');
-    final ugadiposters =
-        beauty.where((ugady) => ugady.categoryName.toLowerCase() == 'ugady');
 
     return Scaffold(
       body: SafeArea(
-          child: SingleChildScrollView(
-        padding: EdgeInsets.all(paddingSize),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Categories',
-                  style: TextStyle(
-                    fontSize: titleFontSize,
-                    fontWeight: FontWeight.bold,
+        child: SingleChildScrollView(
+          padding: EdgeInsets.all(paddingSize),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header with title and action buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Categories',
+                    style: TextStyle(
+                      fontSize: titleFontSize,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                ),
-                Row(
-                  children: [
-                    Container(
-                      padding: EdgeInsets.all(screenWidth * 0.02),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black),
-                        borderRadius: BorderRadius.circular(12),
+                  Row(
+                    children: [
+                      Container(
+                        padding: EdgeInsets.all(screenWidth * 0.02),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.black),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(Icons.translate),
                       ),
-                      child: const Icon(Icons.translate),
+                      SizedBox(width: screenWidth * 0.03),
+                      CircleAvatar(
+                        backgroundColor: Colors.grey[200],
+                        child: const Icon(Icons.search),
+                      )
+                    ],
+                  )
+                ],
+              ),
+              SizedBox(height: screenHeight * 0.025),
+              
+              // Category chips
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: categories.map((cat) {
+                    return Padding(
+                      padding: EdgeInsets.only(right: screenWidth * 0.02),
+                      child: Chip(
+                        label: Text(cat),
+                        backgroundColor: cat == 'Business Ads'
+                            ? const Color.fromARGB(255, 107, 22, 255)
+                            : const Color.fromARGB(255, 250, 250, 250),
+                        labelStyle: TextStyle(
+                            color: cat == 'Business Ads' ? Colors.white : Colors.grey),
+                      ),
+                    );
+                  }).toList(),
+                ),
+              ),
+              SizedBox(height: screenHeight * 0.025),
+              
+              // Category sections - dynamically created from displayCategories list
+              for (final category in displayCategories)
+                Column(
+                  children: [
+                    _buildSectionHeader(
+                      _capitalizeFirstLetter(category), 
+                      context, 
+                      sectionTitleSize, 
+                      screenWidth,
+                      category
                     ),
                     SizedBox(
-                      width: screenWidth * 0.03,
+                      height: itemHeight + 10,
+                      child: _buildCategoryItemsList(
+                        context, category, itemWidth, itemHeight, screenWidth
+                      ),
                     ),
-                    CircleAvatar(
-                      backgroundColor: Colors.grey[200],
-                      child: const Icon(Icons.search),
-                    )
+                    SizedBox(height: screenHeight * 0.02),
                   ],
-                )
-              ],
-            ),
-            SizedBox(
-              height: screenHeight * 0.025,
-            ),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: Row(
-                  children: categories.map((cat) {
-                return Padding(
-                  padding: EdgeInsets.only(right: screenWidth * 0.02),
-                  child: Chip(
-                    label: Text(cat),
-                    backgroundColor: cat == 'Business Ads'
-                        ? const Color.fromARGB(255, 107, 22, 255)
-                        : const Color.fromARGB(255, 250, 250, 250),
-                    labelStyle: TextStyle(
-                        color:
-                            cat == 'Business Ads' ? Colors.white : Colors.grey),
-                  ),
-                );
-              }).toList()),
-            ),
-            SizedBox(
-              height: screenHeight * 0.025,
-            ),
-            _buildSectionHeader('Ugadi Special', context, sectionTitleSize, screenWidth),
-            SizedBox(
-              height: itemHeight + 10,
-              child: Consumer<UgadiProvider>(
-                builder: (context, provider, child) {
-                  if (provider.isLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (provider.error != null) {
-                    return Center(child: Text("Error: ${provider.error}"));
-                  } else {
-                    final ugadiposters = provider.ugadi;
-                    return ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: ugadiposters.length,
-                      itemBuilder: (context, index) {
-                        final poster = ugadiposters[index];
-                        return _buildItemCard(poster, itemWidth, itemHeight, screenWidth);
-                      },
-                    );
-                  }
-                },
-              ),
-            ),
-            _buildSectionHeader('Chemical', context, sectionTitleSize, screenWidth),
-            SizedBox(
-              height: itemHeight + 10,
-              child: Consumer<ChemicalProvider>(
-                builder: (context, provider, child) {
-                  if (provider.isLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (provider.error != null) {
-                    return Center(child: Text("Error: ${provider.error}"));
-                  } else {
-                    final chemicalposters = provider.chemical;
-
-                    return ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: chemicalposters.length,
-                      itemBuilder: (context, index) {
-                        final poster = chemicalposters[index];
-                        return _buildItemCard(poster, itemWidth, itemHeight, screenWidth);
-                      },
-                    );
-                  }
-                },
-              ),
-            ),
-            _buildSectionHeader('Clothing', context, sectionTitleSize, screenWidth),
-            SizedBox(
-              height: itemHeight + 10,
-              child: Consumer<ClothingProvider>(
-                builder: (context, provider, child) {
-                  if (provider.isLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (provider.error != null) {
-                    return Center(child: Text("Error: ${provider.error}"));
-                  } else {
-                    final clothingposters = provider.clothing;
-
-                    return ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: clothingposters.length,
-                      itemBuilder: (context, index) {
-                        final poster = clothingposters[index];
-                        return _buildItemCard(poster, itemWidth, itemHeight, screenWidth);
-                      },
-                    );
-                  }
-                },
-              ),
-            ),
-            _buildSectionHeader('Beauty', context, sectionTitleSize, screenWidth),
-            SizedBox(
-              height: itemHeight + 10,
-              child: Consumer<BeautyProvider>(
-                builder: (context, provider, child) {
-                  if (provider.isLoading) {
-                    return const Center(child: CircularProgressIndicator());
-                  } else if (provider.error != null) {
-                    return Center(child: Text("Error: ${provider.error}"));
-                  } else {
-                    final beautyposters = provider.beauty;
-
-                    return ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      itemCount: beautyposters.length,
-                      itemBuilder: (context, index) {
-                        final poster = beautyposters[index];
-                        return _buildItemCard(poster, itemWidth, itemHeight, screenWidth);
-                      },
-                    );
-                  }
-                },
-              ),
-            ),
-          ],
+                ),
+            ],
+          ),
         ),
-      )),
+      ),
+    );
+  }
+
+  // Helper method to build the category items list
+  Widget _buildCategoryItemsList(
+    BuildContext context, String category, double itemWidth, double itemHeight, double screenWidth
+  ) {
+    return Consumer<CategoryProviderr>(
+      builder: (context, provider, child) {
+        if (provider.isLoadingCategory(category)) {
+          return const Center(child: CircularProgressIndicator());
+        } else if (provider.getErrorForCategory(category) != null) {
+          return Center(child: Text("Error: ${provider.getErrorForCategory(category)}"));
+        } else {
+          final items = provider.getItemsByCategory(category);
+          return ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: items.length,
+            itemBuilder: (context, index) {
+              final item = items[index];
+              return _buildItemCard(item, itemWidth, itemHeight, screenWidth);
+            },
+          );
+        }
+      },
     );
   }
 
   // Helper method to build a consistent section header with responsive spacing
-  Widget _buildSectionHeader(String title, BuildContext context, double fontSize, double screenWidth) {
+  Widget _buildSectionHeader(String title, BuildContext context, double fontSize, double screenWidth, String category) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -701,14 +928,14 @@ class _CategoryScreenState extends State<CategoryScreen> {
           children: [
             TextButton(
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailsScreen(category: 'ugadi')));
+                Navigator.push(context, MaterialPageRoute(builder: (context) => DetailsScreen(category: category)));
               },
               child: const Text(
                 'View All',
                 style: TextStyle(color: Colors.black),
               ),
             ),
-            const Icon(Icons.arrow_forward_ios,size: 18,)
+            const Icon(Icons.arrow_forward_ios, size: 18)
           ],
         ),
       ],
@@ -716,7 +943,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
   }
 
   // Helper method to build item cards with responsive dimensions
-  Widget _buildItemCard(dynamic poster, double width, double height, double screenWidth) {
+  Widget _buildItemCard(dynamic item, double width, double height, double screenWidth) {
     return Container(
       width: width,
       margin: EdgeInsets.only(right: screenWidth * 0.03),
@@ -733,8 +960,8 @@ class _CategoryScreenState extends State<CategoryScreen> {
               top: Radius.circular(12),
             ),
             child: Image.network(
-              poster.images.isNotEmpty
-                  ? poster.images[0]
+              item.images.isNotEmpty
+                  ? item.images[0]
                   : 'https://via.placeholder.com/120x100',
               height: height,
               width: width,
@@ -744,5 +971,11 @@ class _CategoryScreenState extends State<CategoryScreen> {
         ],
       ),
     );
+  }
+  
+  // Helper method to capitalize first letter of a string
+  String _capitalizeFirstLetter(String text) {
+    if (text.isEmpty) return '';
+    return text[0].toUpperCase() + text.substring(1);
   }
 }

@@ -42,18 +42,17 @@
 
 
 
-
 import 'package:company_project/services/category_poster_service.dart';
 import 'package:flutter/material.dart';
-
+import 'package:company_project/models/category_modell.dart';
 
 class CategoryPosterProvider extends ChangeNotifier {
   final CategoryPosterService _service = CategoryPosterService();
-  List<dynamic> _categoryPosters = [];
+  List<CategoryModel> _categoryPosters = [];
   bool _isLoading = false;
   String _error = '';
 
-  List<dynamic> get categoryPosters => _categoryPosters;
+  List<CategoryModel> get categoryPosters => _categoryPosters;
   bool get isLoading => _isLoading;
   String get error => _error;
 

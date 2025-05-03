@@ -3,6 +3,7 @@ import 'package:company_project/providers/beauty_provider.dart';
 import 'package:company_project/providers/brand_info_provider.dart';
 import 'package:company_project/providers/category_poster_provider.dart';
 import 'package:company_project/providers/category_provider.dart';
+import 'package:company_project/providers/category_providerr.dart';
 import 'package:company_project/providers/chemical_provider.dart';
 import 'package:company_project/providers/clothing_provider.dart';
 import 'package:company_project/providers/customer_provider.dart';
@@ -33,10 +34,10 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_)=>AuthProvider()),
         ChangeNotifierProvider(create: (_)=>CategoryProvider()),
         ChangeNotifierProvider(create: (_)=>PosterProvider()),
-        ChangeNotifierProvider(create: (_)=>ChemicalProvider()),
-        ChangeNotifierProvider(create: (_)=>ClothingProvider()),
-        ChangeNotifierProvider(create: (_)=>BeautyProvider()),
-        ChangeNotifierProvider(create: (_)=>UgadiProvider()),
+        // ChangeNotifierProvider(create: (_)=>ChemicalProvider()),
+        // ChangeNotifierProvider(create: (_)=>ClothingProvider()),
+        // ChangeNotifierProvider(create: (_)=>BeautyProvider()),
+        // ChangeNotifierProvider(create: (_)=>UgadiProvider()),
         ChangeNotifierProvider(create: (_)=>FestivalProvider()),
         ChangeNotifierProvider(create: (_) => CategoryPosterProvider()),
         ChangeNotifierProvider(create: (_)=>SignupProvider()),
@@ -44,8 +45,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_)=>DateTimeProvider()),
         ChangeNotifierProvider(create: (_)=>FestivalPosterProvider()),
         ChangeNotifierProvider(create: (_)=>BrandInfoProvider()),
-        ChangeNotifierProvider(create: (_)=>CreateCustomerProvider())
-
+        ChangeNotifierProvider(create: (_)=>CreateCustomerProvider()),
+        ChangeNotifierProvider(create: (_)=>CategoryProviderr())
         
       ],
       child:const MaterialApp(
