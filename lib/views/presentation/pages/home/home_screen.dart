@@ -870,15 +870,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       top: Radius.circular(12)),
                   child: GestureDetector(
                     onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => PosterTemplate(
-                                  poster: TemplateModel.fromJson(poster), // Pass the selected poster
-                                  isCustom: false,
-                                ),
-                              ),
-                            );
+                            // Navigator.push(
+                            //   context,
+                            //   MaterialPageRoute(
+                            //     builder: (context) => PosterTemplate(
+                            //       poster: poster, // Pass the selected poster
+                            //       isCustom: false,
+                            //     ),
+                            //   ),
+                            // );
                     },
                     child: Image.network(
                       poster['images'][0],

@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:company_project/models/category_modell.dart';
 import 'package:company_project/models/poster_model.dart';
 import 'package:http/http.dart' as http;
 
@@ -8,7 +9,7 @@ class PosterService {
   final String baseUrl='https://posterbnaobackend.onrender.com';
 
 
-Future <List<TemplateModel>> fetchTemplates() async {
+Future <List<CategoryModel>> fetchTemplates() async {
   print('Starting API request to fetch templates');
   
   try {
@@ -27,7 +28,7 @@ Future <List<TemplateModel>> fetchTemplates() async {
       }
       
       print('Sample first item: ${data.isNotEmpty ? data[0] : "No items"}');
-      return data.map((json) => TemplateModel.fromJson(json)).toList();
+      return data.map((json) => CategoryModel.fromJson(json)).toList();
     } else {
       print('API Error: Status ${response.statusCode}, Body: ${response.body}');
       throw Exception('Failed to load posters: ${response.statusCode}');

@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:company_project/helper/storage_helper.dart';
+import 'package:company_project/models/category_modell.dart';
 import 'package:company_project/models/editor_item.dart';
 import 'package:company_project/models/poster_model.dart';
 import 'package:company_project/models/poster_size_model.dart';
@@ -83,7 +84,7 @@ class BottomNavbarItem extends StatelessWidget {
 
 class PosterTemplate extends StatefulWidget {
   final bool isCustom;
-  final TemplateModel? poster; // Passed when selecting an existing poster
+  final CategoryModel? poster; // Passed when selecting an existing poster
   final PosterSize? customSize; // Passed when creating a custom poster
 
   const PosterTemplate({

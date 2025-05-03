@@ -1,3 +1,4 @@
+import 'package:company_project/models/category_modell.dart';
 import 'package:company_project/models/poster_model.dart';
 import 'package:company_project/services/api/poster_service.dart';
 import 'package:flutter/material.dart';
@@ -6,12 +7,12 @@ class PosterProvider extends ChangeNotifier {
   final PosterService _service = PosterService();
 
   // Add these state variables
-  List<TemplateModel> _posters = [];
+  List<CategoryModel> _posters = [];
   bool _isLoading = false;
   String? _error;
 
   // Add these getters
-  List<TemplateModel> get posters => _posters;
+  List<CategoryModel> get posters => _posters;
   bool get isLoading => _isLoading;
   String? get error => _error;
 

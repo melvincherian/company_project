@@ -89,15 +89,15 @@ class _DetailsScreenState extends State<DetailsScreen> {
                         return GestureDetector(
                           onTap: () {
                             // Uncomment when ready to implement navigation to PosterTemplate
-                            // Navigator.push(
-                            //   context,
-                            //   MaterialPageRoute(
-                            //     builder: (context) => PosterTemplate(
-                            //       poster: poster,
-                            //       isCustom: false,
-                            //     ),
-                            //   ),
-                            // );
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => PosterTemplate(
+                                  poster: poster,
+                                  isCustom: false,
+                                ),
+                              ),
+                            );
                           },
                           child: Container(
                             decoration: BoxDecoration(
