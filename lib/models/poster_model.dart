@@ -6,7 +6,7 @@ class TemplateModel {
   final List<String> images;
   final String description;
   final String size;
-  final String? festivalDateString; // Changed to String
+  final String? festivalDateString; 
   final bool inStock;
 
   TemplateModel({

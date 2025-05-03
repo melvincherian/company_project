@@ -701,7 +701,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
           children: [
             TextButton(
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailsScreen(category: 'beauty')));
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailsScreen(category: 'ugadi')));
               },
               child: const Text(
                 'View All',

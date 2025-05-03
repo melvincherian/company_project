@@ -829,9 +829,9 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() {
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to load festival posters')),
-        );
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   const SnackBar(content: Text('Failed to load festival posters')),
+        // );
       }
     } catch (e) {
       setState(() {
