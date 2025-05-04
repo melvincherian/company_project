@@ -1,5 +1,4 @@
 import 'package:company_project/views/presentation/pages/home/Logo/edit_logo.dart';
-import 'package:company_project/views/presentation/pages/home/Logo/edit_logo2.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flutter/material.dart';
 
@@ -273,7 +272,7 @@ class LogoTile extends StatelessWidget {
                 Expanded(
                   child: OutlinedButton(
                     onPressed: () {
-                       Navigator.push(context, MaterialPageRoute(builder: (context)=>const EditLogotwo()));
+                       Navigator.push(context, MaterialPageRoute(builder: (context)=>const EditLogo()));
                     
                     },
                     child: const Text("Edit Logo",style: TextStyle(color: Colors.black),),
