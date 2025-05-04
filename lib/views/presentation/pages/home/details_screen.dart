@@ -1,4 +1,5 @@
 import 'package:company_project/views/presentation/pages/home/poster/create_poster_template.dart';
+import 'package:company_project/views/presentation/pages/home/poster/poster_maker_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:company_project/providers/category_poster_provider.dart';
@@ -92,7 +93,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => PosterTemplate(
+                                builder: (context) => PosterMakerApp(
                                   poster: poster,
                                   isCustom: false,
                                 ),

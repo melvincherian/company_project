@@ -447,9 +447,6 @@
 //   }
 // }
 
-
-
-
 // ignore_for_file: prefer_const_constructors_in_immutables, unused_local_variable
 
 // import 'package:company_project/providers/beauty_provider.dart';
@@ -477,8 +474,6 @@
 //     'Chemical'
 //   ];
 
-
-
 //   @override
 //   void initState() {
 //     super.initState();
@@ -498,14 +493,14 @@
 //     final MediaQueryData mediaQuery = MediaQuery.of(context);
 //     final screenWidth = mediaQuery.size.width;
 //     final screenHeight = mediaQuery.size.height;
-    
+
 //     // Define responsive sizes based on screen width
 //     final double paddingSize = screenWidth * 0.04; // 4% of screen width
 //     final double itemWidth = screenWidth < 600 ? 120 : 150; // Increase item width on larger screens
 //     final double itemHeight = screenWidth < 600 ? 100 : 120; // Increase item height on larger screens
 //     final double titleFontSize = screenWidth < 600 ? 26 : 32; // Larger title font on bigger screens
 //     final double sectionTitleSize = screenWidth < 600 ? 18 : 22; // Larger section titles on bigger screens
-    
+
 //     final chemicalProvider = Provider.of<ChemicalProvider>(context);
 //     final clothingProvider = Provider.of<ClothingProvider>(context);
 //     final beautyProvider = Provider.of<BeautyProvider>(context);
@@ -747,12 +742,9 @@
 //   }
 // }
 
-
-
-
-
 import 'package:company_project/providers/category_providerr.dart';
 import 'package:company_project/views/presentation/pages/home/details_screen.dart';
+import 'package:company_project/views/presentation/pages/home/poster/poster_maker_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -785,8 +777,9 @@ class _CategoryScreenState extends State<CategoryScreen> {
   void initState() {
     super.initState();
     // Fetch all categories data at once
-    Future.microtask(() => Provider.of<CategoryProviderr>(context, listen: false)
-        .fetchMultipleCategories(displayCategories));
+    Future.microtask(() =>
+        Provider.of<CategoryProviderr>(context, listen: false)
+            .fetchMultipleCategories(displayCategories));
   }
 
   @override
@@ -795,13 +788,17 @@ class _CategoryScreenState extends State<CategoryScreen> {
     final MediaQueryData mediaQuery = MediaQuery.of(context);
     final screenWidth = mediaQuery.size.width;
     final screenHeight = mediaQuery.size.height;
-    
+
     // Define responsive sizes based on screen width
     final double paddingSize = screenWidth * 0.04; // 4% of screen width
-    final double itemWidth = screenWidth < 600 ? 120 : 150; // Increase item width on larger screens
-    final double itemHeight = screenWidth < 600 ? 100 : 120; // Increase item height on larger screens
-    final double titleFontSize = screenWidth < 600 ? 26 : 32; // Larger title font on bigger screens
-    final double sectionTitleSize = screenWidth < 600 ? 18 : 22; // Larger section titles on bigger screens
+    final double itemWidth =
+        screenWidth < 600 ? 120 : 150; // Increase item width on larger screens
+    final double itemHeight =
+        screenWidth < 600 ? 100 : 120; // Increase item height on larger screens
+    final double titleFontSize =
+        screenWidth < 600 ? 26 : 32; // Larger title font on bigger screens
+    final double sectionTitleSize =
+        screenWidth < 600 ? 18 : 22; // Larger section titles on bigger screens
 
     return Scaffold(
       body: SafeArea(
@@ -841,7 +838,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                 ],
               ),
               SizedBox(height: screenHeight * 0.025),
-              
+
               // Category chips
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
@@ -855,30 +852,26 @@ class _CategoryScreenState extends State<CategoryScreen> {
                             ? const Color.fromARGB(255, 107, 22, 255)
                             : const Color.fromARGB(255, 250, 250, 250),
                         labelStyle: TextStyle(
-                            color: cat == 'Business Ads' ? Colors.white : Colors.grey),
+                            color: cat == 'Business Ads'
+                                ? Colors.white
+                                : Colors.grey),
                       ),
                     );
                   }).toList(),
                 ),
               ),
               SizedBox(height: screenHeight * 0.025),
-              
+
               // Category sections - dynamically created from displayCategories list
               for (final category in displayCategories)
                 Column(
                   children: [
-                    _buildSectionHeader(
-                      _capitalizeFirstLetter(category), 
-                      context, 
-                      sectionTitleSize, 
-                      screenWidth,
-                      category
-                    ),
+                    _buildSectionHeader(_capitalizeFirstLetter(category),
+                        context, sectionTitleSize, screenWidth, category),
                     SizedBox(
                       height: itemHeight + 10,
-                      child: _buildCategoryItemsList(
-                        context, category, itemWidth, itemHeight, screenWidth
-                      ),
+                      child: _buildCategoryItemsList(context, category,
+                          itemWidth, itemHeight, screenWidth),
                     ),
                     SizedBox(height: screenHeight * 0.02),
                   ],
@@ -891,15 +884,15 @@ class _CategoryScreenState extends State<CategoryScreen> {
   }
 
   // Helper method to build the category items list
-  Widget _buildCategoryItemsList(
-    BuildContext context, String category, double itemWidth, double itemHeight, double screenWidth
-  ) {
+  Widget _buildCategoryItemsList(BuildContext context, String category,
+      double itemWidth, double itemHeight, double screenWidth) {
     return Consumer<CategoryProviderr>(
       builder: (context, provider, child) {
         if (provider.isLoadingCategory(category)) {
           return const Center(child: CircularProgressIndicator());
         } else if (provider.getErrorForCategory(category) != null) {
-          return Center(child: Text("Error: ${provider.getErrorForCategory(category)}"));
+          return Center(
+              child: Text("Error: ${provider.getErrorForCategory(category)}"));
         } else {
           final items = provider.getItemsByCategory(category);
           return ListView.builder(
@@ -916,7 +909,8 @@ class _CategoryScreenState extends State<CategoryScreen> {
   }
 
   // Helper method to build a consistent section header with responsive spacing
-  Widget _buildSectionHeader(String title, BuildContext context, double fontSize, double screenWidth, String category) {
+  Widget _buildSectionHeader(String title, BuildContext context,
+      double fontSize, double screenWidth, String category) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -928,7 +922,11 @@ class _CategoryScreenState extends State<CategoryScreen> {
           children: [
             TextButton(
               onPressed: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context) => DetailsScreen(category: category)));
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) =>
+                            DetailsScreen(category: category)));
               },
               child: const Text(
                 'View All',
@@ -943,7 +941,8 @@ class _CategoryScreenState extends State<CategoryScreen> {
   }
 
   // Helper method to build item cards with responsive dimensions
-  Widget _buildItemCard(dynamic item, double width, double height, double screenWidth) {
+  Widget _buildItemCard(
+      dynamic item, double width, double height, double screenWidth) {
     return Container(
       width: width,
       margin: EdgeInsets.only(right: screenWidth * 0.03),
@@ -959,20 +958,33 @@ class _CategoryScreenState extends State<CategoryScreen> {
             borderRadius: const BorderRadius.vertical(
               top: Radius.circular(12),
             ),
-            child: Image.network(
-              item.images.isNotEmpty
-                  ? item.images[0]
-                  : 'https://via.placeholder.com/120x100',
-              height: height,
-              width: width,
-              fit: BoxFit.cover,
+            child: GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PosterMakerApp(
+                      poster: item,
+                      isCustom: false,
+                    ),
+                  ),
+                );
+              },
+              child: Image.network(
+                item.images.isNotEmpty
+                    ? item.images[0]
+                    : 'https://via.placeholder.com/120x100',
+                height: height,
+                width: width,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
         ],
       ),
     );
   }
-  
+
   // Helper method to capitalize first letter of a string
   String _capitalizeFirstLetter(String text) {
     if (text.isEmpty) return '';
