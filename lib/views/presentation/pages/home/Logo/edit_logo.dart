@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:company_project/views/presentation/pages/home/Logo/element_screen.dart';
 import 'package:company_project/views/presentation/pages/home/poster/edit_brand.dart';
 import 'package:flutter/material.dart';
@@ -206,7 +205,7 @@ class _EditLogoState extends State<EditLogo> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                       ),
-                      child: const Text('Delete Image'),
+                      child: const Text('Delete Image',style: TextStyle(color: Colors.white),),
                     ),
                     ElevatedButton(
                       onPressed: () {
@@ -215,7 +214,10 @@ class _EditLogoState extends State<EditLogo> {
                         });
                         Navigator.pop(context);
                       },
-                      child: const Text('Save Changes'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                      ),
+                      child: const Text('Save Changes',style: TextStyle(color: Colors.white),),
                     ),
                   ],
                 ),
@@ -956,7 +958,7 @@ class _EditLogoState extends State<EditLogo> {
               ),
               GestureDetector(
                 onTap: _pickImage,
-                child: const _BottomMenuItem(icon: Icons.add_a_photo, label: 'Add Logo'),
+                child: const _BottomMenuItem(icon: Icons.add_a_photo, label: 'Add Image'),
               ),
             ],
           ),

@@ -44,6 +44,18 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
     super.dispose();
   }
 
+  InputDecoration _buildInputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      prefixIcon: Icon(icon),
+      filled: true,
+      fillColor: Colors.grey.shade100,
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = Provider.of<CreateCustomerProvider>(context, listen: false);
@@ -51,72 +63,97 @@ class _EditCustomerScreenState extends State<EditCustomerScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Edit Customer'),
-        
-        // backgroundColor: Colors.blueAccent,
-        foregroundColor: Colors.black,
+        centerTitle: true,
+        backgroundColor: Colors.white,
+        elevation: 1,
+        foregroundColor: Colors.black87,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            TextField(
-              controller: nameController,
-              decoration: const InputDecoration(labelText: 'Name'),
+            Card(
+              elevation: 2,
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: nameController,
+                      decoration: _buildInputDecoration('Name', Icons.person),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: emailController,
+                      decoration: _buildInputDecoration('Email', Icons.email),
+                      keyboardType: TextInputType.emailAddress,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: mobileController,
+                      decoration: _buildInputDecoration('Mobile Number', Icons.phone),
+                      keyboardType: TextInputType.phone,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: addressController,
+                      decoration: _buildInputDecoration('Address', Icons.location_on),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: genderController,
+                      decoration: _buildInputDecoration('Gender', Icons.wc),
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: dobController,
+                      decoration: _buildInputDecoration('DOB (yyyyMMdd)', Icons.calendar_today),
+                      keyboardType: TextInputType.number,
+                    ),
+                    const SizedBox(height: 12),
+                    TextFormField(
+                      controller: anniversaryController,
+                      decoration: _buildInputDecoration('Anniversary Date (yyyyMMdd)', Icons.favorite),
+                      keyboardType: TextInputType.number,
+                    ),
+                  ],
+                ),
+              ),
             ),
-            TextField(
-              controller: emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
-            ),
-            TextField(
-              controller: mobileController,
-              decoration: const InputDecoration(labelText: 'Mobile Number'),
-              keyboardType: TextInputType.phone,
-            ),
-            TextField(
-              controller: addressController,
-              decoration: const InputDecoration(labelText: 'Address'),
-            ),
-            TextField(
-              controller: genderController,
-              decoration: const InputDecoration(labelText: 'Gender'),
-            ),
-            TextField(
-              controller: dobController,
-              decoration: const InputDecoration(labelText: 'DOB (yyyyMMdd)'),
-              keyboardType: TextInputType.number,
-            ),
-            TextField(
-              controller: anniversaryController,
-              decoration: const InputDecoration(labelText: 'Anniversary Date (yyyyMMdd)'),
-              keyboardType: TextInputType.number,
-            ),
-            const SizedBox(height: 20),
-            ElevatedButton.icon(
-              onPressed: () async {
-                await provider.updateCustomer(
-                  userId: 'current_user_id', // Replace with actual user ID if dynamic
-                  customerId: widget.customer['_id'] ?? '',
-                  name: nameController.text,
-                  email: emailController.text,
-                  mobile: mobileController.text,
-                  address: addressController.text,
-                  gender: genderController.text,
-                  dob: dobController.text,
-                  anniversaryDate: anniversaryController.text,
-                );
+            const SizedBox(height: 24),
+            Center(
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  await provider.updateCustomer(
+                    userId: 'current_user_id', // Replace with actual user ID if dynamic
+                    customerId: widget.customer['_id'] ?? '',
+                    name: nameController.text,
+                    email: emailController.text,
+                    mobile: mobileController.text,
+                    address: addressController.text,
+                    gender: genderController.text,
+                    dob: dobController.text,
+                    anniversaryDate: anniversaryController.text,
+                  );
 
-                await provider.saveCustomersToPrefs();
+                  await provider.saveCustomersToPrefs();
 
-                if (context.mounted) {
-                  Navigator.pop(context);
-                }
-              },
-              // icon: const Icon(Icons.save),
-              label: const Text('Save Changes',style: TextStyle(color: Colors.white),),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
-                textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                  if (context.mounted) {
+                    Navigator.pop(context);
+                  }
+                },
+                icon: const Icon(Icons.save),
+                label: const Text('Save Changes'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.blueAccent,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 14),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                  textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
+                  elevation: 4,
+                ),
               ),
             ),
           ],

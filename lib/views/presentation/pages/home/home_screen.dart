@@ -776,6 +776,8 @@ class _HomeScreenState extends State<HomeScreen> {
       storyProvider.fetchStories().then((_) {
         print(
             'Fetch stories completed - story count: ${storyProvider.stories.length}');
+
+             showSubscriptionModal(context);
       });
     });
 
@@ -1600,4 +1602,157 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
     );
   }
+
+
+
+
+
+void showSubscriptionModal(BuildContext context) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (_) => Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Subscriptions',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.deepPurple,
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: Icon(Icons.close, color: Colors.grey.shade700),
+                onPressed: () => Navigator.pop(context),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildSubscriptionCard(
+            planTitle: 'BRASS HOUSE (FREE PLAN)',
+            price: '₹Free',
+            priceColor: Colors.green,
+            cardColor: Colors.teal.shade50,
+            icon: Icons.verified_user,
+            features: [
+              'Create Posters - 30',
+              'Cash Book Entries - 300',
+              'Upload Limit - 10 (disappear in 24 hours)',
+              'Product Listing - (Display for 30 days)',
+              'Business Listing - 0 (convert to business)',
+              'Refer And Earn 300 Coins = 3 ₹',
+            ],
+          ),
+          const SizedBox(height: 20),
+          _buildSubscriptionCard(
+            planTitle: 'COPPER HOUSE',
+            price: '₹100',
+            priceColor: Colors.orange,
+            cardColor: Colors.orange.shade50,
+            icon: Icons.workspace_premium,
+            features: [
+              'Create Posters - 100',
+              'Cash Book Entries - 1000',
+              'Uploads Limit - 10 (disappear in 24 hours)',
+              'Product Listing - (Display for 30 days)',
+              'Business Listing - 0 (convert to business)',
+              'Refer And Earn 300 Coins = 3 ₹',
+            ],
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+Widget _buildSubscriptionCard({
+  required String planTitle,
+  required String price,
+  required Color priceColor,
+  required Color cardColor,
+  required IconData icon,
+  required List<String> features,
+}) {
+  return Container(
+    padding: EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: cardColor,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.grey.withOpacity(0.15),
+          blurRadius: 8,
+          offset: Offset(0, 4),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Icon(icon, color: priceColor),
+              radius: 20,
+            ),
+            SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                planTitle,
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        ...features.map(
+          (feature) => Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
+              children: [
+                Icon(Icons.check_circle_outline, size: 18, color: Colors.grey),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    feature,
+                    style: TextStyle(fontSize: 14),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(height: 12),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Container(
+            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+            decoration: BoxDecoration(
+              color: priceColor,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              price,
+              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+
 }
