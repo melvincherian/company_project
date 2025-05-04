@@ -193,8 +193,8 @@ class _EditBrandState extends State<EditBrand> {
                         controller: _addressController),
                     _buildTextField("Email", controller: _emailController),
                     _buildTextField("Website", controller: _websiteController),
-                    _buildTextField("Products & Services", controller: _productsServicesController),
-                    _buildTextField("Tagline", controller: _taglineController),
+                    // _buildTextField("Products & Services", controller: _productsServicesController),
+                    // _buildTextField("Tagline", controller: _taglineController),
                     const SizedBox(height: 20),
                     const Text(
                       "Select Social Media Icons to Highlight \non Post",

@@ -48,7 +48,7 @@ class _BrandInfoScreenState extends State<BrandInfoScreen> {
                     child: Icon(Icons.arrow_back_ios_new),
                   ),
                   SizedBox(width: 10),
-                  Icon(Icons.layers),
+                  // Icon(Icons.layers),
                   Spacer(),
                   ElevatedButton.icon(
                     onPressed: () {},

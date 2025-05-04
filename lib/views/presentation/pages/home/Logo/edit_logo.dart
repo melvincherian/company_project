@@ -1,8 +1,10 @@
+
 import 'dart:io';
+
 import 'package:company_project/views/presentation/pages/home/Logo/brand_info_screen.dart';
-import 'package:company_project/views/presentation/pages/home/Logo/edit_logo2.dart';
 import 'package:company_project/views/presentation/pages/home/Logo/element_screen.dart';
 import 'package:company_project/views/presentation/pages/home/Logo/shape_screen.dart';
+import 'package:company_project/views/presentation/pages/home/poster/edit_brand.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:math' as math;
@@ -18,7 +20,12 @@ class _EditLogoState extends State<EditLogo> {
   File? _backgroundImage;
   final List<_EditableText> _texts = [];
   final List<_EditableShape> _shapes = [];
-  final List<_EditableElement> _elements = []; // Add elements list
+  final List<_EditableElement> _elements = []; // New list for elements
+  
+  // Track selected items for deletion
+  _EditableText? _selectedText;
+  _EditableShape? _selectedShape;
+  _EditableElement? _selectedElement; // Add tracking for selected element
 
   // Picking image
   Future<void> _pickBackgroundImage() async {
@@ -32,7 +39,7 @@ class _EditLogoState extends State<EditLogo> {
   }
 
   // Adding a shape to the editor
-  void _addShapes(ShapeType shapeType) {
+  void _addShape(ShapeType shapeType) {
     setState(() {
       _shapes.add(_EditableShape(
         shapeType: shapeType,
@@ -44,95 +51,84 @@ class _EditLogoState extends State<EditLogo> {
   }
 
   // Adding an element to the editor
-  void _addElement(IconData icon, String name) {
+  void _addElement(Map<String, dynamic> elementData) {
     setState(() {
       _elements.add(_EditableElement(
-        icon: icon,
-        name: name,
+        icon: elementData['icon'],
+        name: elementData['name'],
         color: Colors.indigo,
-        size: 60.0,
+        size: const Size(60, 60),
         offset: const Offset(100, 100),
       ));
     });
   }
-
-  // Method to handle element editing
-  void _showEditElementPopup(_EditableElement editableElement) {
-    Color selectedColor = editableElement.color;
-    double selectedSize = editableElement.size;
-
-    showModalBottomSheet(
-      context: context,
-      builder: (_) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text('Edit ${editableElement.name}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 16),
-                  
-                  // Color selection
-                  const Text('Color:'),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceAround,
-                    children: [
-                      _colorPicker(Colors.indigo, (color) {
-                        setModalState(() => selectedColor = color);
-                      }),
-                      _colorPicker(Colors.red, (color) {
-                        setModalState(() => selectedColor = color);
-                      }),
-                      _colorPicker(Colors.green, (color) {
-                        setModalState(() => selectedColor = color);
-                      }),
-                      _colorPicker(Colors.orange, (color) {
-                        setModalState(() => selectedColor = color);
-                      }),
-                      _colorPicker(Colors.purple, (color) {
-                        setModalState(() => selectedColor = color);
-                      }),
-                    ],
-                  ),
-                  
-                  // Size slider
-                  const SizedBox(height: 16),
-                  const Text('Size:'),
-                  Slider(
-                    value: selectedSize,
-                    min: 20,
-                    max: 120,
-                    divisions: 10,
-                    label: selectedSize.round().toString(),
-                    onChanged: (value) {
-                      setModalState(() {
-                        selectedSize = value;
-                      });
-                    },
-                  ),
-                  
-                  // Save button
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        editableElement.color = selectedColor;
-                        editableElement.size = selectedSize;
-                      });
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Save Changes'),
-                  ),
-                ],
-              ),
-            );
-          }
-        );
-      },
-    );
+  
+  // Delete selected item
+  void _deleteSelectedItem() {
+    setState(() {
+      if (_selectedText != null) {
+        _texts.remove(_selectedText);
+        _selectedText = null;
+      }
+      
+      if (_selectedShape != null) {
+        _shapes.remove(_selectedShape);
+        _selectedShape = null;
+      }
+      
+      if (_selectedElement != null) {
+        _elements.remove(_selectedElement);
+        _selectedElement = null;
+      }
+    });
+  }
+  
+  // Select or deselect text
+  void _selectText(_EditableText text) {
+    setState(() {
+      if (_selectedText == text) {
+        _selectedText = null; // Deselect if tapping the same text
+      } else {
+        _selectedText = text;
+        _selectedShape = null; // Deselect any selected shape
+        _selectedElement = null; // Deselect any selected element
+      }
+    });
+  }
+  
+  // Select or deselect shape
+  void _selectShape(_EditableShape shape) {
+    setState(() {
+      if (_selectedShape == shape) {
+        _selectedShape = null; // Deselect if tapping the same shape
+      } else {
+        _selectedShape = shape;
+        _selectedText = null; // Deselect any selected text
+        _selectedElement = null; // Deselect any selected element
+      }
+    });
+  }
+  
+  // Select or deselect element
+  void _selectElement(_EditableElement element) {
+    setState(() {
+      if (_selectedElement == element) {
+        _selectedElement = null; // Deselect if tapping the same element
+      } else {
+        _selectedElement = element;
+        _selectedText = null; // Deselect any selected text
+        _selectedShape = null; // Deselect any selected shape
+      }
+    });
+  }
+  
+  // Deselect all items
+  void _deselectAll() {
+    setState(() {
+      _selectedText = null;
+      _selectedShape = null;
+      _selectedElement = null;
+    });
   }
 
   // Method to handle shape editing
@@ -193,17 +189,35 @@ class _EditLogoState extends State<EditLogo> {
                     },
                   ),
                   
-                  // Save button
+                  // Save and Delete buttons row
                   const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () {
-                      setState(() {
-                        editableShape.color = selectedColor;
-                        editableShape.size = Size(selectedSize, selectedSize);
-                      });
-                      Navigator.pop(context);
-                    },
-                    child: const Text('Save Changes'),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _shapes.remove(editableShape);
+                            _selectedShape = null;
+                          });
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        child: const Text('Delete Shape'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            editableShape.color = selectedColor;
+                            editableShape.size = Size(selectedSize, selectedSize);
+                          });
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Save Changes'),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -214,7 +228,103 @@ class _EditLogoState extends State<EditLogo> {
     );
   }
 
-  // Text methods remain the same...
+  // Method to handle element editing
+  void _showEditElementPopup(_EditableElement editableElement) {
+    Color selectedColor = editableElement.color;
+    double selectedSize = editableElement.size.width;
+
+    showModalBottomSheet(
+      context: context,
+      builder: (_) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text('Edit ${editableElement.name}', style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 16),
+                  
+                  // Color selection
+                  const Text('Color:'),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      _colorPicker(Colors.blue, (color) {
+                        setModalState(() => selectedColor = color);
+                      }),
+                      _colorPicker(Colors.red, (color) {
+                        setModalState(() => selectedColor = color);
+                      }),
+                      _colorPicker(Colors.green, (color) {
+                        setModalState(() => selectedColor = color);
+                      }),
+                      _colorPicker(Colors.indigo, (color) {
+                        setModalState(() => selectedColor = color);
+                      }),
+                      _colorPicker(Colors.purple, (color) {
+                        setModalState(() => selectedColor = color);
+                      }),
+                    ],
+                  ),
+                  
+                  // Size slider
+                  const SizedBox(height: 16),
+                  const Text('Size:'),
+                  Slider(
+                    value: selectedSize,
+                    min: 20,
+                    max: 200,
+                    divisions: 18,
+                    label: selectedSize.round().toString(),
+                    onChanged: (value) {
+                      setModalState(() {
+                        selectedSize = value;
+                      });
+                    },
+                  ),
+                  
+                  // Save and Delete buttons row
+                  const SizedBox(height: 16),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                    children: [
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _elements.remove(editableElement);
+                            _selectedElement = null;
+                          });
+                          Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.red,
+                        ),
+                        child: const Text('Delete Element'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            editableElement.color = selectedColor;
+                            editableElement.size = Size(selectedSize, selectedSize);
+                          });
+                          Navigator.pop(context);
+                        },
+                        child: const Text('Save Changes'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          }
+        );
+      },
+    );
+  }
+
   void _showAddTextPopup() {
     final TextEditingController _textController = TextEditingController();
     Color selectedColor = Colors.white;
@@ -273,7 +383,6 @@ class _EditLogoState extends State<EditLogo> {
   }
 
   void _showEditTextPopup(_EditableText editableText) {
-    // Existing implementation...
     final TextEditingController _textController = TextEditingController(text: editableText.text);
     Color selectedColor = editableText.color;
 
@@ -311,17 +420,35 @@ class _EditLogoState extends State<EditLogo> {
                 ],
               ),
               const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: () {
-                  if (_textController.text.isNotEmpty) {
-                    setState(() {
-                      editableText.text = _textController.text;
-                      editableText.color = selectedColor;
-                    });
-                    Navigator.pop(context);
-                  }
-                },
-                child: const Text('Save Changes'),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      setState(() {
+                        _texts.remove(editableText);
+                        _selectedText = null;
+                      });
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                    ),
+                    child: const Text('Delete Text'),
+                  ),
+                  ElevatedButton(
+                    onPressed: () {
+                      if (_textController.text.isNotEmpty) {
+                        setState(() {
+                          editableText.text = _textController.text;
+                          editableText.color = selectedColor;
+                        });
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: const Text('Save Changes'),
+                  ),
+                ],
               ),
             ],
           ),
@@ -362,12 +489,15 @@ class _EditLogoState extends State<EditLogo> {
                     },
                     icon: const Icon(Icons.arrow_back_ios),
                   ),
-                  // const Icon(Icons.layers),
+                  // Delete button - only visible when something is selected
+                  if (_selectedText != null || _selectedShape != null || _selectedElement != null)
+                    IconButton(
+                      onPressed: _deleteSelectedItem,
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                    ),
                   const Spacer(),
                   ElevatedButton(
-                    onPressed: () {
-                      // Save logic here
-                    },
+                    onPressed: () {},
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color.fromARGB(255, 84, 61, 231),
                       padding:
@@ -389,7 +519,12 @@ class _EditLogoState extends State<EditLogo> {
               // Center Image + Movable Text + Movable Shapes + Movable Elements
               Expanded(
                 child: GestureDetector(
-                  onTap: _pickBackgroundImage,
+                  onTap: () {
+                    _deselectAll(); // Deselect when tapping background
+                    if (_backgroundImage == null) {
+                      _pickBackgroundImage();
+                    }
+                  },
                   child: Stack(
                     children: [
                       Center(
@@ -402,11 +537,15 @@ class _EditLogoState extends State<EditLogo> {
                       
                       // Render shapes
                       ..._shapes.map((editableShape) {
+                        final isSelected = editableShape == _selectedShape;
                         return Positioned(
                           left: editableShape.offset.dx,
                           top: editableShape.offset.dy,
                           child: GestureDetector(
                             onTap: () {
+                              _selectShape(editableShape);
+                            },
+                            onDoubleTap: () {
                               _showEditShapePopup(editableShape);
                             },
                             child: Draggable(
@@ -425,19 +564,44 @@ class _EditLogoState extends State<EditLogo> {
                                   );
                                 });
                               },
-                              child: _buildShapeWidget(editableShape),
+                              child: Stack(
+                                children: [
+                                  _buildShapeWidget(editableShape),
+                                  if (isSelected)
+                                    Positioned(
+                                      right: -10,
+                                      top: -10,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.highlight,
+                                          color: Colors.blue,
+                                          size: 16,
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
                             ),
                           ),
                         );
                       }).toList(),
-
+                      
                       // Render elements
                       ..._elements.map((editableElement) {
+                        final isSelected = editableElement == _selectedElement;
                         return Positioned(
                           left: editableElement.offset.dx,
                           top: editableElement.offset.dy,
                           child: GestureDetector(
                             onTap: () {
+                              _selectElement(editableElement);
+                            },
+                            onDoubleTap: () {
                               _showEditElementPopup(editableElement);
                             },
                             child: Draggable(
@@ -445,8 +609,8 @@ class _EditLogoState extends State<EditLogo> {
                                 color: Colors.transparent,
                                 child: Icon(
                                   editableElement.icon,
-                                  size: editableElement.size,
                                   color: editableElement.color,
+                                  size: editableElement.size.width,
                                 ),
                               ),
                               childWhenDragging: Container(),
@@ -460,23 +624,48 @@ class _EditLogoState extends State<EditLogo> {
                                   );
                                 });
                               },
-                              child: Icon(
-                                editableElement.icon,
-                                size: editableElement.size,
-                                color: editableElement.color,
+                              child: Stack(
+                                children: [
+                                  Icon(
+                                    editableElement.icon,
+                                    color: editableElement.color,
+                                    size: editableElement.size.width,
+                                  ),
+                                  if (isSelected)
+                                    Positioned(
+                                      right: -10,
+                                      top: -10,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.highlight,
+                                          color: Colors.blue,
+                                          size: 16,
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                           ),
                         );
                       }).toList(),
                       
-                      // Render texts (existing)
+                      // Render texts
                       ..._texts.map((editableText) {
+                        final isSelected = editableText == _selectedText;
                         return Positioned(
                           left: editableText.offset.dx,
                           top: editableText.offset.dy,
                           child: GestureDetector(
                             onTap: () {
+                              _selectText(editableText);
+                            },
+                            onDoubleTap: () {
                               _showEditTextPopup(editableText);
                             },
                             child: Draggable(
@@ -502,13 +691,34 @@ class _EditLogoState extends State<EditLogo> {
                                   );
                                 });
                               },
-                              child: Text(
-                                editableText.text,
-                                style: TextStyle(
-                                  color: editableText.color,
-                                  fontSize: 24,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              child: Stack(
+                                children: [
+                                  Text(
+                                    editableText.text,
+                                    style: TextStyle(
+                                      color: editableText.color,
+                                      fontSize: 24,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  if (isSelected)
+                                    Positioned(
+                                      right: -10,
+                                      top: -10,
+                                      child: Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: const BoxDecoration(
+                                          color: Colors.white,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(
+                                          Icons.highlight,
+                                          color: Colors.blue,
+                                          size: 16,
+                                        ),
+                                      ),
+                                    ),
+                                ],
                               ),
                             ),
                           ),
@@ -536,7 +746,7 @@ class _EditLogoState extends State<EditLogo> {
             ),
             GestureDetector(
               onTap: () {
-                Navigator.push(context, MaterialPageRoute(builder: (context)=>BrandInfoScreen()));
+                Navigator.push(context, MaterialPageRoute(builder: (context)=>EditBrand()));
               },
               child: const _BottomMenuItem(icon: Icons.info, label: 'Brand Info')),
             GestureDetector(
@@ -547,8 +757,7 @@ class _EditLogoState extends State<EditLogo> {
                   MaterialPageRoute(
                     builder: (context) => ShapeSelectionScreen(
                       onShapeSelected: (shapeType) {
-                        
-                        // _addShapes(shapeType);
+                        _addShape(shapeType);
                       },
                     ),
                   ),
@@ -557,19 +766,16 @@ class _EditLogoState extends State<EditLogo> {
               child: const _BottomMenuItem(icon: Icons.category, label: 'Shapes')),
             GestureDetector(
               onTap: () {
-                // Navigate to ElementScreen and handle the returned element
+                // Navigate to ElementScreen and await result
                 Navigator.push(
-                  context,
+                  context, 
                   MaterialPageRoute(
-                    builder: (context) => const ElementScreen()
+                    builder: (context) => const ElementScreen(),
                   ),
                 ).then((selectedElement) {
+                  // Check if an element was selected and returned
                   if (selectedElement != null) {
-                    // Add selected element to the canvas
-                    _addElement(
-                      selectedElement['icon'],
-                      selectedElement['name']
-                    );
+                    _addElement(selectedElement);
                   }
                 });
               },
@@ -678,15 +884,15 @@ class _EditableShape {
 
 // Helper class for storing editable elements (new)
 class _EditableElement {
-  IconData icon;
   String name;
+  IconData icon;
   Color color;
-  double size;
+  Size size;
   Offset offset;
 
   _EditableElement({
-    required this.icon,
     required this.name,
+    required this.icon,
     required this.color,
     required this.size,
     required this.offset
@@ -701,7 +907,6 @@ enum ShapeType {
   triangle,
   star,
 }
-
 // Modified CustomPainters to accept color parameter
 class _TrianglePainter extends CustomPainter {
   final Color color;
@@ -751,4 +956,69 @@ class _StarPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(CustomPainter oldDelegate) => false;
+}
+
+// New modified shape selection screen
+class ShapeSelectionScreen extends StatelessWidget {
+  final Function(ShapeType) onShapeSelected;
+  
+  const ShapeSelectionScreen({super.key, required this.onShapeSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    final shapes = [
+      ShapeItem('Circle', const CircleShape(), ShapeType.circle),
+      ShapeItem('Square', const SquareShape(), ShapeType.square),
+      ShapeItem('Rectangle', const RectangleShape(), ShapeType.rectangle),
+      ShapeItem('Triangle', const TriangleShape(), ShapeType.triangle),
+      ShapeItem('Star', const StarShape(), ShapeType.star),
+    ];
+
+    return Scaffold(
+      appBar: AppBar(title: const Text('Select a Shape')),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: GridView.builder(
+          itemCount: shapes.length,
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+          ),
+          itemBuilder: (context, index) {
+            final shape = shapes[index];
+            return GestureDetector(
+              onTap: () {
+                // Pass the selected shape back to the editor
+                onShapeSelected(shape.shapeType);
+                Navigator.pop(context);
+              },
+              child: Container(
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.grey),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Expanded(child: shape.widget),
+                    const SizedBox(height: 4),
+                    Text(shape.name),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class ShapeItem {
+  final String name;
+  final Widget widget;
+  final ShapeType shapeType;
+
+  ShapeItem(this.name, this.widget, this.shapeType);
 }
