@@ -731,6 +731,7 @@
 
 import 'dart:convert';
 
+import 'package:company_project/helper/storage_helper.dart';
 import 'package:company_project/models/poster_model.dart';
 import 'package:company_project/providers/date_time_provider.dart';
 import 'package:company_project/providers/poster_provider.dart';
@@ -740,6 +741,7 @@ import 'package:company_project/views/presentation/pages/home/poster/create_post
 import 'package:company_project/views/presentation/pages/home/poster/poster_maker_screen.dart';
 import 'package:company_project/views/presentation/widgets/add_story.dart';
 import 'package:company_project/views/presentation/widgets/date_selector_screen.dart';
+import 'package:company_project/views/presentation/widgets/stories_widget.dart';
 import 'package:company_project/views/presentation/widgets/story_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -754,13 +756,15 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final String currentUserId = '680634a4bb1d44fb0c93aae2';
+  String currentUserId = '680634a4bb1d44fb0c93aae2';
+
   bool _isLoading = false;
   Map<String, List<Map<String, dynamic>>> _categorizedPosters = {};
 
   @override
   void initState() {
     super.initState();
+    _loadUserId();
     print('HomeScreen init - about to fetch posters and stories');
     Future.microtask(() {
       print('Inside microtask - calling providers');
@@ -785,6 +789,17 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchFestivalPosters(context.read<DateTimeProvider>().selectedDate);
     });
+  }
+
+
+    Future<void> _loadUserId() async {
+    final userData = await AuthPreferences.getUserData();
+    if (userData != null) {
+      setState(() {
+        currentUserId = userData.user.id; // Adjust this based on your LoginResponse structure
+      });
+      print('User ID: $currentUserId');
+    }
   }
 
   // Format date for API request
@@ -1199,7 +1214,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: CircleAvatar(
                                       radius: 30,
                                       backgroundImage: NetworkImage(
-                                        'https://posterbnaobackend.onrender.com/${userStory.image}',
+                                        'https://posterbnaobackend.onrender.com/${userStory.images[0]}',
                                       ),
                                       onBackgroundImageError:
                                           (exception, stackTrace) {
@@ -1254,7 +1269,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: CircleAvatar(
                                       radius: 30,
                                       backgroundImage: NetworkImage(
-                                        'https://posterbnaobackend.onrender.com/${story.image}',
+                                        'https://posterbnaobackend.onrender.com/${story.images[0]}',
                                       ),
                                       onBackgroundImageError:
                                           (exception, stackTrace) {
@@ -1264,8 +1279,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 4),
-                                  const Text(
-                                    'Story',
+                                   Text(
+                                    story.caption,
                                     style: TextStyle(color: Colors.black),
                                   )
                                 ],
@@ -1279,6 +1294,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                   ),
                 ),
+
+
+                // StoriesWidget(currentUserId: currentUserId),
+
+
                 const SizedBox(height: 15),
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -1603,72 +1623,229 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-
-
-
-
 void showSubscriptionModal(BuildContext context) {
+  // Track the selected plan
+  String? selectedPlan;
+  bool showPaymentOptions = false;
+
   showModalBottomSheet(
     context: context,
     isScrollControlled: true,
-    backgroundColor: Colors.white,
-    shape: RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-    ),
-    builder: (_) => Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Row(
+    backgroundColor: Colors.transparent, // Make the background transparent to apply our own padding
+    builder: (_) => StatefulBuilder(
+      builder: (context, setState) {
+        return Container(
+          // Add padding around the entire modal
+          margin: const EdgeInsets.all(2),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          // Make it take up to 90% of the screen height
+          constraints: BoxConstraints(
+            maxHeight: MediaQuery.of(context).size.height * 0.9,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Expanded(
-                child: Text(
-                  'Subscriptions',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.deepPurple,
+              // Header with padding
+              Padding(
+                padding: const EdgeInsets.only(left: 16, right: 16, top: 8, bottom: 8),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Subscriptions Plans',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepPurple,
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.close, color: Colors.grey.shade700),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+              ),
+              
+              // Subscription plans (scrollable if needed)
+              Flexible(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 12),
+                      _buildSubscriptionCard(
+                        context: context,
+                        planTitle: 'BRASS HOUSE (FREE PLAN)',
+                        price: '₹Free',
+                        priceColor: Colors.green,
+                        cardColor: Colors.teal.shade50,
+                        icon: Icons.verified_user,
+                        features: [
+                          'Create Posters - 30',
+                          'Cash Book Entries - 300',
+                          'Upload Limit - 10 (disappear in 24 hours)',
+                          'Product Listing - (Display for 30 days)',
+                          'Business Listing - 0 (convert to business)',
+                          'Refer And Earn 300 Coins = 3 ₹',
+                        ],
+                        isSelected: selectedPlan == 'BRASS HOUSE',
+                        onTap: () {
+                          setState(() {
+                            selectedPlan = 'BRASS HOUSE';
+                            showPaymentOptions = true;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                      _buildSubscriptionCard(
+                        context: context,
+                        planTitle: 'COPPER HOUSE',
+                        price: '₹100',
+                        priceColor: Colors.orange,
+                        cardColor: Colors.orange.shade50,
+                        icon: Icons.workspace_premium,
+                        features: [
+                          'Create Posters - 100',
+                          'Cash Book Entries - 1000',
+                          'Uploads Limit - 10 (disappear in 24 hours)',
+                          'Product Listing - (Display for 30 days)',
+                          'Business Listing - 0 (convert to business)',
+                          'Refer And Earn 300 Coins = 3 ₹',
+                        ],
+                        isSelected: selectedPlan == 'COPPER HOUSE',
+                        onTap: () {
+                          setState(() {
+                            selectedPlan = 'COPPER HOUSE';
+                            showPaymentOptions = true;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+                    ],
                   ),
                 ),
               ),
-              IconButton(
-                icon: Icon(Icons.close, color: Colors.grey.shade700),
-                onPressed: () => Navigator.pop(context),
+              
+              // Payment options container - shows when a plan is selected
+              if (showPaymentOptions)
+                _buildPaymentOptionsContainer(
+                  context: context,
+                  selectedPlan: selectedPlan ?? '',
+                  price: selectedPlan == 'COPPER HOUSE' ? '₹100' : '₹Free',
+                  onClose: () {
+                    setState(() {
+                      showPaymentOptions = false;
+                      selectedPlan = null;
+                    });
+                  },
+                ),
+            ],
+          ),
+        );
+      },
+    ),
+  );
+}
+
+Widget _buildSubscriptionCard({
+  required BuildContext context,
+  required String planTitle,
+  required String price,
+  required Color priceColor,
+  required Color cardColor,
+  required IconData icon,
+  required List<String> features,
+  required bool isSelected,
+  required VoidCallback onTap,
+}) {
+  return GestureDetector(
+    onTap: onTap,
+    child: Container(
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isSelected ? Colors.deepPurple : Colors.transparent,
+          width: 2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 4,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: isSelected ? Colors.deepPurple : Colors.grey.shade700),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  planTitle,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
+                ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          _buildSubscriptionCard(
-            planTitle: 'BRASS HOUSE (FREE PLAN)',
-            price: '₹Free',
-            priceColor: Colors.green,
-            cardColor: Colors.teal.shade50,
-            icon: Icons.verified_user,
-            features: [
-              'Create Posters - 30',
-              'Cash Book Entries - 300',
-              'Upload Limit - 10 (disappear in 24 hours)',
-              'Product Listing - (Display for 30 days)',
-              'Business Listing - 0 (convert to business)',
-              'Refer And Earn 300 Coins = 3 ₹',
-            ],
-          ),
-          const SizedBox(height: 20),
-          _buildSubscriptionCard(
-            planTitle: 'COPPER HOUSE',
-            price: '₹100',
-            priceColor: Colors.orange,
-            cardColor: Colors.orange.shade50,
-            icon: Icons.workspace_premium,
-            features: [
-              'Create Posters - 100',
-              'Cash Book Entries - 1000',
-              'Uploads Limit - 10 (disappear in 24 hours)',
-              'Product Listing - (Display for 30 days)',
-              'Business Listing - 0 (convert to business)',
-              'Refer And Earn 300 Coins = 3 ₹',
-            ],
+          const SizedBox(height: 16),
+          ...features.map((feature) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  children: [
+                    Icon(Icons.check_circle, size: 16, color: Colors.green),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        feature,
+                        style: TextStyle(fontSize: 14),
+                      ),
+                    ),
+                  ],
+                ),
+              )),
+          // Add padding at the bottom
+          const SizedBox(height: 8),
+          // Price container at the bottom right
+          Align(
+            alignment: Alignment.bottomRight,
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.15),
+                    spreadRadius: 1,
+                    blurRadius: 2,
+                    offset: Offset(0, 1),
+                  ),
+                ],
+              ),
+              child: Text(
+                price,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: priceColor,
+                ),
+              ),
+            ),
           ),
         ],
       ),
@@ -1676,76 +1853,121 @@ void showSubscriptionModal(BuildContext context) {
   );
 }
 
-Widget _buildSubscriptionCard({
-  required String planTitle,
+Widget _buildPaymentOptionsContainer({
+  required BuildContext context,
+  required String selectedPlan,
   required String price,
-  required Color priceColor,
-  required Color cardColor,
-  required IconData icon,
-  required List<String> features,
+  required VoidCallback onClose,
 }) {
+  // List of available payment methods
+  final paymentMethods = [
+    {'name': 'Wallet Balance', 'icon': Icons.account_balance_wallet},
+    {'name': 'UPI', 'icon': Icons.payment},
+    {'name': 'Credit/Debit Card', 'icon': Icons.credit_card},
+  ];
+
   return Container(
-    padding: EdgeInsets.all(16),
+    width: double.infinity,
+    padding: const EdgeInsets.all(16),
     decoration: BoxDecoration(
-      color: cardColor,
-      borderRadius: BorderRadius.circular(16),
+      color: Colors.grey.shade100,
+      borderRadius: BorderRadius.only(
+        bottomLeft: Radius.circular(24),
+        bottomRight: Radius.circular(24),
+      ),
       boxShadow: [
         BoxShadow(
-          color: Colors.grey.withOpacity(0.15),
-          blurRadius: 8,
-          offset: Offset(0, 4),
+          color: Colors.grey.withOpacity(0.3),
+          spreadRadius: 1,
+          blurRadius: 3,
+          offset: Offset(0, -2),
         ),
       ],
     ),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
         Row(
           children: [
-            CircleAvatar(
-              backgroundColor: Colors.white,
-              child: Icon(icon, color: priceColor),
-              radius: 20,
-            ),
-            SizedBox(width: 12),
             Expanded(
               child: Text(
-                planTitle,
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                'Payment Options',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.deepPurple,
+                ),
               ),
+            ),
+            IconButton(
+              icon: Icon(Icons.close, size: 20, color: Colors.grey.shade700),
+              padding: EdgeInsets.zero,
+              constraints: BoxConstraints(),
+              onPressed: onClose,
             ),
           ],
         ),
-        const SizedBox(height: 12),
-        ...features.map(
-          (feature) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            child: Row(
-              children: [
-                Icon(Icons.check_circle_outline, size: 18, color: Colors.grey),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    feature,
-                    style: TextStyle(fontSize: 14),
-                  ),
-                ),
-              ],
-            ),
+        const SizedBox(height: 8),
+        Text(
+          'Selected Plan: $selectedPlan - $price',
+          style: TextStyle(
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Choose a payment method:',
+          style: TextStyle(
+            fontSize: 14,
+            color: Colors.grey.shade700,
           ),
         ),
         const SizedBox(height: 12),
-        Align(
-          alignment: Alignment.centerRight,
-          child: Container(
-            padding: EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-            decoration: BoxDecoration(
-              color: priceColor,
-              borderRadius: BorderRadius.circular(8),
+        
+        // Payment method options
+        ...paymentMethods.map((method) => _buildPaymentMethodTile(
+              icon: method['icon'] as IconData,
+              name: method['name'] as String,
+              onTap: () {
+                // Handle payment method selection
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text('Selected ${method['name']} for payment'),
+                    duration: Duration(seconds: 2),
+                  ),
+                );
+              },
+            )),
+        
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            onPressed: () {
+              // Process payment
+              Navigator.pop(context); // Close the modal
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text('Processing payment for $selectedPlan'),
+                  backgroundColor: Colors.green,
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.deepPurple,
+              foregroundColor: Colors.white,
+              padding: EdgeInsets.symmetric(vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
             ),
             child: Text(
-              price,
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+              price == '₹Free' ? 'ACTIVATE PLAN' : 'PAY NOW',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ),
@@ -1754,5 +1976,37 @@ Widget _buildSubscriptionCard({
   );
 }
 
-
+Widget _buildPaymentMethodTile({
+  required IconData icon,
+  required String name,
+  required VoidCallback onTap,
+}) {
+  return InkWell(
+    onTap: onTap,
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.deepPurple),
+          const SizedBox(width: 12),
+          Text(
+            name,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          Spacer(),
+          Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+        ],
+      ),
+    ),
+  );
+}
 }

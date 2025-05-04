@@ -6,71 +6,126 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path/path.dart';
-
+import 'package:shared_preferences/shared_preferences.dart';
 
 class StoryProvider extends ChangeNotifier {
   final List<Story> _stories = [];
   bool _isLoading = false;
   String? _error;
+  String? _currentUserId;
 
   List<Story> get stories => _stories;
   bool get isLoading => _isLoading;
   String? get error => _error;
 
-  // Fetch all stories
-Future<void> fetchStories() async {
-  _isLoading = true;
-  _error = null;
-  notifyListeners();
-
-  try {
-    print('Starting to fetch stories...');
-    final response = await http.get(
-      Uri.parse('https://posterbnaobackend.onrender.com/api/users/getAllStories'),
-    );
-
-    print('Response status code: ${response.statusCode}');
-    print('Response body: ${response.body}');
-
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      print('Decoded data: $data');
-      print('Stories from API: ${data['stories']}');
-      
-      if (data['stories'] != null && data['stories'] is List) {
-        _stories.clear();
-        print('Cleared existing stories. Adding new ones...');
-        
-        for (var storyJson in data['stories']) {
-          print('Processing story: $storyJson');
-          try {
-            final story = Story.fromJson(storyJson);
-            _stories.add(story);
-            print('Added story: ${story.id}');
-          } catch (e) {
-            print('Error parsing story: $e');
-          }
-        }
-        
-        print('Total stories addedddddddddddddddddddddddddddddddddddddddd: ${_stories.length}');
-      } else {
-        print('Stories data is null or not a list: ${data['stories']}');
-        _error = 'Invalid stories data format';
-      }
-    } else {
-      _error = 'Failed to load stories. Status code: ${response.statusCode}';
-      print('Error: $_error');
-    }
-  } catch (e) {
-    _error = 'Error fetching stories: $e';
-    print('Exception caught: $_error');
-  } finally {
-    _isLoading = false;
-    print('Stories fetch completed. Stories count: ${_stories.length}');
-    print('Stories content: $_stories');
+  // Set current user ID
+  void setCurrentUserId(String userId) {
+    _currentUserId = userId;
     notifyListeners();
   }
-}
+
+  // Check if current user has a story
+  bool hasActiveStory() {
+    if (_currentUserId == null) return false;
+    
+    // Get stories grouped by user
+    final userStoriesList = getUserStoriesList();
+    
+    // Check if current user exists in the grouped stories
+    return userStoriesList.any((userStories) => 
+      userStories.userId == _currentUserId && 
+      userStories.stories.any((story) => DateTime.now().isBefore(story.expiredAt))
+    );
+  }
+
+  // Group stories by user
+  List<UserStories> getUserStoriesList() {
+    final Map<String, List<Story>> grouped = {};
+    
+    // Only include stories that are not expired
+    final activeStories = _stories.where(
+      (story) => DateTime.now().isBefore(story.expiredAt)
+    ).toList();
+
+    for (var story in activeStories) {
+      if (!grouped.containsKey(story.userId)) {
+        grouped[story.userId] = [];
+      }
+      grouped[story.userId]!.add(story);
+    }
+
+    return grouped.entries
+        .map((entry) => UserStories(userId: entry.key, stories: entry.value))
+        .toList();
+  }
+
+  // Get current user's stories
+  UserStories? getCurrentUserStories() {
+    if (_currentUserId == null) return null;
+    
+    final userStoriesList = getUserStoriesList();
+    
+    try {
+      return userStoriesList.firstWhere(
+        (userStories) => userStories.userId == _currentUserId
+      );
+    } catch (e) {
+      return null; // No active stories found for current user
+    }
+  }
+
+  // Get only other users' stories (excluding current user's)
+  List<UserStories> getOtherUsersStories() {
+    if (_currentUserId == null) return getUserStoriesList();
+    
+    final userStoriesList = getUserStoriesList();
+    
+    return userStoriesList.where(
+      (userStories) => userStories.userId != _currentUserId
+    ).toList();
+  }
+
+  // Fetch all stories
+  Future<void> fetchStories() async {
+    _isLoading = true;
+    _error = null;
+    notifyListeners();
+
+    try {
+      final response = await http.get(
+        Uri.parse('https://posterbnaobackend.onrender.com/api/users/getAllStories'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        
+        if (data['stories'] != null && data['stories'] is List) {
+          _stories.clear();
+          
+          for (var storyJson in data['stories']) {
+            try {
+              final story = Story.fromJson(storyJson);
+              // Only add stories that haven't expired
+              if (DateTime.now().isBefore(story.expiredAt)) {
+                _stories.add(story);
+              }
+            } catch (e) {
+              print('Error parsing story: $e');
+            }
+          }
+        } else {
+          _error = 'Invalid stories data format';
+        }
+      } else {
+        _error = 'Failed to load stories. Status code: ${response.statusCode}';
+      }
+    } catch (e) {
+      _error = 'Error fetching stories: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
 
   // Post a new story
   Future<bool> postStory(File imageFile, String caption, String userId) async {
@@ -125,12 +180,20 @@ Future<void> fetchStories() async {
 
   // Pick image from gallery or camera
   Future<File?> pickImage(ImageSource source) async {
-    // final picker = ImagePickerPlugin();
-    // final pickedFile = await picker.pickImage(source: source);
+    final picker = ImagePicker();
+    final pickedFile = await picker.pickImage(source: source);
     
-    // if (pickedFile != null) {
-    //   return File(pickedFile.path);
-    // }
+    if (pickedFile != null) {
+      return File(pickedFile.path);
+    }
     return null;
   }
+}
+
+// Helper class to group stories by user
+class UserStories {
+  final String userId;
+  final List<Story> stories;
+
+  UserStories({required this.userId, required this.stories});
 }
