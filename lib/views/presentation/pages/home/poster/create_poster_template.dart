@@ -1,3191 +1,3286 @@
-import 'dart:io';
+import 'dart:math';
 
-import 'package:company_project/helper/storage_helper.dart';
 import 'package:company_project/models/category_modell.dart';
-import 'package:company_project/models/editor_item.dart';
-import 'package:company_project/models/poster_model.dart';
 import 'package:company_project/models/poster_size_model.dart';
-import 'package:company_project/models/poster_template_model.dart';
-import 'package:company_project/views/presentation/pages/home/Logo/brand_info_screen.dart';
-import 'package:company_project/views/presentation/pages/home/poster/add_element_screen.dart';
-import 'package:company_project/views/presentation/pages/home/poster/add_image.dart';
-import 'package:company_project/views/presentation/pages/home/poster/add_shape.dart';
-import 'package:company_project/views/presentation/pages/home/poster/animation_screen.dart';
-import 'package:company_project/views/presentation/pages/home/poster/audio_screen.dart';
-import 'package:company_project/views/presentation/pages/home/poster/brand_info_poster.dart';
-import 'package:company_project/views/presentation/pages/home/poster/brand_screen.dart';
-import 'package:company_project/views/presentation/pages/home/poster/effect_screen.dart';
-import 'package:company_project/views/presentation/widgets/bottom_navbar.dart';
-import 'package:company_project/views/presentation/widgets/poster_brandinfo_widget.dart';
-import 'package:company_project/views/presentation/widgets/sticker_widget.dart';
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
-import 'package:flutter/material.dart';
-import 'package:screenshot/screenshot.dart';
-import 'package:permission_handler/permission_handler.dart';
-import 'dart:typed_data';
-import 'package:path_provider/path_provider.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:flutter/rendering.dart';
+import 'dart:ui' as ui;
+import 'dart:io';
+import 'package:flutter/services.dart';
+import 'dart:typed_data';
+import 'package:permission_handler/permission_handler.dart';
+import 'package:media_store_plus/media_store_plus.dart';
+// Added packages for enhanced functionality
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:photofilters/photofilters.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import 'package:image/image.dart' as img;
 
-class LayerItem {
-  final String id;
-  final String name;
-  bool isVisible;
-  final String? imageUrl;
-  final Widget? content;
+class PosterMaker extends StatelessWidget {
+  final dynamic posterSize;
+  final bool isCustom;
 
-  LayerItem({
-    required this.id,
-    required this.name,
-    this.isVisible = true,
-    this.imageUrl,
-    this.content,
+  const PosterMaker({
+    super.key,
+    this.posterSize,
+    this.isCustom = false,
   });
-}
-
-class BottomNavbarItem extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final bool isActive;
-
-  const BottomNavbarItem({
-    Key? key,
-    required this.icon,
-    required this.label,
-    this.isActive = false,
-  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          icon,
-          color: isActive ? Colors.amber : Colors.white,
-          size: isActive ? 28 : 24,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            color: isActive ? Colors.amber : Colors.white,
-            fontSize: isActive ? 12 : 10,
-            fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ],
+    return MaterialApp(
+      title: 'Poster Maker',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
+      ),
+      home: PosterMakerAppScreen(
+           isCustom: isCustom, posterSize: posterSize),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
 
-class PosterTemplate extends StatefulWidget {
+class PosterMakerAppScreen extends StatefulWidget {
   final bool isCustom;
-  final CategoryModel? poster; // Passed when selecting an existing poster
-  final PosterSize? customSize; // Passed when creating a custom poster
+  final PosterSize? posterSize;
 
-  const PosterTemplate({
-    Key? key,
-    required this.isCustom,
-    this.poster,
-    this.customSize,
-  }) : super(key: key);
+  const PosterMakerAppScreen({
+    super.key,
+    this.isCustom = false,
+    this.posterSize,
+  });
 
   @override
-  State<PosterTemplate> createState() => _PosterTemplateState();
+  _PosterMakerAppScreenState createState() => _PosterMakerAppScreenState();
 }
 
-class _PosterTemplateState extends State<PosterTemplate>
-    with SingleTickerProviderStateMixin {
-  final ScreenshotController screenshotController = ScreenshotController();
-  final GlobalKey _canvasKey = GlobalKey();
-  double _sliderPosition = 150;
-  bool _showLayerSlider = false;
-  String _backgroundImage = '';
+class _PosterMakerAppScreenState extends State<PosterMakerAppScreen>
+    with TickerProviderStateMixin {
+  final GlobalKey _posterKey = GlobalKey();
+  File? _posterImage;
+  File? _logoImage;
+  final TextEditingController _contactInfoController = TextEditingController(
+    text: 'info@example.com | www.example.com | 1234567890',
+  );
+
+  // Lists for different elements
+  List<DraggableItem> socialIcons = [];
+  List<DraggableTextItem> textItems = [];
+  List<DraggableStickerItem> stickerItems = [];
+
+  // Items for fixed elements
+  DraggableItem? logoItem;
+  DraggableTextItem? contactInfoItem;
+
+  // Background color and gradient properties
   Color _backgroundColor = Colors.white;
-  final List<EditorItem> _editorItems = [];
-  EditorItem? _selectedItem;
-  late AnimationController _animationController;
-  late Animation<double> _animation;
+  bool _useGradient = false;
+  List<Color> _gradientColors = [Colors.white, Colors.blue.shade100];
 
-  // Audio player
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  String? _selectedAudioPath;
-  bool _isAudioPlaying = false;
+  // Animation controllers for animated elements
+  Map<String, AnimationController> _animationControllers = {};
 
-  // Animation properties
-  String? _selectedAnimation;
-  double _animationDuration = 1.0; // seconds
+  // Selected item for editing
+  String? _selectedItemId;
+  String? _selectedItemType;
 
-  // Active tool state
-  String _activeTool = 'text'; // Default tool
+  // Effect applied to background image
+  // Filter? _appliedFilter;
+  // double _brightness = 0.0;
+  // double _contrast = 1.0;
+  // double _saturation = 1.0;
 
-  List<LayerItem> _layers = [];
-  // String? _userData;
-  // String? _userName;
-  String? _userNumber;
-  String? _email;
-  String? _sitename;
+  List<FilterOption> _filterOptions = [];
+  FilterOption? _appliedFilter;
+  double _brightness = 0.0;
+  double _contrast = 1.0;
+  double _saturation = 1.0;
 
-  File? _logoFile;
+  List<double> multiplyColorMatrices(List<double> a, List<double> b) {
+    List<double> result = List.filled(20, 0.0);
 
-  // Text effects properties
-  double _textShadowOffset = 1.0;
-  Color _textShadowColor = Colors.black.withOpacity(0.3);
-  double _textShadowBlur = 2.0;
+    for (int row = 0; row < 4; row++) {
+      for (int col = 0; col < 5; col++) {
+        result[row * 5 + col] = a[row * 5 + 0] * b[0 * 5 + col] +
+            a[row * 5 + 1] * b[1 * 5 + col] +
+            a[row * 5 + 2] * b[2 * 5 + col] +
+            a[row * 5 + 3] * b[3 * 5 + col];
+        if (col == 4) {
+          // bias (last column)
+          result[row * 5 + col] += a[row * 5 + 4];
+        }
+      }
+    }
 
-  // For multitouch scaling
-  double _baseScaleFactor = 1.0;
+    return result;
+  }
 
   @override
   void initState() {
+    print('lllllllllllllllllllll${widget.posterSize?.size}');
     super.initState();
-    _animationController = AnimationController(
-      duration: const Duration(milliseconds: 500),
-      vsync: this,
+    _loadDefaultSocialIcons();
+    _initializeFilters();
+
+    // Initialize contact info text item
+    contactInfoItem = DraggableTextItem(
+      id: 'contact_info',
+      text: _contactInfoController.text,
+      position: const Offset(20, 0),
+      fontSize: 14,
+      fontWeight: FontWeight.normal,
+      textColor: Colors.black,
+      bgColor: Colors.transparent,
+      rotation: 0,
+      isAnimated: false,
+      animationType: 'none',
+      onPositionChanged: (Offset newPosition) {
+        setState(() {
+          contactInfoItem?.position = newPosition;
+        });
+      },
     );
-    _animation =
-        Tween<double>(begin: 0.0, end: 1.0).animate(_animationController);
 
-    _initializeLayers();
-    _loadUserData();
-
-    if (widget.poster != null && widget.poster!.images.isNotEmpty) {
-      _backgroundImage = widget.poster!.images[0];
-    }
+    // Load the passed poster if available
   }
 
   @override
   void dispose() {
-    _animationController.dispose();
-    _audioPlayer.dispose();
+    // Dispose all animation controllers
+    _animationControllers.forEach((key, controller) {
+      controller.dispose();
+    });
     super.dispose();
   }
 
-  Future<void> _loadUserData() async {
-    try {
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      setState(() {
-        _sitename = prefs.getString('user_site_name') ?? "Site name";
-        _email = prefs.getString('user_email') ?? "email";
-        _userNumber = prefs.getString('user_phone') ?? "9876543210";
-      });
-    } catch (e) {
-      debugPrint('Error loading user data: $e');
-    }
-  }
-
-  void _initializeLayers() {
-    _layers = [
-      LayerItem(
-        id: 'header',
-        name: 'Header',
-        isVisible: true,
-        content: Container(
-          padding: const EdgeInsets.all(10),
-          color: Colors.transparent,
-          child: const Row(
-            children: [
-              Icon(Icons.star, color: Colors.amber),
-              SizedBox(width: 5),
-              Text(
-                'Respect and Humble Tribute',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
-        ),
+  void _initializeFilters() {
+    _filterOptions = [
+      FilterOption(
+        name: 'Normal',
+        filter: const ColorFilter.mode(Colors.transparent, BlendMode.srcOver),
+        matrix: [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ],
       ),
-      LayerItem(
-        id: 'logo',
-        name: 'Logo',
-        isVisible: true,
-        imageUrl: 'YOUR LOGO HERE',
+      FilterOption(
+        name: 'Sepia',
+        filter: ColorFilter.matrix([
+          0.393,
+          0.769,
+          0.189,
+          0,
+          0,
+          0.349,
+          0.686,
+          0.168,
+          0,
+          0,
+          0.272,
+          0.534,
+          0.131,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ]),
+        matrix: [
+          0.393,
+          0.769,
+          0.189,
+          0,
+          0,
+          0.349,
+          0.686,
+          0.168,
+          0,
+          0,
+          0.272,
+          0.534,
+          0.131,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ],
       ),
-      LayerItem(
-        id: 'person',
-        name: 'Person Image',
-        isVisible: true,
-        imageUrl: 'https://example.com/person.jpg',
+      FilterOption(
+        name: 'Grayscale',
+        filter: ColorFilter.matrix([
+          0.2126,
+          0.7152,
+          0.0722,
+          0,
+          0,
+          0.2126,
+          0.7152,
+          0.0722,
+          0,
+          0,
+          0.2126,
+          0.7152,
+          0.0722,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ]),
+        matrix: [
+          0.2126,
+          0.7152,
+          0.0722,
+          0,
+          0,
+          0.2126,
+          0.7152,
+          0.0722,
+          0,
+          0,
+          0.2126,
+          0.7152,
+          0.0722,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ],
       ),
-      LayerItem(
-        id: 'title',
-        name: 'Title Text',
-        isVisible: true,
-        content: const Text(
-          'RASHTRASANT\nTUKDOJI MAHARAJ',
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-            color: Colors.green,
-          ),
-        ),
+      FilterOption(
+        name: 'Vintage',
+        filter: ColorFilter.matrix([
+          0.9,
+          0.5,
+          0.1,
+          0,
+          0,
+          0.3,
+          0.8,
+          0.1,
+          0,
+          0,
+          0.2,
+          0.3,
+          0.5,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ]),
+        matrix: [
+          0.9,
+          0.5,
+          0.1,
+          0,
+          0,
+          0.3,
+          0.8,
+          0.1,
+          0,
+          0,
+          0.2,
+          0.3,
+          0.5,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ],
       ),
-      LayerItem(
-        id: 'subtitle',
-        name: 'Subtitle',
-        isVisible: true,
-        content: Text(
-          'ON HIS BIRTH ANNIVERSARY',
-          style: TextStyle(fontSize: 14),
-        ),
+      FilterOption(
+        name: 'Cold',
+        filter: ColorFilter.matrix([
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0.5,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ]),
+        matrix: [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0.5,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ],
       ),
-      LayerItem(
-        id: 'business',
-        name: 'Business Info',
-        isVisible: true,
-        content: Column(
-          children: [
-            Text(
-              _sitename ?? 'www.abc.com',
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
-                  children: [
-                    Icon(Icons.location_on, size: 16),
-                    Text(_email??'abc@gmail.com',
-                        style: TextStyle(fontSize: 12)),
-                  ],
-                ),
-                Row(
-                  children: [
-                    Icon(Icons.phone, size: 16),
-                    Text(_userNumber ?? '9876543210',
-                        style: TextStyle(fontSize: 12)),
-                  ],
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-      LayerItem(
-        id: 'background',
-        name: 'Background',
-        isVisible: true,
+      FilterOption(
+        name: 'Warm',
+        filter: ColorFilter.matrix([
+          1.1,
+          0,
+          0,
+          0,
+          10,
+          0,
+          1.0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.9,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ]),
+        matrix: [
+          1.1,
+          0,
+          0,
+          0,
+          10,
+          0,
+          1.0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.9,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ],
       ),
     ];
   }
 
-  void _toggleLayerVisibility(String layerId) {
+  Future<void> _loadDefaultSocialIcons() async {
+    // This would typically load actual icons, but we'll create placeholders for this example
     setState(() {
-      final layerIndex = _layers.indexWhere((layer) => layer.id == layerId);
-      if (layerIndex != -1) {
-        _layers[layerIndex].isVisible = !_layers[layerIndex].isVisible;
-      }
+      socialIcons = [
+        DraggableItem(
+          id: 'facebook',
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.blue,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.facebook, color: Colors.white),
+          ),
+          position: const Offset(10, 10),
+          rotation: 0,
+          scale: 1.0,
+          isAnimated: false,
+          animationType: 'none',
+          onPositionChanged: (Offset newPosition) {
+            setState(() {
+              final index =
+                  socialIcons.indexWhere((item) => item.id == 'facebook');
+              if (index != -1) {
+                socialIcons[index].position = newPosition;
+              }
+            });
+          },
+        ),
+        DraggableItem(
+          id: 'instagram',
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Colors.purple, Colors.pink, Colors.orange],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.camera_alt, color: Colors.white),
+          ),
+          position: const Offset(60, 10),
+          rotation: 0,
+          scale: 1.0,
+          isAnimated: false,
+          animationType: 'none',
+          onPositionChanged: (Offset newPosition) {
+            setState(() {
+              final index =
+                  socialIcons.indexWhere((item) => item.id == 'instagram');
+              if (index != -1) {
+                socialIcons[index].position = newPosition;
+              }
+            });
+          },
+        ),
+        DraggableItem(
+          id: 'whatsapp',
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.green,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.chat, color: Colors.white),
+          ),
+          position: const Offset(110, 10),
+          rotation: 0,
+          scale: 1.0,
+          isAnimated: false,
+          animationType: 'none',
+          onPositionChanged: (Offset newPosition) {
+            setState(() {
+              final index =
+                  socialIcons.indexWhere((item) => item.id == 'whatsapp');
+              if (index != -1) {
+                socialIcons[index].position = newPosition;
+              }
+            });
+          },
+        ),
+      ];
     });
   }
 
-  Future<void> _downloadPoster() async {
-    try {
-      // First capture the screenshot
-      final Uint8List? imageBytes = await screenshotController.capture();
-      if (imageBytes == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to capture poster')),
+  Future<void> _pickPosterImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        _posterImage = File(image.path);
+        // Reset filters when new image is selected
+        _brightness = 0.0;
+        _contrast = 1.0;
+        _saturation = 1.0;
+        _appliedFilter = null;
+      });
+    }
+  }
+
+  Future<void> _pickLogoImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      final File logoFile = File(image.path);
+
+      // Preserve the current position and scale if updating an existing logo
+      final Offset position = logoItem?.position ?? const Offset(250, 10);
+      final double scale = logoItem?.scale ?? 1.0;
+
+      setState(() {
+        _logoImage = logoFile;
+        logoItem = DraggableItem(
+          id: 'logo',
+          child: Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: FileImage(logoFile),
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          position: position,
+          rotation: 0,
+          scale: scale,
+          isAnimated: false,
+          animationType: 'none',
+          onPositionChanged: (Offset newPosition) {
+            setState(() {
+              logoItem?.position = newPosition;
+            });
+          },
         );
-        return;
-      }
+      });
+    }
+  }
 
-      // Request permissions
-      if (Platform.isAndroid) {
-        final status = await Permission.storage.request();
-        if (!status.isGranted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content:
-                    Text('Storage permission is required to save the poster')),
+  void _showLogoOptions() {
+    if (_selectedItemType == 'logo' && _selectedItemId == logoItem?.id) {
+      showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return Container(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: Icon(Icons.photo_library),
+                  title: Text('Change Logo'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickLogoImage();
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.delete),
+                  title: Text('Remove Logo'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      logoItem = null;
+                      _logoImage = null;
+                      _selectedItemId = '';
+                      _selectedItemType = '';
+                    });
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.zoom_in),
+                  title: Text('Resize Logo'),
+                  subtitle: Text('Drag the blue handle to resize'),
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
           );
-          return;
-        }
-      } else if (Platform.isIOS) {
-        final status = await Permission.photos.request();
-        if (!status.isGranted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-                content:
-                    Text('Photos permission is required to save the poster')),
-          );
-          return;
-        }
-      }
+        },
+      );
+    }
+  }
 
-      // Save to gallery
-      // final result = await ImageGallerySaver.saveImage(
-      //   imageBytes,
-      //   quality: 100,
-      //   name: "Poster_${DateTime.now().millisecondsSinceEpoch}",
-      // );
+  // TEXT MANAGEMENT METHODS
+  void _addNewText() {
+    final TextEditingController controller =
+        TextEditingController(text: 'New Text');
+    Color textColor = Colors.black;
+    Color bgColor = Colors.transparent;
+    double fontSize = 20;
+    FontWeight fontWeight = FontWeight.normal;
+    bool isAnimated = false;
+    String animationType = 'none';
 
-      // if (result['isSuccess']) {
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     const SnackBar(
-      //       content: Text('Poster saved successfully!'),
-      //       backgroundColor: Colors.green,
-      //     ),
-      //   );
-      // } else {
-      //   ScaffoldMessenger.of(context).showSnackBar(
-      //     SnackBar(
-      //       content: Text('Failed to save poster: ${result['errorMessage'] ?? "Unknown error"}'),
-      //       backgroundColor: Colors.red,
-      //     ),
-      //   );
-      // }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error saving poster: $e'),
-          backgroundColor: Colors.red,
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(builder: (context, setDialogState) {
+        return AlertDialog(
+          title: const Text('Add Text'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: controller,
+                  decoration:
+                      const InputDecoration(hintText: 'Enter your text'),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    const Text('Size: '),
+                    Expanded(
+                      child: Slider(
+                        value: fontSize,
+                        min: 10,
+                        max: 40,
+                        divisions: 30,
+                        label: fontSize.round().toString(),
+                        onChanged: (value) {
+                          setDialogState(() {
+                            fontSize = value;
+                          });
+                        },
+                      ),
+                    ),
+                    Text('${fontSize.round()}'),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Text('Bold: '),
+                    Switch(
+                      value: fontWeight == FontWeight.bold,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          fontWeight =
+                              value ? FontWeight.bold : FontWeight.normal;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Text('Text Color: '),
+                    GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Pick a color'),
+                              content: SingleChildScrollView(
+                                child: ColorPicker(
+                                  pickerColor: textColor,
+                                  onColorChanged: (color) {
+                                    setDialogState(() {
+                                      textColor = color;
+                                    });
+                                  },
+                                  pickerAreaHeightPercent: 0.8,
+                                ),
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('Done'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: textColor,
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    const Text('Background: '),
+                    GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Pick a background color'),
+                              content: SingleChildScrollView(
+                                child: ColorPicker(
+                                  pickerColor: bgColor,
+                                  onColorChanged: (color) {
+                                    setDialogState(() {
+                                      bgColor = color;
+                                    });
+                                  },
+                                  pickerAreaHeightPercent: 0.8,
+                                ),
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('Done'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Text('Animated: '),
+                    Switch(
+                      value: isAnimated,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          isAnimated = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                if (isAnimated)
+                  DropdownButton<String>(
+                    value: animationType,
+                    items: const [
+                      DropdownMenuItem(value: 'none', child: Text('None')),
+                      DropdownMenuItem(value: 'bounce', child: Text('Bounce')),
+                      DropdownMenuItem(value: 'fade', child: Text('Fade')),
+                      DropdownMenuItem(value: 'shake', child: Text('Shake')),
+                      DropdownMenuItem(value: 'scale', child: Text('Scale')),
+                    ],
+                    onChanged: (value) {
+                      setDialogState(() {
+                        animationType = value!;
+                      });
+                    },
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                final String newId =
+                    'text_${DateTime.now().millisecondsSinceEpoch}';
+                final newTextItem = DraggableTextItem(
+                  id: newId,
+                  text: controller.text,
+                  position: Offset(
+                    MediaQuery.of(context).size.width / 2 - 50,
+                    MediaQuery.of(context).size.height / 2 - 50,
+                  ),
+                  fontSize: fontSize,
+                  fontWeight: fontWeight,
+                  textColor: textColor,
+                  bgColor: bgColor,
+                  rotation: 0,
+                  isAnimated: isAnimated,
+                  animationType: animationType,
+                  onPositionChanged: (Offset newPosition) {
+                    setState(() {
+                      final index =
+                          textItems.indexWhere((item) => item.id == newId);
+                      if (index != -1) {
+                        textItems[index].position = newPosition;
+                      }
+                    });
+                  },
+                );
+
+                setState(() {
+                  textItems.add(newTextItem);
+
+                  // Create animation controller if needed
+                  if (isAnimated && animationType != 'none') {
+                    _createAnimationController(newId, animationType);
+                  }
+                });
+
+                Navigator.pop(context);
+              },
+              child: const Text('Add'),
+            ),
+          ],
+        );
+      }),
+    );
+  }
+
+  void _editTextItem(DraggableTextItem item) {
+    final TextEditingController controller =
+        TextEditingController(text: item.text);
+    Color textColor = item.textColor;
+    Color bgColor = item.bgColor;
+    double fontSize = item.fontSize;
+    FontWeight fontWeight = item.fontWeight;
+    bool isAnimated = item.isAnimated;
+    String animationType = item.animationType;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(builder: (context, setDialogState) {
+        return AlertDialog(
+          title: const Text('Edit Text'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: controller,
+                  decoration:
+                      const InputDecoration(hintText: 'Enter your text'),
+                  maxLines: 3,
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    const Text('Size: '),
+                    Expanded(
+                      child: Slider(
+                        value: fontSize,
+                        min: 10,
+                        max: 40,
+                        divisions: 30,
+                        label: fontSize.round().toString(),
+                        onChanged: (value) {
+                          setDialogState(() {
+                            fontSize = value;
+                          });
+                        },
+                      ),
+                    ),
+                    Text('${fontSize.round()}'),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Text('Bold: '),
+                    Switch(
+                      value: fontWeight == FontWeight.bold,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          fontWeight =
+                              value ? FontWeight.bold : FontWeight.normal;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Text('Text Color: '),
+                    GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Pick a color'),
+                              content: SingleChildScrollView(
+                                child: ColorPicker(
+                                  pickerColor: textColor,
+                                  onColorChanged: (color) {
+                                    setDialogState(() {
+                                      textColor = color;
+                                    });
+                                  },
+                                  pickerAreaHeightPercent: 0.8,
+                                ),
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('Done'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: textColor,
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    const Text('Background: '),
+                    GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Pick a background color'),
+                              content: SingleChildScrollView(
+                                child: ColorPicker(
+                                  pickerColor: bgColor,
+                                  onColorChanged: (color) {
+                                    setDialogState(() {
+                                      bgColor = color;
+                                    });
+                                  },
+                                  pickerAreaHeightPercent: 0.8,
+                                ),
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('Done'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: bgColor,
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Text('Animated: '),
+                    Switch(
+                      value: isAnimated,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          isAnimated = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                if (isAnimated)
+                  DropdownButton<String>(
+                    value: animationType,
+                    items: const [
+                      DropdownMenuItem(value: 'none', child: Text('None')),
+                      DropdownMenuItem(value: 'bounce', child: Text('Bounce')),
+                      DropdownMenuItem(value: 'fade', child: Text('Fade')),
+                      DropdownMenuItem(value: 'shake', child: Text('Shake')),
+                      DropdownMenuItem(value: 'scale', child: Text('Scale')),
+                    ],
+                    onChanged: (value) {
+                      setDialogState(() {
+                        animationType = value!;
+                      });
+                    },
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Delete Text'),
+                    content: const Text(
+                        'Are you sure you want to delete this text element?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            textItems.removeWhere(
+                                (element) => element.id == item.id);
+
+                            // Remove animation controller if it exists
+                            if (_animationControllers.containsKey(item.id)) {
+                              _animationControllers[item.id]?.dispose();
+                              _animationControllers.remove(item.id);
+                            }
+                          });
+
+                          Navigator.pop(context); // Close delete dialog
+                          Navigator.pop(context); // Close edit dialog
+                        },
+                        child: const Text('Delete',
+                            style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  final index =
+                      textItems.indexWhere((element) => element.id == item.id);
+                  if (index != -1) {
+                    textItems[index].text = controller.text;
+                    textItems[index].fontSize = fontSize;
+                    textItems[index].fontWeight = fontWeight;
+                    textItems[index].textColor = textColor;
+                    textItems[index].bgColor = bgColor;
+                    textItems[index].isAnimated = isAnimated;
+                    textItems[index].animationType = animationType;
+
+                    // Update animation if needed
+                    if (isAnimated && animationType != 'none') {
+                      _createAnimationController(item.id, animationType);
+                    } else {
+                      // Remove animation controller if it exists
+                      if (_animationControllers.containsKey(item.id)) {
+                        _animationControllers[item.id]?.dispose();
+                        _animationControllers.remove(item.id);
+                      }
+                    }
+                  }
+                });
+
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      }),
+    );
+  }
+
+  // STICKER METHODS
+  void _addSticker() {
+    // 150 varied and attractive sticker options
+    final List<Map<String, dynamic>> stickerOptions = [
+      // Emoji & Expressions
+      {
+        'name': 'Heart Eyes',
+        'icon': Icons.emoji_emotions,
+        'color': Colors.amber[500]
+      },
+      {
+        'name': 'Cool Face',
+        'icon': Icons.face_retouching_natural,
+        'color': Colors.blue[400]
+      },
+      {
+        'name': 'Wink',
+        'icon': Icons.sentiment_satisfied_alt,
+        'color': Colors.yellow[600]
+      },
+      {'name': 'Laugh Tears', 'icon': Icons.mood, 'color': Colors.amber[400]},
+      {
+        'name': 'Mind Blown',
+        'icon': Icons.psychology,
+        'color': Colors.red[400]
+      },
+      {
+        'name': 'Shocked',
+        'icon': Icons.face_retouching_natural,
+        'color': Colors.purple[300]
+      },
+      {'name': 'Thinking', 'icon': Icons.psychology, 'color': Colors.blue[300]},
+      {
+        'name': 'Love Struck',
+        'icon': Icons.favorite,
+        'color': Colors.pink[400]
+      },
+      {
+        'name': 'Party Face',
+        'icon': Icons.celebration,
+        'color': Colors.orange[400]
+      },
+      {
+        'name': 'Sleepy',
+        'icon': Icons.nights_stay,
+        'color': Colors.indigo[300]
+      },
+
+      // Animals
+      {'name': 'Cat', 'icon': Icons.pets, 'color': Colors.grey[500]},
+      {'name': 'Dog', 'icon': Icons.pets, 'color': Colors.brown[300]},
+      {'name': 'Dolphin', 'icon': Icons.water, 'color': Colors.cyan[300]},
+      {'name': 'Lion', 'icon': Icons.face, 'color': Colors.amber[800]},
+      {
+        'name': 'Flamingo',
+        'icon': Icons.filter_vintage,
+        'color': Colors.pink[300]
+      },
+      {'name': 'Panda', 'icon': Icons.pets, 'color': Colors.grey[900]},
+      {'name': 'Koala', 'icon': Icons.pets, 'color': Colors.grey[400]},
+      {'name': 'Owl', 'icon': Icons.visibility, 'color': Colors.brown[500]},
+      {
+        'name': 'Butterfly',
+        'icon': Icons.flutter_dash,
+        'color': Colors.teal[300]
+      },
+      {'name': 'Elephant', 'icon': Icons.pets, 'color': Colors.grey[600]},
+      {'name': 'Fox', 'icon': Icons.pets, 'color': Colors.orange[500]},
+      {
+        'name': 'Penguin',
+        'icon': Icons.back_hand,
+        'color': Colors.blueGrey[800]
+      },
+      {'name': 'Bee', 'icon': Icons.flutter_dash, 'color': Colors.amber[400]},
+      {'name': 'Monkey', 'icon': Icons.face, 'color': Colors.brown[400]},
+      {'name': 'Turtle', 'icon': Icons.shield, 'color': Colors.green[800]},
+
+      // Fantasy & Magical
+      {
+        'name': 'Unicorn',
+        'icon': Icons.auto_awesome,
+        'color': Colors.purple[300]
+      },
+      {
+        'name': 'Magic Wand',
+        'icon': Icons.auto_fix_high,
+        'color': Colors.indigo[400]
+      },
+      {
+        'name': 'Dragon',
+        'icon': Icons.whatshot,
+        'color': Colors.deepOrange[700]
+      },
+      {
+        'name': 'Crystal Ball',
+        'icon': Icons.lens,
+        'color': Colors.lightBlue[200]
+      },
+      {
+        'name': 'Wizard Hat',
+        'icon': Icons.auto_awesome,
+        'color': Colors.deepPurple[800]
+      },
+      {'name': 'Fairy', 'icon': Icons.all_inclusive, 'color': Colors.pink[200]},
+      {'name': 'Phoenix', 'icon': Icons.whatshot, 'color': Colors.red[500]},
+      {'name': 'Castle', 'icon': Icons.castle, 'color': Colors.blueGrey[700]},
+      {'name': 'Mermaid', 'icon': Icons.waves, 'color': Colors.cyan[400]},
+      {
+        'name': 'Potion',
+        'icon': Icons.local_drink,
+        'color': Colors.purple[500]
+      },
+
+      // Food & Drinks
+      {'name': 'Pizza', 'icon': Icons.local_pizza, 'color': Colors.orange[400]},
+      {
+        'name': 'Burger',
+        'icon': Icons.lunch_dining,
+        'color': Colors.brown[600]
+      },
+      {'name': 'Taco', 'icon': Icons.lunch_dining, 'color': Colors.orange[300]},
+      {'name': 'Sushi', 'icon': Icons.set_meal, 'color': Colors.red[200]},
+      {'name': 'Ice Cream', 'icon': Icons.icecream, 'color': Colors.pink[100]},
+      {'name': 'Donut', 'icon': Icons.donut_large, 'color': Colors.pink[400]},
+      {'name': 'Avocado', 'icon': Icons.spa, 'color': Colors.green[600]},
+      {'name': 'Coffee', 'icon': Icons.coffee, 'color': Colors.brown[500]},
+      {'name': 'Cake', 'icon': Icons.cake, 'color': Colors.pink[300]},
+      {'name': 'Watermelon', 'icon': Icons.circle, 'color': Colors.green[600]},
+      {'name': 'Cupcake', 'icon': Icons.cake, 'color': Colors.pink[200]},
+      {
+        'name': 'Lemonade',
+        'icon': Icons.local_drink,
+        'color': Colors.yellow[400]
+      },
+      {
+        'name': 'Pretzel',
+        'icon': Icons.bakery_dining,
+        'color': Colors.amber[700]
+      },
+      {
+        'name': 'Croissant',
+        'icon': Icons.bakery_dining,
+        'color': Colors.amber[500]
+      },
+      {
+        'name': 'Boba Tea',
+        'icon': Icons.emoji_food_beverage,
+        'color': Colors.brown[300]
+      },
+
+      // Nature & Plants
+      {
+        'name': 'Flower',
+        'icon': Icons.local_florist,
+        'color': Colors.pink[300]
+      },
+      {'name': 'Palm Tree', 'icon': Icons.park, 'color': Colors.green[700]},
+      {'name': 'Cactus', 'icon': Icons.grass, 'color': Colors.lightGreen[700]},
+      {'name': 'Leaf', 'icon': Icons.eco, 'color': Colors.green[500]},
+      {
+        'name': 'Four Leaf Clover',
+        'icon': Icons.spa,
+        'color': Colors.green[400]
+      },
+      {
+        'name': 'Cherry Blossom',
+        'icon': Icons.filter_vintage,
+        'color': Colors.pink[100]
+      },
+      {
+        'name': 'Sunflower',
+        'icon': Icons.wb_sunny,
+        'color': Colors.yellow[600]
+      },
+      {'name': 'Mushroom', 'icon': Icons.umbrella, 'color': Colors.brown[200]},
+      {'name': 'Rose', 'icon': Icons.local_florist, 'color': Colors.red[500]},
+      {'name': 'Bamboo', 'icon': Icons.grass, 'color': Colors.green[500]},
+
+      // Weather & Celestial
+      {'name': 'Sun', 'icon': Icons.wb_sunny, 'color': Colors.amber[500]},
+      {
+        'name': 'Moon',
+        'icon': Icons.nightlight_round,
+        'color': Colors.indigo[300]
+      },
+      {'name': 'Cloud', 'icon': Icons.cloud, 'color': Colors.blue[300]},
+      {
+        'name': 'Rainbow',
+        'icon': Icons.filter_drama,
+        'color': Colors.purple[300]
+      },
+      {
+        'name': 'Snowflake',
+        'icon': Icons.ac_unit,
+        'color': Colors.lightBlue[200]
+      },
+      {'name': 'Lightning', 'icon': Icons.bolt, 'color': Colors.amber[400]},
+      {'name': 'Tornado', 'icon': Icons.air, 'color': Colors.blueGrey[500]},
+      {'name': 'Star', 'icon': Icons.star, 'color': Colors.amber[300]},
+      {'name': 'Comet', 'icon': Icons.flash_on, 'color': Colors.blue[400]},
+      {'name': 'Aurora', 'icon': Icons.waves, 'color': Colors.green[200]},
+
+      // Space & Sci-Fi
+      {'name': 'Rocket', 'icon': Icons.rocket_launch, 'color': Colors.red[600]},
+      {'name': 'Alien', 'icon': Icons.android, 'color': Colors.green[400]},
+      {'name': 'Planet', 'icon': Icons.public, 'color': Colors.blue[700]},
+      {
+        'name': 'Satellite',
+        'icon': Icons.satellite_alt,
+        'color': Colors.grey[400]
+      },
+      {
+        'name': 'UFO',
+        'icon': Icons.airplanemode_active,
+        'color': Colors.purple[600]
+      },
+      {
+        'name': 'Telescope',
+        'icon': Icons.visibility,
+        'color': Colors.indigo[800]
+      },
+      {'name': 'Astronaut', 'icon': Icons.person, 'color': Colors.white},
+      {
+        'name': 'Black Hole',
+        'icon': Icons.blur_circular,
+        'color': Colors.black
+      },
+      {
+        'name': 'Galaxy',
+        'icon': Icons.blur_on,
+        'color': Colors.deepPurple[400]
+      },
+      {
+        'name': 'Space Station',
+        'icon': Icons.settings_input_antenna,
+        'color': Colors.grey[500]
+      },
+
+      // Tech & Gaming
+      {
+        'name': 'Game Controller',
+        'icon': Icons.sports_esports,
+        'color': Colors.blue[700]
+      },
+      {'name': 'Headphones', 'icon': Icons.headphones, 'color': Colors.black87},
+      {
+        'name': 'VR Headset',
+        'icon': Icons.view_in_ar,
+        'color': Colors.indigo[600]
+      },
+      {'name': 'Laptop', 'icon': Icons.laptop, 'color': Colors.grey[800]},
+      {'name': 'Smartphone', 'icon': Icons.smartphone, 'color': Colors.black},
+      {'name': 'Robot', 'icon': Icons.smart_toy, 'color': Colors.blue[500]},
+      {'name': 'Joystick', 'icon': Icons.gamepad, 'color': Colors.purple[500]},
+      {'name': 'Camera', 'icon': Icons.camera_alt, 'color': Colors.grey[700]},
+      {
+        'name': 'Bitcoin',
+        'icon': Icons.currency_bitcoin,
+        'color': Colors.amber[500]
+      },
+      {'name': 'Pixel Heart', 'icon': Icons.favorite, 'color': Colors.red[600]},
+
+      // Transportation
+      {'name': 'Car', 'icon': Icons.directions_car, 'color': Colors.red[500]},
+      {'name': 'Airplane', 'icon': Icons.flight, 'color': Colors.blue[500]},
+      {
+        'name': 'Bicycle',
+        'icon': Icons.directions_bike,
+        'color': Colors.green[500]
+      },
+      {'name': 'Hot Air Balloon', 'icon': Icons.air, 'color': Colors.red[300]},
+      {
+        'name': 'Sailboat',
+        'icon': Icons.sailing,
+        'color': Colors.lightBlue[500]
+      },
+      {
+        'name': 'Submarine',
+        'icon': Icons.directions_boat,
+        'color': Colors.yellow[700]
+      },
+      {
+        'name': 'Helicopter',
+        'icon': Icons.airplanemode_active,
+        'color': Colors.black54
+      },
+      {'name': 'Train', 'icon': Icons.train, 'color': Colors.red[700]},
+      {'name': 'Motorcycle', 'icon': Icons.motorcycle, 'color': Colors.black},
+      {'name': 'Taxi', 'icon': Icons.local_taxi, 'color': Colors.yellow[600]},
+
+      // Sports & Activities
+      {
+        'name': 'Basketball',
+        'icon': Icons.sports_basketball,
+        'color': Colors.orange[600]
+      },
+      {
+        'name': 'Football',
+        'icon': Icons.sports_football,
+        'color': Colors.brown[500]
+      },
+      {'name': 'Soccer', 'icon': Icons.sports_soccer, 'color': Colors.black},
+      {
+        'name': 'Tennis',
+        'icon': Icons.sports_tennis,
+        'color': Colors.lime[500]
+      },
+      {
+        'name': 'Baseball',
+        'icon': Icons.sports_baseball,
+        'color': Colors.white
+      },
+      {'name': 'Surfboard', 'icon': Icons.surfing, 'color': Colors.blue[300]},
+      {'name': 'Ski', 'icon': Icons.downhill_skiing, 'color': Colors.blue[700]},
+      {'name': 'Golf', 'icon': Icons.sports_golf, 'color': Colors.green[500]},
+      {
+        'name': 'Skateboard',
+        'icon': Icons.skateboarding,
+        'color': Colors.blueGrey[600]
+      },
+      {
+        'name': 'Yoga',
+        'icon': Icons.self_improvement,
+        'color': Colors.teal[400]
+      },
+
+      // Music & Arts
+      {
+        'name': 'Music Note',
+        'icon': Icons.music_note,
+        'color': Colors.pink[500]
+      },
+      {'name': 'Guitar', 'icon': Icons.audiotrack, 'color': Colors.brown[600]},
+      {'name': 'Microphone', 'icon': Icons.mic, 'color': Colors.red[600]},
+      {'name': 'Vinyl Record', 'icon': Icons.album, 'color': Colors.black},
+      {
+        'name': 'Paintbrush',
+        'icon': Icons.brush,
+        'color': Colors.deepOrange[400]
+      },
+      {'name': 'Piano', 'icon': Icons.piano, 'color': Colors.grey[900]},
+      {
+        'name': 'Theater Mask',
+        'icon': Icons.theater_comedy,
+        'color': Colors.amber[600]
+      },
+      {'name': 'Drum', 'icon': Icons.music_note, 'color': Colors.red[400]},
+      {
+        'name': 'Saxophone',
+        'icon': Icons.music_note,
+        'color': Colors.amber[700]
+      },
+      {'name': 'Palette', 'icon': Icons.palette, 'color': Colors.purple[400]},
+
+      // Seasonal & Holiday
+      {
+        'name': 'Pumpkin',
+        'icon': Icons.emoji_food_beverage,
+        'color': Colors.orange[800]
+      },
+      {'name': 'Firework', 'icon': Icons.flare, 'color': Colors.purple[400]},
+      {
+        'name': 'Snowman',
+        'icon': Icons.ac_unit,
+        'color': Colors.lightBlue[100]
+      },
+      {
+        'name': 'Christmas Tree',
+        'icon': Icons.park,
+        'color': Colors.green[800]
+      },
+      {'name': 'Gift', 'icon': Icons.card_giftcard, 'color': Colors.red[500]},
+      {'name': 'Easter Egg', 'icon': Icons.egg, 'color': Colors.pink[200]},
+      {
+        'name': 'Candy Cane',
+        'icon': Icons.rounded_corner,
+        'color': Colors.red[500]
+      },
+      {
+        'name': 'Valentine Heart',
+        'icon': Icons.favorite,
+        'color': Colors.pink[500]
+      },
+      {
+        'name': 'New Year',
+        'icon': Icons.celebration,
+        'color': Colors.amber[300]
+      },
+      {
+        'name': 'Beach Umbrella',
+        'icon': Icons.beach_access,
+        'color': Colors.orange[500]
+      },
+
+      // Objects & Items
+      {'name': 'Diamond', 'icon': Icons.diamond, 'color': Colors.cyan[300]},
+      {
+        'name': 'Crown',
+        'icon': Icons.brightness_auto,
+        'color': Colors.amber[500]
+      },
+      {
+        'name': 'Light Bulb',
+        'icon': Icons.lightbulb,
+        'color': Colors.yellow[600]
+      },
+      {'name': 'Key', 'icon': Icons.key, 'color': Colors.amber[700]},
+      {'name': 'Lock', 'icon': Icons.lock, 'color': Colors.blueGrey[700]},
+      {'name': 'Glasses', 'icon': Icons.visibility, 'color': Colors.black54},
+      {'name': 'Watch', 'icon': Icons.watch, 'color': Colors.brown[600]},
+      {
+        'name': 'Backpack',
+        'icon': Icons.backpack,
+        'color': Colors.deepPurple[500]
+      },
+      {'name': 'Book', 'icon': Icons.book, 'color': Colors.blue[800]},
+      {'name': 'Umbrella', 'icon': Icons.umbrella, 'color': Colors.indigo[500]},
+
+      // Places & Landmarks
+      {
+        'name': 'Eiffel Tower',
+        'icon': Icons.location_city,
+        'color': Colors.grey[600]
+      },
+      {
+        'name': 'Statue of Liberty',
+        'icon': Icons.account_balance,
+        'color': Colors.teal[500]
+      },
+      {
+        'name': 'Pyramid',
+        'icon': Icons.change_history,
+        'color': Colors.amber[800]
+      },
+      {
+        'name': 'Pagoda',
+        'icon': Icons.account_balance,
+        'color': Colors.red[800]
+      },
+      {
+        'name': 'Colosseum',
+        'icon': Icons.maps_home_work,
+        'color': Colors.brown[400]
+      },
+      {
+        'name': 'Mount Fuji',
+        'icon': Icons.landscape,
+        'color': Colors.indigo[400]
+      },
+      {'name': 'Great Wall', 'icon': Icons.fence, 'color': Colors.grey[600]},
+      {
+        'name': 'Taj Mahal',
+        'icon': Icons.account_balance,
+        'color': Colors.white
+      },
+      {
+        'name': 'Skyscraper',
+        'icon': Icons.apartment,
+        'color': Colors.blue[700]
+      },
+
+      // Mystical & Spiritual
+      {
+        'name': 'Yin Yang',
+        'icon': Icons.brightness_medium,
+        'color': Colors.black
+      },
+      {
+        'name': 'Om Symbol',
+        'icon': Icons.all_inclusive,
+        'color': Colors.orange[600]
+      },
+      {'name': 'Lotus', 'icon': Icons.spa, 'color': Colors.pink[200]},
+      {
+        'name': 'Meditation',
+        'icon': Icons.self_improvement,
+        'color': Colors.indigo[400]
+      },
+      {
+        'name': 'Dreamcatcher',
+        'icon': Icons.stream,
+        'color': Colors.purple[300]
+      },
+      {
+        'name': 'Chakra',
+        'icon': Icons.change_circle,
+        'color': Colors.teal[400]
+      },
+      {'name': 'Mandala', 'icon': Icons.flare, 'color': Colors.amber[400]},
+      {'name': 'Zen Stone', 'icon': Icons.grain, 'color': Colors.grey[500]},
+      {
+        'name': 'Evil Eye',
+        'icon': Icons.remove_red_eye,
+        'color': Colors.blue[500]
+      },
+      {'name': 'Incense', 'icon': Icons.waves, 'color': Colors.brown[300]},
+    ];
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Select Sticker'),
+        content: SizedBox(
+          width: double.maxFinite,
+          height: 300,
+          child: GridView.builder(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 5,
+              crossAxisSpacing: 10,
+              mainAxisSpacing: 10,
+            ),
+            itemCount: stickerOptions.length,
+            itemBuilder: (context, index) {
+              final sticker = stickerOptions[index];
+              return InkWell(
+                onTap: () {
+                  final String newId =
+                      'sticker_${DateTime.now().millisecondsSinceEpoch}';
+
+                  final newStickerItem = DraggableStickerItem(
+                    id: newId,
+                    stickerType: sticker['name'],
+                    icon: sticker['icon'],
+                    color: sticker['color'],
+                    position: Offset(
+                      MediaQuery.of(context).size.width / 2 - 25,
+                      MediaQuery.of(context).size.height / 2 - 25,
+                    ),
+                    size: 50,
+                    rotation: 0,
+                    isAnimated: false,
+                    animationType: 'none',
+                    onPositionChanged: (Offset newPosition) {
+                      setState(() {
+                        final index =
+                            stickerItems.indexWhere((item) => item.id == newId);
+                        if (index != -1) {
+                          stickerItems[index].position = newPosition;
+                        }
+                      });
+                    },
+                  );
+
+                  setState(() {
+                    stickerItems.add(newStickerItem);
+                  });
+
+                  Navigator.pop(context);
+                },
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade200,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    sticker['icon'],
+                    color: sticker['color'],
+                    size: 30,
+                  ),
+                ),
+              );
+            },
+          ),
         ),
-      );
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _editStickerItem(DraggableStickerItem item) {
+    double size = item.size;
+    bool isAnimated = item.isAnimated;
+    String animationType = item.animationType;
+    Color color = item.color;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(builder: (context, setDialogState) {
+        return AlertDialog(
+          title: const Text('Edit Sticker'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 10),
+                Center(
+                  child: Icon(
+                    item.icon,
+                    color: color,
+                    size: size,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    const Text('Size: '),
+                    Expanded(
+                      child: Slider(
+                        value: size,
+                        min: 30,
+                        max: 100,
+                        divisions: 14,
+                        label: size.round().toString(),
+                        onChanged: (value) {
+                          setDialogState(() {
+                            size = value;
+                          });
+                        },
+                      ),
+                    ),
+                    Text('${size.round()}'),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Text('Color: '),
+                    GestureDetector(
+                      onTap: () {
+                        showDialog(
+                          context: context,
+                          builder: (BuildContext context) {
+                            return AlertDialog(
+                              title: const Text('Pick a color'),
+                              content: SingleChildScrollView(
+                                child: ColorPicker(
+                                  pickerColor: color,
+                                  onColorChanged: (newColor) {
+                                    setDialogState(() {
+                                      color = newColor;
+                                    });
+                                  },
+                                  enableAlpha:
+                                      false, // Optional: disables opacity slider
+                                  displayThumbColor:
+                                      true, // Optional: shows thumb color
+                                ),
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  child: const Text('Done'),
+                                  onPressed: () {
+                                    Navigator.of(context).pop();
+                                  },
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                      child: Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                          color: color,
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(15),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
+                    const Text('Animated: '),
+                    Switch(
+                      value: isAnimated,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          isAnimated = value;
+                        });
+                      },
+                    ),
+                  ],
+                ),
+                if (isAnimated)
+                  DropdownButton<String>(
+                    value: animationType,
+                    items: const [
+                      DropdownMenuItem(value: 'none', child: Text('None')),
+                      DropdownMenuItem(value: 'bounce', child: Text('Bounce')),
+                      DropdownMenuItem(value: 'fade', child: Text('Fade')),
+                      DropdownMenuItem(value: 'rotate', child: Text('Rotate')),
+                      DropdownMenuItem(value: 'scale', child: Text('Scale')),
+                    ],
+                    onChanged: (value) {
+                      setDialogState(() {
+                        animationType = value!;
+                      });
+                    },
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    title: const Text('Delete Sticker'),
+                    content: const Text(
+                        'Are you sure you want to delete this sticker?'),
+                    actions: [
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text('Cancel'),
+                      ),
+                      TextButton(
+                        onPressed: () {
+                          setState(() {
+                            stickerItems.removeWhere(
+                                (element) => element.id == item.id);
+
+                            // Remove animation controller if it exists
+                            if (_animationControllers.containsKey(item.id)) {
+                              _animationControllers[item.id]?.dispose();
+                              _animationControllers.remove(item.id);
+                            }
+                          });
+
+                          Navigator.pop(context); // Close delete dialog
+                          Navigator.pop(context); // Close edit dialog
+                        },
+                        child: const Text('Delete',
+                            style: TextStyle(color: Colors.red)),
+                      ),
+                    ],
+                  ),
+                );
+              },
+              child: const Text('Delete', style: TextStyle(color: Colors.red)),
+            ),
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  final index = stickerItems
+                      .indexWhere((element) => element.id == item.id);
+                  if (index != -1) {
+                    stickerItems[index].size = size;
+                    stickerItems[index].color = color;
+                    stickerItems[index].isAnimated = isAnimated;
+                    stickerItems[index].animationType = animationType;
+
+                    // Update animation if needed
+                    if (isAnimated && animationType != 'none') {
+                      _createAnimationController(item.id, animationType);
+                    } else {
+                      // Remove animation controller if it exists
+                      if (_animationControllers.containsKey(item.id)) {
+                        _animationControllers[item.id]?.dispose();
+                        _animationControllers.remove(item.id);
+                      }
+                    }
+                  }
+                });
+
+                Navigator.pop(context);
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      }),
+    );
+  }
+
+  // ANIMATION METHODS
+  void _createAnimationController(String itemId, String animationType) {
+    // Dispose of existing controller if it exists
+    if (_animationControllers.containsKey(itemId)) {
+      _animationControllers[itemId]?.dispose();
+      _animationControllers.remove(itemId);
+    }
+
+    // Create a new controller based on animation type
+    AnimationController controller;
+    switch (animationType) {
+      case 'bounce':
+        controller = AnimationController(
+          vsync: this,
+          duration: const Duration(seconds: 1),
+          reverseDuration: const Duration(seconds: 1),
+        )..repeat(reverse: true);
+        break;
+      case 'fade':
+        controller = AnimationController(
+          vsync: this,
+          duration: const Duration(seconds: 2),
+        )..repeat(reverse: true);
+        break;
+      case 'shake':
+        controller = AnimationController(
+          vsync: this,
+          duration: const Duration(milliseconds: 500),
+        )..repeat(reverse: true);
+        break;
+      case 'scale':
+        controller = AnimationController(
+          vsync: this,
+          duration: const Duration(seconds: 1),
+        )..repeat(reverse: true);
+        break;
+      case 'rotate':
+        controller = AnimationController(
+          vsync: this,
+          duration: const Duration(seconds: 2),
+        )..repeat();
+        break;
+      default:
+        return; // No animation
+    }
+
+    _animationControllers[itemId] = controller;
+  }
+
+  Widget _applyAnimation(Widget child, String itemId, String animationType) {
+    if (!_animationControllers.containsKey(itemId) || animationType == 'none') {
+      return child;
+    }
+
+    final controller = _animationControllers[itemId]!;
+
+    switch (animationType) {
+      case 'bounce':
+        return AnimatedBuilder(
+          animation: controller,
+          builder: (context, child) {
+            return Transform.translate(
+              offset: Offset(0, sin(controller.value * pi) * 10),
+              child: child,
+            );
+          },
+          child: child,
+        );
+      case 'fade':
+        return FadeTransition(
+          opacity: Tween(begin: 0.5, end: 1.0).animate(controller),
+          child: child,
+        );
+      case 'shake':
+        return AnimatedBuilder(
+          animation: controller,
+          builder: (context, child) {
+            return Transform.translate(
+              offset: Offset(sin(controller.value * pi * 2) * 5, 0),
+              child: child,
+            );
+          },
+          child: child,
+        );
+      case 'scale':
+        return ScaleTransition(
+          scale: Tween(begin: 0.8, end: 1.2).animate(controller),
+          child: child,
+        );
+      case 'rotate':
+        return RotationTransition(
+          turns: controller,
+          child: child,
+        );
+      default:
+        return child;
     }
   }
 
-  Future<void> _pickLogo() async {
-    try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+  // IMAGE FILTER METHODS
 
-      if (image != null) {
-        setState(() {
-          _logoFile = File(image.path);
-        });
-      }
-    } catch (e) {
-      debugPrint('Error picking logo: $e');
+  void _applyImageFilter() {
+    if (_posterImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error selecting logo: $e')),
-      );
-    }
-  }
-
-  void _toggleAudioPlayback() {
-    if (_selectedAudioPath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select an audio file first')),
+        const SnackBar(content: Text('Please select a poster image first.')),
       );
       return;
     }
 
-    setState(() {
-      _isAudioPlaying = !_isAudioPlaying;
-    });
+    // Store current values in case user cancels
+    final currentFilter = _appliedFilter;
+    final currentBrightness = _brightness;
+    final currentContrast = _contrast;
+    final currentSaturation = _saturation;
 
-    if (_isAudioPlaying) {
-      _audioPlayer.play(DeviceFileSource(_selectedAudioPath!));
-    } else {
-      _audioPlayer.pause();
-    }
-  }
-
-  void _applyAnimation(String animationType, double duration) {
-    setState(() {
-      _selectedAnimation = animationType;
-      _animationDuration = duration;
-
-      // Reset and restart animation
-      _animationController.duration =
-          Duration(milliseconds: (duration * 1000).toInt());
-      _animationController.reset();
-      _animationController.forward();
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$animationType animation applied')),
-    );
-  }
-
-  void _openBackgroundColorPicker() {
-    showDialog(
+    // Show filter dialog
+    showModalBottomSheet(
       context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Select Background Color'),
-          content: SingleChildScrollView(
-            child: ColorPicker(
-              pickerColor: _backgroundColor,
-              onColorChanged: (Color color) {
-                setState(() {
-                  _backgroundColor = color;
-                });
-              },
-              pickerAreaHeightPercent: 0.8,
-              enableAlpha: true,
-              displayThumbColor: true,
-              showLabel: true,
-              paletteType: PaletteType.hsv,
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Done'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    return Scaffold(
-      body: SafeArea(
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        icon: const Icon(Icons.arrow_back_ios),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.7,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Image Filters',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
                       ),
-                      GestureDetector(
+                    ),
+                    Row(
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            // Reset values and close
+                            setState(() {
+                              _appliedFilter = currentFilter;
+                              _brightness = currentBrightness;
+                              _contrast = currentContrast;
+                              _saturation = currentSaturation;
+                            });
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Save the current values
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Apply'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Presets',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 100,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _filterOptions.length,
+                    itemBuilder: (context, index) {
+                      final filter = _filterOptions[index];
+                      return GestureDetector(
                         onTap: () {
-                          setState(() {
-                            _showLayerSlider = !_showLayerSlider;
+                          setModalState(() {
+                            setState(() {
+                              _appliedFilter = filter;
+                            });
                           });
                         },
-                        child: const Icon(Icons.layers),
-                      ),
-                      const Spacer(),
-                      if (_selectedAudioPath != null)
-                        IconButton(
-                          icon: Icon(
-                            _isAudioPlaying
-                                ? Icons.pause_circle_filled
-                                : Icons.play_circle_fill,
-                            color: Colors.blue,
-                          ),
-                          onPressed: _toggleAudioPlayback,
-                        ),
-                      InkWell(
-                        onTap: _downloadPoster,
-                        borderRadius: BorderRadius.circular(30),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 20, vertical: 10),
+                          width: 80,
+                          margin: const EdgeInsets.only(right: 12),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(10),
-                            gradient: const LinearGradient(
-                              colors: [
-                                Color(0xFF5C6BC0),
-                                Color.fromARGB(255, 127, 81, 255)
-                              ],
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                            ),
+                            border: _appliedFilter?.name == filter.name
+                                ? Border.all(color: Colors.blue, width: 2)
+                                : null,
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
+                          child: Column(
                             children: [
-                              Icon(
-                                Icons.download_for_offline_sharp,
-                                color: Colors.white,
-                                size: 18,
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(8),
+                                  ),
+                                  child: ColorFiltered(
+                                    colorFilter: filter.filter,
+                                    child: Image.file(
+                                      _posterImage!,
+                                      fit: BoxFit.cover,
+                                    ),
+                                  ),
+                                ),
                               ),
-                              SizedBox(width: 6),
-                              Text(
-                                'Download',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
+                              Container(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 4),
+                                width: double.infinity,
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.vertical(
+                                    bottom: Radius.circular(8),
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  filter.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      )
-                    ],
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: GestureDetector(
-                        onTap: () {
-                          // Deselect when tapping on the background
-                          setState(() {
-                            if (_selectedItem != null) {
-                              _selectedItem!.isSelected = false;
-                              _selectedItem = null;
-                            }
-                          });
-                        },
-                        onScaleStart: (details) {
-                          if (_selectedItem != null) {
-                            _baseScaleFactor = _selectedItem!.scale;
-                          }
-                        },
-                        onScaleUpdate: (details) {
-                          if (_selectedItem != null) {
-                            setState(() {
-                              // Apply scaling
-                              _selectedItem!.scale =
-                                  _baseScaleFactor * details.scale;
-
-                              // Limit scale range
-                              if (_selectedItem!.scale < 0.5)
-                                _selectedItem!.scale = 0.5;
-                              if (_selectedItem!.scale > 3.0)
-                                _selectedItem!.scale = 3.0;
-                            });
-                          }
-                        },
-                        child: Screenshot(
-                          controller: screenshotController,
-                          child: Container(
-                            key: _canvasKey,
-                            child: Stack(
-                              children: [
-                                ClipRRect(
-                                  borderRadius: BorderRadius.circular(8),
-                                  child: _buildPosterCanvas(),
-                                ),
-                                if (_layers
-                                    .firstWhere((layer) => layer.id == 'header',
-                                        orElse: () => LayerItem(
-                                            id: 'not-found',
-                                            name: 'Not Found',
-                                            isVisible: false))
-                                    .isVisible)
-                                  Positioned(
-                                    top: 10,
-                                    left: 10,
-                                    right: 10,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        GestureDetector(
-                                          onTap: _pickLogo,
-                                          child: Container(
-                                            width: 60,
-                                            height: 60,
-                                            padding: EdgeInsets.all(5),
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              border:
-                                                  Border.all(color: Colors.red),
-                                              image: _logoFile != null
-                                                  ? DecorationImage(
-                                                      image:
-                                                          FileImage(_logoFile!),
-                                                      fit: BoxFit.cover,
-                                                    )
-                                                  : null,
-                                            ),
-                                            child: _logoFile == null
-                                                ? Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment
-                                                            .center,
-                                                    children: [
-                                                      Icon(
-                                                          Icons
-                                                              .add_photo_alternate,
-                                                          size: 16,
-                                                          color: Colors.red),
-                                                      Text(
-                                                        'LOGO',
-                                                        style: TextStyle(
-                                                            fontSize: 10,
-                                                            color: Colors.red),
-                                                        textAlign:
-                                                            TextAlign.center,
-                                                      ),
-                                                    ],
-                                                  )
-                                                : null,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                if (_layers
-                                    .firstWhere((layer) => layer.id == 'person',
-                                        orElse: () => LayerItem(
-                                            id: 'not-found',
-                                            name: 'Not Found',
-                                            isVisible: false))
-                                    .isVisible)
-                                  Positioned(
-                                    top: 80,
-                                    left: 0,
-                                    right: 0,
-                                    child: Center(
-                                      child: Container(
-                                        width: 120,
-                                        height: 120,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                              color: Colors.orange, width: 3),
-                                          image:const DecorationImage(
-                                            fit: BoxFit.cover,
-                                            image: NetworkImage(
-                                                'https://s3-alpha-sig.figma.com/img/9cf6/9546/ebfe8be7faa0bcece189903d1e14b4d7?Expires=1745798400&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=YGwJR0j8WDu-tfa~nvJd90b9coqrtqXsWyqXePok5XUXvpyN5lVWahW33A5oomX6R05rIsJnDgFouHZMy3-~iGFbdXhbaupOkOAtNM2p3O6o9iBJDeil8qfb519bIUiu-7dZBHmy~y~UUOf-eymwdj9ikjqOY~XTlycxvxcZJE3rwdcZg6pAptH6Kw~nVTymvMpIq~eLrcrq2vLxVdWVhw7jNLHAZkpfIe0jCALLAgmQ5nyZNvMqRwmnAcpSKxwjudRM0ZsDqcCUukmupdFSNCB8fbpurIjoTK7v9KR6S0WCkv5MpzD0sJiXfsXGVLHK80RHO69RMXtGZAPhRsRNkQ__'),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                if (_layers
-                                    .firstWhere((layer) => layer.id == 'title',
-                                        orElse: () => LayerItem(
-                                            id: 'not-found',
-                                            name: 'Not Found',
-                                            isVisible: false))
-                                    .isVisible)
-                                  // Positioned(
-                                  //   top: 210,
-                                  //   left: 0,
-                                  //   right: 0,
-                                  //   child: Center(
-                                  //     child: Text(
-                                  //       'RASHTRASANT\nTUKDOJI MAHARAJ',
-                                  //       textAlign: TextAlign.center,
-                                  //       style: TextStyle(
-                                  //         fontSize: 20,
-                                  //         fontWeight: FontWeight.bold,
-                                  //         color: Colors.green,
-                                  //         shadows: [
-                                  //           Shadow(
-                                  //             offset: Offset(_textShadowOffset, _textShadowOffset),
-                                  //             blurRadius: _textShadowBlur,
-                                  //             color: _textShadowColor,
-                                  //           ),
-                                  //         ],
-                                  //       ),
-                                  //     ),
-                                  //   ),
-                                  // ),
-                                  if (_layers
-                                      .firstWhere(
-                                          (layer) => layer.id == 'subtitle',
-                                          orElse: () => LayerItem(
-                                              id: 'not-found',
-                                              name: 'Not Found',
-                                              isVisible: false))
-                                      .isVisible)
-                                    // Positioned(
-                                    //   top: 260,
-                                    //   left: 0,
-                                    //   right: 0,
-                                    //   child: Center(
-                                    //     child: Text(
-                                    //       'ON HIS BIRTH ANNIVERSARY',
-                                    //       style: TextStyle(fontSize: 14),
-                                    //     ),
-                                    //   ),
-                                    // ),
-                                    if (_layers
-                                        .firstWhere(
-                                            (layer) => layer.id == 'business',
-                                            orElse: () => LayerItem(
-                                                id: 'not-found',
-                                                name: 'Not Found',
-                                                isVisible: false))
-                                        .isVisible)
-                                      Positioned(
-                                        bottom: 20,
-                                        left: 10,
-                                        right: 10,
-                                        child: Column(
-                                          children: [
-                                            SizedBox(height: 5),
-                                            Container(
-                                              height: 35,
-                                             
-                                              decoration: BoxDecoration(
-                                                
-                                                color: const Color.fromARGB(255, 163, 153, 143)
-                                              ),
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
-                                                children: [
-                                                  GestureDetector(
-                                                    onTap: () {
-                                                      Navigator.push(context, MaterialPageRoute(builder: (context)=>BrandInfo()));
-                                                    },
-                                                    child: Text(
-                                                       _email??'abc@gmail.com',
-                                                      style:const TextStyle(
-                                                          fontSize: 12,
-                                                          fontWeight:
-                                                              FontWeight.w500),
-                                                    ),
-                                                  ),
-                                                  Row(
-                                                    children: [
-                                                      Icon(Icons.email,
-                                                          size: 16),
-                                                      GestureDetector(
-                                                        onTap: () {
-                                                          Navigator.push(context, MaterialPageRoute(builder: (context)=>BrandInfo()));
-                                                        },
-                                                        child: Text(_sitename??'www.abc.com',
-                                                            style: TextStyle(
-                                                                fontSize: 12)),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  Row(
-                                                    children: [
-                                                      Icon(Icons.phone, size: 16),
-                                                      GestureDetector(
-                                                        onTap: () {
-                                                          Navigator.push(context, MaterialPageRoute(builder: (context)=>BrandInfo()));
-                                                        },
-                                                        child: Text(
-                                                            _userNumber ??
-                                                                '8051281283',
-                                                            style: TextStyle(
-                                                                fontSize: 12)),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                ..._editorItems
-                                    .map((item) => _buildEditorItem(item)),
-                                if (_selectedItem != null)
-                                  _buildSelectionControls(_selectedItem!),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  Container(
-                    height: 80,
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                    color: Colors.black,
-                    child: SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 12),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _activeTool = 'text';
-                              });
-                              showAddTextBottomSheet(context);
-                            },
-                            child: BottomNavbarItem(
-                              icon: Icons.text_fields,
-                              label: 'Text',
-                              isActive: _activeTool == 'text',
-                            ),
-                          ),
-                          const SizedBox(width: 24),
-                          // GestureDetector(
-                          //   onTap: () async {
-                          //     setState(() {
-                          //       _activeTool = 'audio';
-                          //     });
-
-                          //     final result = await Navigator.push(
-                          //       context,
-                          //       MaterialPageRoute(
-                          //         builder: (context) => const AudioScreen()
-                          //       ),
-                          //     );
-
-                          //     if (result != null && result is String) {
-                          //       setState(() {
-                          //         _selectedAudioPath = result;
-                          //       });
-
-                          //       // Start playing the audio
-                          //       _audioPlayer.play(DeviceFileSource(_selectedAudioPath!));
-                          //       _isAudioPlaying = true;
-
-                          //       ScaffoldMessenger.of(context).showSnackBar(
-                          //         const SnackBar(
-                          //           content: Text('Audio added to poster'),
-                          //           backgroundColor: Colors.green,
-                          //         ),
-                          //       );
-                          //     }
-                          //   },
-                          //   child: BottomNavbarItem(
-                          //     icon: Icons.music_note,
-                          //     label: 'Audio',
-                          //     isActive: _activeTool == 'audio',
-                          //   ),
-                          // ),
-                          const SizedBox(width: 10),
-                          GestureDetector(
-                            onTap: () async {
-                              setState(() {
-                                _activeTool = 'animation';
-                              });
-
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const AnimationScreen()),
-                              );
-
-                              if (result != null &&
-                                  result is Map<String, dynamic>) {
-                                _applyAnimation(result['animationType'],
-                                    result['duration']);
-                              }
-                            },
-                            child: BottomNavbarItem(
-                              icon: Icons.animation,
-                              label: 'Animation',
-                              isActive: _activeTool == 'animation',
-                            ),
-                          ),
-                          const SizedBox(width: 24),
-                          GestureDetector(
-                            onTap: () async {
-                              // Navigator.push(context, MaterialPageRoute(builder: (context)=>BrandInfoScreenposter()));
-
-                              setState(() {
-                                _activeTool = 'brand';
-                              });
-
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => BrandInfo()),
-                              );
-                              if (result != null &&
-                                  result is Map<String, dynamic>) {
-                                setState(() {
-                                  if (result.containsKey('email')) {
-                                    _email = result['email'];
-                                  }
-                                  if (result.containsKey('phoneNumber')) {
-                                    _userNumber = result['phoneNumber'];
-                                  }
-                                  if (result.containsKey('site')) {
-                                    _sitename = result['site'];
-                                  }
-                                });
-                              }
-                            },
-                            child: BottomNavbarItem(
-                              icon: Icons.info_outline,
-                              label: 'Brand Info',
-                              isActive: _activeTool == 'brand',
-                            ),
-                          ),
-                          const SizedBox(width: 24),
-                          GestureDetector(
-                            onTap: () async {
-                              setState(() {
-                                _activeTool = 'sticker';
-                              });
-
-                              final result = await showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  shape: const RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.vertical(
-                                          top: Radius.circular(20))),
-                                  builder: (context) => const StickerPicker());
-
-                              if (result != null) {
-                                _addStickerItem('assets/unnamed.png');
-                              }
-                            },
-                            child: BottomNavbarItem(
-                              icon: Icons.emoji_emotions_outlined,
-                              label: 'Sticker',
-                              isActive: _activeTool == 'sticker',
-                            ),
-                          ),
-                          const SizedBox(width: 24),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _activeTool = 'effects';
-                              });
-
-                              showModalBottomSheet(
-                                context: context,
-                                shape: const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.vertical(
-                                      top: Radius.circular(20)),
-                                ),
-                                backgroundColor: Colors.white,
-                                isScrollControlled: true,
-                                builder: (context) {
-                                  return StatefulBuilder(
-                                    builder: (context, setModalState) {
-                                      return Container(
-                                        padding: const EdgeInsets.all(20),
-                                        height:
-                                            MediaQuery.of(context).size.height *
-                                                0.6,
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const Text(
-                                              'Text Effects',
-                                              style: TextStyle(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                            ),
-                                            const SizedBox(height: 20),
-                                            const Text('Shadow Offset',
-                                                style: TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.w500)),
-                                            Slider(
-                                              value: _textShadowOffset,
-                                              min: 0,
-                                              max: 10,
-                                              divisions: 20,
-                                              label: _textShadowOffset
-                                                  .toStringAsFixed(1),
-                                              onChanged: (value) {
-                                                setModalState(() {
-                                                  _textShadowOffset = value;
-                                                });
-                                                setState(() {
-                                                  _textShadowOffset = value;
-                                                });
-                                              },
-                                            ),
-                                            const SizedBox(height: 10),
-                                            const Text('Shadow Blur',
-                                                style: TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.w500)),
-                                            Slider(
-                                              value: _textShadowBlur,
-                                              min: 0,
-                                              max: 20,
-                                              divisions: 20,
-                                              label: _textShadowBlur
-                                                  .toStringAsFixed(1),
-                                              onChanged: (value) {
-                                                setModalState(() {
-                                                  _textShadowBlur = value;
-                                                });
-                                                setState(() {
-                                                  _textShadowBlur = value;
-                                                });
-                                              },
-                                            ),
-                                            const SizedBox(height: 10),
-                                            const Text('Shadow Color',
-                                                style: TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.w500)),
-                                            const SizedBox(height: 10),
-                                            GestureDetector(
-                                              onTap: () {
-                                                showDialog(
-                                                  context: context,
-                                                  builder:
-                                                      (BuildContext context) {
-                                                    return AlertDialog(
-                                                      title: const Text(
-                                                          'Pick Shadow Color'),
-                                                      content:
-                                                          SingleChildScrollView(
-                                                        child: ColorPicker(
-                                                          pickerColor:
-                                                              _textShadowColor,
-                                                          onColorChanged:
-                                                              (Color color) {
-                                                            setModalState(() {
-                                                              _textShadowColor =
-                                                                  color;
-                                                            });
-                                                            setState(() {
-                                                              _textShadowColor =
-                                                                  color;
-                                                            });
-                                                          },
-                                                          pickerAreaHeightPercent:
-                                                              0.8,
-                                                          enableAlpha: true,
-                                                          displayThumbColor:
-                                                              true,
-                                                          showLabel: true,
-                                                          paletteType:
-                                                              PaletteType.hsv,
-                                                        ),
-                                                      ),
-                                                      actions: <Widget>[
-                                                        TextButton(
-                                                          child: const Text(
-                                                              'Done'),
-                                                          onPressed: () {
-                                                            Navigator.of(
-                                                                    context)
-                                                                .pop();
-                                                          },
-                                                        ),
-                                                      ],
-                                                    );
-                                                  },
-                                                );
-                                              },
-                                              child: Container(
-                                                width: 40,
-                                                height: 40,
-                                                decoration: BoxDecoration(
-                                                  color: _textShadowColor,
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                  border: Border.all(
-                                                      color: Colors.grey),
-                                                ),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 20),
-                                            const Text('Background Color',
-                                                style: TextStyle(
-                                                    fontWeight:
-                                                        FontWeight.w500)),
-                                            const SizedBox(height: 10),
-                                            GestureDetector(
-                                              onTap: () {
-                                                showDialog(
-                                                  context: context,
-                                                  builder:
-                                                      (BuildContext context) {
-                                                    return AlertDialog(
-                                                      title: const Text(
-                                                          'Pick Background Color'),
-                                                      content:
-                                                          SingleChildScrollView(
-                                                        child: ColorPicker(
-                                                          pickerColor:
-                                                              _backgroundColor,
-                                                          onColorChanged:
-                                                              (Color color) {
-                                                            setModalState(() {
-                                                              _backgroundColor =
-                                                                  color;
-                                                            });
-                                                            setState(() {
-                                                              _backgroundColor =
-                                                                  color;
-                                                            });
-                                                          },
-                                                          pickerAreaHeightPercent:
-                                                              0.8,
-                                                          enableAlpha: true,
-                                                          displayThumbColor:
-                                                              true,
-                                                          showLabel: true,
-                                                          paletteType:
-                                                              PaletteType.hsv,
-                                                        ),
-                                                      ),
-                                                      actions: <Widget>[
-                                                        TextButton(
-                                                          child: const Text(
-                                                              'Done'),
-                                                          onPressed: () {
-                                                            Navigator.of(
-                                                                    context)
-                                                                .pop();
-                                                          },
-                                                        ),
-                                                      ],
-                                                    );
-                                                  },
-                                                );
-                                              },
-                                              child: Container(
-                                                width: 40,
-                                                height: 40,
-                                                decoration: BoxDecoration(
-                                                  color: _backgroundColor,
-                                                  borderRadius:
-                                                      BorderRadius.circular(8),
-                                                  border: Border.all(
-                                                      color: Colors.grey),
-                                                ),
-                                              ),
-                                            ),
-                                            const Spacer(),
-                                            SizedBox(
-                                              width: double.infinity,
-                                              child: ElevatedButton(
-                                                style: ElevatedButton.styleFrom(
-                                                  backgroundColor: Colors.blue,
-                                                  foregroundColor: Colors.white,
-                                                  padding: const EdgeInsets
-                                                      .symmetric(vertical: 12),
-                                                ),
-                                                onPressed: () {
-                                                  Navigator.pop(context);
-                                                },
-                                                child:
-                                                    const Text('Apply Effects'),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    },
-                                  );
-                                },
-                              );
-                            },
-                            child: BottomNavbarItem(
-                              icon: Icons.auto_fix_high,
-                              label: 'Effects',
-                              isActive: _activeTool == 'effects',
-                            ),
-                          ),
-                          const SizedBox(width: 24),
-                          GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _activeTool = 'background';
-                              });
-                              _openBackgroundColorPicker();
-                            },
-                            child: BottomNavbarItem(
-                              icon: Icons.format_color_fill,
-                              label: 'Background',
-                              isActive: _activeTool == 'background',
-                            ),
-                          ),
-                          const SizedBox(width: 24),
-                          GestureDetector(
-                            onTap: () async {
-                              setState(() {
-                                _activeTool = 'image';
-                              });
-
-                              final result = await Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) =>
-                                        const AddImageScreen()),
-                              );
-
-                              if (result != null && result is String) {
-                                setState(() {
-                                  _backgroundImage = result;
-                                });
-                              }
-                            },
-                            child: BottomNavbarItem(
-                              icon: Icons.image,
-                              label: 'Image',
-                              isActive: _activeTool == 'image',
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              // Layer slider panel
-              // if (_showLayerSlider)
-              //   Positioned(
-              //     right: 0,
-              //     top: 70,
-              //     bottom: 100,
-              //     width: 250,
-              //     child: Container(
-              //       decoration: BoxDecoration(
-              //         color: Colors.white,
-              //         boxShadow: [
-              //           BoxShadow(
-              //             color: Colors.black.withOpacity(0.2),
-              //             blurRadius: 10,
-              //             spreadRadius: 1,
-              //           ),
-              //         ],
-              //         borderRadius: const BorderRadius.only(
-              //           topLeft: Radius.circular(15),
-              //           bottomLeft: Radius.circular(15),
-              //         ),
-              //       ),
-              //       padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-              //       child: Column(
-              //         crossAxisAlignment: CrossAxisAlignment.start,
-              //         children: [
-              //           Row(
-              //             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              //             children: [
-              //               const Text(
-              //                 'Layers',
-              //                 style: TextStyle(
-              //                   fontSize: 18,
-              //                   fontWeight: FontWeight.bold,
-              //                 ),
-              //               ),
-              //               IconButton(
-              //                 icon: const Icon(Icons.close),
-              //                 onPressed: () {
-              //                   setState(() {
-              //                     _showLayerSlider = false;
-              //                   });
-              //                 },
-              //               ),
-              //             ],
-              //           ),
-              //           const Divider(),
-              //           Expanded(
-              //             child: ListView.builder(
-              //               itemCount: _layers.length,
-              //               itemBuilder: (context, index) {
-              //                 final layer = _layers[index];
-              //                 return ListTile(
-              //                   title: Text(layer.name),
-              //                   leading: IconButton(
-              //                     icon: Icon(
-              //                       layer.isVisible ? Icons.visibility : Icons.visibility_off,
-              //                       color: layer.isVisible ? Colors.blue : Colors.grey,
-              //                     ),
-              //                     onPressed: () {
-              //                       _toggleLayerVisibility(layer.id);
-              //                     },
-              //                   ),
-              //                   dense: true,
-              //                 );
-              //               },
-              //             ),
-              //           ),
-              //         ],
-              //       ),
-              //     ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPosterCanvas() {
-    return Container(
-      width: _selectedAnimation == null ? double.infinity : null,
-      height: _selectedAnimation == null ? null : null,
-      alignment: Alignment.center,
-      color: _backgroundColor,
-      child: _selectedAnimation != null
-          ? _buildAnimatedPoster()
-          : (_backgroundImage.isNotEmpty)
-              ? Image.network(
-                  _backgroundImage,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                )
-              : Container(color: _backgroundColor),
-    );
-  }
-
-  Widget _buildAnimatedPoster() {
-    switch (_selectedAnimation) {
-      case 'Fade In':
-        return FadeTransition(
-          opacity: _animation,
-          child: Container(
-            color: _backgroundColor,
-            width: double.infinity,
-            height: double.infinity,
-            child: _backgroundImage.isNotEmpty
-                ? Image.network(
-                    _backgroundImage,
-                    fit: BoxFit.cover,
-                  )
-                : null,
-          ),
-        );
-      case 'Zoom In':
-        return ScaleTransition(
-          scale: _animation,
-          child: Container(
-            color: _backgroundColor,
-            width: double.infinity,
-            height: double.infinity,
-            child: _backgroundImage.isNotEmpty
-                ? Image.network(
-                    _backgroundImage,
-                    fit: BoxFit.cover,
-                  )
-                : null,
-          ),
-        );
-      case 'Slide In':
-        return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(-1.0, 0.0),
-            end: Offset.zero,
-          ).animate(_animationController),
-          child: Container(
-            color: _backgroundColor,
-            width: double.infinity,
-            height: double.infinity,
-            child: _backgroundImage.isNotEmpty
-                ? Image.network(
-                    _backgroundImage,
-                    fit: BoxFit.cover,
-                  )
-                : null,
-          ),
-        );
-      case 'Rotate':
-        return RotationTransition(
-          turns: _animation,
-          child: Container(
-            color: _backgroundColor,
-            width: double.infinity,
-            height: double.infinity,
-            child: _backgroundImage.isNotEmpty
-                ? Image.network(
-                    _backgroundImage,
-                    fit: BoxFit.cover,
-                  )
-                : null,
-          ),
-        );
-      default:
-        return Container(
-          color: _backgroundColor,
-          width: double.infinity,
-          height: double.infinity,
-          child: _backgroundImage.isNotEmpty
-              ? Image.network(
-                  _backgroundImage,
-                  fit: BoxFit.cover,
-                )
-              : null,
-        );
-    }
-  }
-
-  Widget _buildEditorItem(EditorItem item) {
-    return Positioned(
-      left: item.position.dx,
-      top: item.position.dy,
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            // Deselect previous item
-            if (_selectedItem != null) {
-              _selectedItem!.isSelected = false;
-            }
-            // Select this item
-            item.isSelected = true;
-            _selectedItem = item;
-          });
-        },
-        onPanUpdate: (details) {
-          setState(() {
-            item.position = Offset(
-              item.position.dx + details.delta.dx,
-              item.position.dy + details.delta.dy,
-            );
-          });
-        },
-        child: Transform.scale(
-          scale: item.scale,
-          child: item.child,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSelectionControls(EditorItem item) {
-    return Positioned(
-      left: item.position.dx - 10,
-      top: item.position.dy - 10,
-      child: Container(
-        width: 150 * item.scale + 20, // Approximation of size
-        height: 50 * item.scale + 20, // Approximation of size
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: Colors.blue,
-            width: 2,
-          ),
-          borderRadius: BorderRadius.circular(5),
-        ),
-        child: Stack(
-          children: [
-            // Delete button
-            Positioned(
-              right: -5,
-              top: -5,
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _editorItems.remove(item);
-                    _selectedItem = null;
-                  });
-                },
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-              ),
-            ),
-            // Rotate button
-            Positioned(
-              bottom: -5,
-              right: -5,
-              child: GestureDetector(
-                onTap: () {
-                  // Implement rotation logic
-                },
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: const BoxDecoration(
-                    color: Colors.blue,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.rotate_right,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void showAddTextBottomSheet(BuildContext context) {
-    final TextEditingController textController = TextEditingController();
-    Color selectedColor = Colors.black;
-    double fontSize = 20;
-    String fontFamily = 'Roboto';
-    FontWeight fontWeight = FontWeight.normal;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Container(
-              padding: EdgeInsets.only(
-                top: 20,
-                left: 20,
-                right: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-              ),
-              height: MediaQuery.of(context).size.height * 0.8,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Add Text',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: textController,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter your text here',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 20),
-                  const Text('Font Size',
-                      style: TextStyle(fontWeight: FontWeight.w500)),
-                  Slider(
-                    value: fontSize,
-                    min: 12,
-                    max: 40,
-                    divisions: 28,
-                    label: fontSize.round().toString(),
-                    onChanged: (value) {
-                      setModalState(() {
-                        fontSize = value;
-                      });
+                      );
                     },
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Color',
-                          style: TextStyle(fontWeight: FontWeight.w500)),
-                      GestureDetector(
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text('Pick a color'),
-                                content: SingleChildScrollView(
-                                  child: ColorPicker(
-                                    pickerColor: selectedColor,
-                                    onColorChanged: (Color color) {
-                                      setModalState(() {
-                                        selectedColor = color;
-                                      });
-                                    },
-                                    pickerAreaHeightPercent: 0.8,
-                                  ),
-                                ),
-                                actions: <Widget>[
-                                  TextButton(
-                                    child: const Text('Done'),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
-                                ],
-                              );
-                            },
-                          );
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Adjustments',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Brightness slider
+                Row(
+                  children: [
+                    const SizedBox(width: 16),
+                    const Icon(Icons.brightness_6),
+                    const SizedBox(width: 8),
+                    const Text('Brightness'),
+                    Expanded(
+                      child: Slider(
+                        value: _brightness,
+                        min: -1.0,
+                        max: 1.0,
+                        divisions: 20,
+                        onChanged: (value) {
+                          setModalState(() {
+                            setState(() {
+                              _brightness = value;
+                            });
+                          });
                         },
-                        child: Container(
-                          width: 30,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            color: selectedColor,
-                            borderRadius: BorderRadius.circular(5),
-                            border: Border.all(color: Colors.grey),
-                          ),
+                      ),
+                    ),
+                  ],
+                ),
+                // Contrast slider
+                Row(
+                  children: [
+                    const SizedBox(width: 16),
+                    const Icon(Icons.contrast),
+                    const SizedBox(width: 8),
+                    const Text('Contrast'),
+                    Expanded(
+                      child: Slider(
+                        value: _contrast,
+                        min: 0.5,
+                        max: 2.0,
+                        divisions: 15,
+                        onChanged: (value) {
+                          setModalState(() {
+                            setState(() {
+                              _contrast = value;
+                            });
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                // Saturation slider
+                Row(
+                  children: [
+                    const SizedBox(width: 16),
+                    const Icon(Icons.color_lens),
+                    const SizedBox(width: 8),
+                    const Text('Saturation'),
+                    Expanded(
+                      child: Slider(
+                        value: _saturation,
+                        min: 0.0,
+                        max: 2.0,
+                        divisions: 20,
+                        onChanged: (value) {
+                          setModalState(() {
+                            setState(() {
+                              _saturation = value;
+                            });
+                          });
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // Preview
+                Expanded(
+                  child: Center(
+                    child: ColorFiltered(
+                      colorFilter: ColorFilter.matrix(
+                        ColorFilterGenerator.brightnessAdjustMatrix(
+                            _brightness),
+                      ),
+                      child: ColorFiltered(
+                        colorFilter: ColorFilter.matrix(
+                          ColorFilterGenerator.contrastAdjustMatrix(_contrast),
                         ),
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.matrix(
+                            ColorFilterGenerator.saturationAdjustMatrix(
+                                _saturation),
+                          ),
+                          child: _appliedFilter != null
+                              ? ColorFiltered(
+                                  colorFilter: ColorFilter.matrix(
+                                      _appliedFilter!.matrix),
+                                  child: Image.file(_posterImage!,
+                                      fit: BoxFit.contain),
+                                )
+                              : Image.file(_posterImage!, fit: BoxFit.contain),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // BACKGROUND COLOR METHODS
+  void _changeBackgroundColor() {
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(builder: (context, setDialogState) {
+        return AlertDialog(
+          title: const Text('Background Color'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (!_useGradient)
+                  ColorPicker(
+                    pickerColor: _backgroundColor,
+                    onColorChanged: (color) {
+                      setDialogState(() {
+                        _backgroundColor = color;
+                      });
+                    },
+                    pickerAreaHeightPercent: 0.8,
+                  ),
+                if (_useGradient)
+                  Column(
+                    children: [
+                      const Text('Gradient Color 1'),
+                      ColorPicker(
+                        pickerColor: _gradientColors[0],
+                        onColorChanged: (color) {
+                          setDialogState(() {
+                            _gradientColors[0] = color;
+                          });
+                        },
+                        pickerAreaHeightPercent: 0.4,
+                      ),
+                      const Text('Gradient Color 2'),
+                      ColorPicker(
+                        pickerColor: _gradientColors[1],
+                        onColorChanged: (color) {
+                          setDialogState(() {
+                            _gradientColors[1] = color;
+                          });
+                        },
+                        pickerAreaHeightPercent: 0.4,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 10),
-                  const Text('Font Style',
-                      style: TextStyle(fontWeight: FontWeight.w500)),
-                  const SizedBox(height: 10),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildFontStyleOption(
-                          'Regular',
-                          fontWeight == FontWeight.normal,
-                          () {
-                            setModalState(() {
-                              fontWeight = FontWeight.normal;
-                            });
-                          },
-                        ),
-                        _buildFontStyleOption(
-                          'Bold',
-                          fontWeight == FontWeight.bold,
-                          () {
-                            setModalState(() {
-                              fontWeight = FontWeight.bold;
-                            });
-                          },
-                        ),
-                        _buildFontStyleOption(
-                          'Italic',
-                          false, // Add a state variable for italic if needed
-                          () {
-                            // Implement italic toggle
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text('Font Family',
-                      style: TextStyle(fontWeight: FontWeight.w500)),
-                  const SizedBox(height: 10),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildFontFamilyOption(
-                          'Roboto',
-                          fontFamily == 'Roboto',
-                          () {
-                            setModalState(() {
-                              fontFamily = 'Roboto';
-                            });
-                          },
-                        ),
-                        _buildFontFamilyOption(
-                          'Poppins',
-                          fontFamily == 'Poppins',
-                          () {
-                            setModalState(() {
-                              fontFamily = 'Poppins';
-                            });
-                          },
-                        ),
-                        _buildFontFamilyOption(
-                          'Montserrat',
-                          fontFamily == 'Montserrat',
-                          () {
-                            setModalState(() {
-                              fontFamily = 'Montserrat';
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onPressed: () {
-                        if (textController.text.isNotEmpty) {
-                          _addTextItem(
-                            textController.text,
-                            fontSize,
-                            selectedColor,
-                            fontFamily,
-                            fontWeight,
-                          );
-                          Navigator.pop(context);
-                        }
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    const Text('Use Gradient: '),
+                    Switch(
+                      value: _useGradient,
+                      onChanged: (value) {
+                        setDialogState(() {
+                          _useGradient = value;
+                        });
                       },
-                      child: const Text('Add Text'),
                     ),
-                  ),
-                ],
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildFontStyleOption(
-      String label, bool isSelected, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(right: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.blue : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFontFamilyOption(
-      String fontFamily, bool isSelected, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(right: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.blue : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          fontFamily,
-          style: TextStyle(
-            fontFamily: fontFamily,
-            color: isSelected ? Colors.white : Colors.black,
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _addTextItem(
-    String text,
-    double fontSize,
-    Color color,
-    String fontFamily,
-    FontWeight fontWeight,
-  ) {
-    final size = MediaQuery.of(context).size;
-    setState(() {
-      _editorItems.add(
-        EditorItem(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          position: Offset(size.width / 4, size.height / 4),
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: fontSize,
-              color: color,
-              fontFamily: fontFamily,
-              fontWeight: fontWeight,
-              shadows: [
-                Shadow(
-                  offset: Offset(_textShadowOffset, _textShadowOffset),
-                  blurRadius: _textShadowBlur,
-                  color: _textShadowColor,
+                  ],
                 ),
               ],
             ),
           ),
-        ),
-      );
-    });
-  }
-
-  void _addStickerItem(String stickerAsset) {
-    final size = MediaQuery.of(context).size;
-    setState(() {
-      _editorItems.add(
-        EditorItem(
-          id: DateTime.now().millisecondsSinceEpoch.toString(),
-          position: Offset(size.width / 4, size.height / 4),
-          child: Image.asset(
-            stickerAsset,
-            width: 100,
-            height: 100,
-          ),
-        ),
-      );
-    });
-  }
-}
-
-class StickerPicker extends StatelessWidget {
-  const StickerPicker({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    final List<String> stickers = [
-      'assets/unnamed.png',
-      'assets/unnamed.png',
-      'assets/unnamed.png',
-      'assets/unnamed.png',
-      'assets/unnamed.png',
-      'assets/unnamed.png',
-      'assets/unnamed.png',
-      'assets/unnamed.png',
-    ];
-
-    return Container(
-      padding: const EdgeInsets.all(20),
-      height: MediaQuery.of(context).size.height * 0.5,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Select Sticker',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: 20),
-          Expanded(
-            child: GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 10,
-                mainAxisSpacing: 10,
-              ),
-              itemCount: stickers.length,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context, stickers[index]);
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Image.asset(
-                      stickers[index],
-                      fit: BoxFit.contain,
-                    ),
-                  ),
-                );
-              },
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
             ),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  // Keep the selected colors and gradient option
+                });
+                Navigator.pop(context);
+              },
+              child: const Text('Apply'),
+            ),
+          ],
+        );
+      }),
+    );
+  }
+
+  // CONTACT INFO METHODS
+  void _editContactInfo() {
+    final TextEditingController controller =
+        TextEditingController(text: contactInfoItem?.text);
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Edit Contact Information'),
+        content: TextField(
+          controller: controller,
+          decoration:
+              const InputDecoration(hintText: 'Enter contact information'),
+          maxLines: 3,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              setState(() {
+                _contactInfoController.text = controller.text;
+                contactInfoItem?.text = controller.text;
+              });
+              Navigator.pop(context);
+            },
+            child: const Text('Save'),
           ),
         ],
       ),
     );
   }
-}
 
-
-
-class PosterEditor extends StatefulWidget {
-  final String email;
-  final String phoneNumber;
-  final String sitename;
-
-  const PosterEditor({
-    Key? key,
-    required this.email,
-    required this.phoneNumber,
-    required this.sitename,
-  }) : super(key: key);
-
-  @override
-  _PosterEditorState createState() => _PosterEditorState();
-}
-
-class _PosterEditorState extends State<PosterEditor>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _animationController;
-  late Animation<double> _animation;
-  final List<EditorItem> _editorItems = [];
-  EditorItem? _selectedItem;
-  Color _backgroundColor = Colors.white;
-  String _backgroundImage = '';
-  String _activeTool = '';
-  double _textShadowOffset = 2.0;
-  double _textShadowBlur = 4.0;
-  Color _textShadowColor = Colors.black.withOpacity(0.5);
-  String? _selectedAnimation;
-  bool _showLayerSlider = false;
-  final List<Layer> _layers = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _animationController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    );
-    _animation =
-        Tween<double>(begin: 0.0, end: 1.0).animate(_animationController);
-
-    // Add business details as text items
-    _addBusinessInfo();
-
-    // Initialize layers
-    _initLayers();
-  }
-
-  void _addBusinessInfo() {
-    final size = MediaQuery.of(context).size;
-
-    // Add business name
-    _editorItems.add(
-      EditorItem(
-        id: 'email',
-        position: Offset(size.width / 4, size.height / 6),
-        child: Text(
-          widget.email,
-          style: const TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
-            fontFamily: 'Roboto',
-          ),
-        ),
-      ),
-    );
-
-    // Add phone number
-    _editorItems.add(
-      EditorItem(
-        id: 'phone_number',
-        position: Offset(size.width / 4, size.height / 6 + 40),
-        child: Text(
-          'Phone: ${widget.phoneNumber}',
-          style: const TextStyle(
-            fontSize: 16,
-            fontFamily: 'Roboto',
-          ),
-        ),
-      ),
-    );
-
-    // Add address
-    _editorItems.add(
-      EditorItem(
-        id: 'site',
-        position: Offset(size.width / 4, size.height / 6 + 70),
-        child: Text(
-          'Address: ${widget.sitename}',
-          style: const TextStyle(
-            fontSize: 16,
-            fontFamily: 'Roboto',
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _initLayers() {
-    // Add default layers
-    _layers.add(Layer(id: 'background', name: 'Background', isVisible: true));
-    _layers.add(Layer(id: 'content', name: 'Content', isVisible: true));
-    _layers.add(
-        Layer(id: 'business_info', name: 'Business Info', isVisible: true));
-  }
-
-  void _toggleLayerVisibility(String layerId) {
-    setState(() {
-      final layerIndex = _layers.indexWhere((layer) => layer.id == layerId);
-      if (layerIndex != -1) {
-        _layers[layerIndex].isVisible = !_layers[layerIndex].isVisible;
-      }
-    });
-  }
-
-  void _openBackgroundColorPicker() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Pick a background color'),
-          content: SingleChildScrollView(
-            child: ColorPicker(
-              pickerColor: _backgroundColor,
-              onColorChanged: (Color color) {
-                setState(() {
-                  _backgroundColor = color;
-                });
-              },
-              pickerAreaHeightPercent: 0.8,
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('Done'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-          ],
+  // SAVE AND EXPORT METHODS
+  Future<void> _savePoster() async {
+    try {
+      // Request storage permission
+      final status = await Permission.storage.request();
+      if (!status.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content:
+                  Text('Storage permission is required to save the poster.')),
         );
-      },
-    );
+        return;
+      }
+
+      // Capture the poster as image
+      RenderRepaintBoundary boundary = _posterKey.currentContext!
+          .findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
+
+      if (byteData != null) {
+        final buffer = byteData.buffer.asUint8List();
+
+        // Get app directory
+        final appDir = await getApplicationDocumentsDirectory();
+        final fileName = 'poster_${DateTime.now().millisecondsSinceEpoch}.png';
+        final file = File('${appDir.path}/$fileName');
+
+        // Save file
+        await file.writeAsBytes(buffer);
+
+        // Save to gallery
+        final mediaStorePlugin = MediaStore();
+
+// await mediaStorePlugin.saveFile(
+//   tempFilePath: file.path,
+//   dirType: DirType.pictures,   // ✅ use 'pictures' for images
+//   dirName: 'Posters',          // ✅ OK as string (creates Posters folder inside Pictures)
+// );
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Poster saved to gallery as $fileName')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to save poster: $e')),
+      );
+    }
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    super.dispose();
+  Future<void> _sharePoster() async {
+    try {
+      // Capture the poster as image
+      RenderRepaintBoundary boundary = _posterKey.currentContext!
+          .findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
+
+      if (byteData != null) {
+        final buffer = byteData.buffer.asUint8List();
+
+        // Get temporary directory
+        final tempDir = await getTemporaryDirectory();
+        final fileName = 'poster_${DateTime.now().millisecondsSinceEpoch}.png';
+        final file = File('${tempDir.path}/$fileName');
+
+        // Save file
+        await file.writeAsBytes(buffer);
+
+        // Share file
+        await Share.shareXFiles([XFile(file.path)],
+            text: 'Check out my poster!');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to share poster: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Get screen dimensions
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // Default dimensions (if posterSize is null)
+    double posterWidth = screenWidth;
+    double posterHeight = screenHeight * 0.7;
+
+    // If we have a posterSize, calculate appropriate dimensions
+    if (widget.posterSize?.size != null) {
+      // Extract dimensions from size string (format: "width*height")
+      final sizeString = widget.posterSize!.size;
+      final parts = sizeString.split('*');
+
+      if (parts.length == 2) {
+        double width = double.tryParse(parts[0]) ?? 0;
+        double height = double.tryParse(parts[1]) ?? 0;
+
+        if (width > 0 && height > 0) {
+          // Keep aspect ratio but fit within screen
+          double aspectRatio = width / height;
+
+          // Calculate max height and width while maintaining aspect ratio
+          if (aspectRatio > 1) {
+            // Wider than tall
+            posterWidth = min(screenWidth, screenWidth * 0.9);
+            posterHeight = posterWidth / aspectRatio;
+          } else {
+            // Taller than wide
+            posterHeight = min(screenHeight * 0.7, screenHeight * 0.6);
+            posterWidth = posterHeight * aspectRatio;
+          }
+        }
+      }
+    }
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Poster Editor'),
+        title: const Text('Poster Maker'),
         actions: [
           IconButton(
             icon: const Icon(Icons.save),
-            onPressed: () {
-              // Implement save functionality
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Poster saved to gallery'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
+            onPressed: _savePoster,
+            tooltip: 'Save Poster',
           ),
           IconButton(
             icon: const Icon(Icons.share),
-            onPressed: () {
-              // Implement share functionality
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Sharing poster...'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.layers),
-            onPressed: () {
-              setState(() {
-                _showLayerSlider = !_showLayerSlider;
-              });
-            },
+            onPressed: _sharePoster,
+            tooltip: 'Share Poster',
           ),
         ],
       ),
-      body: SafeArea(
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Poster canvas
-            Positioned.fill(
-              child: _buildPosterCanvas(),
-            ),
-
-            // Editor items
-            ..._editorItems.map((item) => _buildEditorItem(item)),
-
-            // Selection controls for selected item
-            if (_selectedItem != null && _selectedItem!.isSelected)
-              _buildSelectionControls(_selectedItem!),
-
-            // Bottom controls
-            Column(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                Container(
-                  height: 80,
-                  color: Colors.white,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                      children: [
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _activeTool = 'text';
-                            });
-                            showAddTextBottomSheet(context);
-                          },
-                          child: BottomNavbarItem(
-                            icon: Icons.text_fields,
-                            label: 'Text',
-                            isActive: _activeTool == 'text',
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        GestureDetector(
-                          onTap: () async {
-                            setState(() {
-                              _activeTool = 'sticker';
-                            });
-                            final result = await showModalBottomSheet(
-                              context: context,
-                              builder: (context) => const StickerPicker(),
-                            );
-                            if (result != null) {
-                              _addStickerItem(result);
-                            }
-                          },
-                          child: BottomNavbarItem(
-                            icon: Icons.emoji_emotions,
-                            label: 'Stickers',
-                            isActive: _activeTool == 'sticker',
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _activeTool = 'effects';
-                            });
-                            showModalBottomSheet(
-                              context: context,
-                              isScrollControlled: true,
-                              shape: const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(20)),
-                              ),
-                              builder: (context) {
-                                return StatefulBuilder(
-                                  builder: (context, setModalState) {
-                                    return Container(
-                                      padding: const EdgeInsets.all(20),
-                                      height:
-                                          MediaQuery.of(context).size.height *
-                                              0.6,
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'Text Effects',
-                                            style: TextStyle(
-                                              fontSize: 20,
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 20),
-                                          const Text('Shadow Offset',
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.w500)),
-                                          Slider(
-                                            value: _textShadowOffset,
-                                            min: 0,
-                                            max: 10,
-                                            divisions: 20,
-                                            label: _textShadowOffset
-                                                .toStringAsFixed(1),
-                                            onChanged: (value) {
-                                              setModalState(() {
-                                                _textShadowOffset = value;
-                                              });
-                                              setState(() {
-                                                _textShadowOffset = value;
-                                              });
-                                            },
-                                          ),
-                                          const SizedBox(height: 10),
-                                          const Text('Shadow Blur',
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.w500)),
-                                          Slider(
-                                            value: _textShadowBlur,
-                                            min: 0,
-                                            max: 20,
-                                            divisions: 20,
-                                            label: _textShadowBlur
-                                                .toStringAsFixed(1),
-                                            onChanged: (value) {
-                                              setModalState(() {
-                                                _textShadowBlur = value;
-                                              });
-                                              setState(() {
-                                                _textShadowBlur = value;
-                                              });
-                                            },
-                                          ),
-                                          const SizedBox(height: 10),
-                                          const Text('Shadow Color',
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.w500)),
-                                          const SizedBox(height: 10),
-                                          GestureDetector(
-                                            onTap: () {
-                                              showDialog(
-                                                context: context,
-                                                builder:
-                                                    (BuildContext context) {
-                                                  return AlertDialog(
-                                                    title: const Text(
-                                                        'Pick Shadow Color'),
-                                                    content:
-                                                        SingleChildScrollView(
-                                                      child: ColorPicker(
-                                                        pickerColor:
-                                                            _textShadowColor,
-                                                        onColorChanged:
-                                                            (Color color) {
-                                                          setModalState(() {
-                                                            _textShadowColor =
-                                                                color;
-                                                          });
-                                                          setState(() {
-                                                            _textShadowColor =
-                                                                color;
-                                                          });
-                                                        },
-                                                        pickerAreaHeightPercent:
-                                                            0.8,
-                                                        enableAlpha: true,
-                                                        displayThumbColor: true,
-                                                        showLabel: true,
-                                                        paletteType:
-                                                            PaletteType.hsv,
-                                                      ),
-                                                    ),
-                                                    actions: <Widget>[
-                                                      TextButton(
-                                                        child:
-                                                            const Text('Done'),
-                                                        onPressed: () {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                      ),
-                                                    ],
-                                                  );
-                                                },
-                                              );
-                                            },
-                                            child: Container(
-                                              width: 40,
-                                              height: 40,
-                                              decoration: BoxDecoration(
-                                                color: _textShadowColor,
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                border: Border.all(
-                                                    color: Colors.grey),
-                                              ),
-                                            ),
-                                          ),
-                                          const SizedBox(height: 20),
-                                          const Text('Background Color',
-                                              style: TextStyle(
-                                                  fontWeight: FontWeight.w500)),
-                                          const SizedBox(height: 10),
-                                          GestureDetector(
-                                            onTap: () {
-                                              showDialog(
-                                                context: context,
-                                                builder:
-                                                    (BuildContext context) {
-                                                  return AlertDialog(
-                                                    title: const Text(
-                                                        'Pick Background Color'),
-                                                    content:
-                                                        SingleChildScrollView(
-                                                      child: ColorPicker(
-                                                        pickerColor:
-                                                            _backgroundColor,
-                                                        onColorChanged:
-                                                            (Color color) {
-                                                          setModalState(() {
-                                                            _backgroundColor =
-                                                                color;
-                                                          });
-                                                          setState(() {
-                                                            _backgroundColor =
-                                                                color;
-                                                          });
-                                                        },
-                                                        pickerAreaHeightPercent:
-                                                            0.8,
-                                                        enableAlpha: true,
-                                                        displayThumbColor: true,
-                                                        showLabel: true,
-                                                        paletteType:
-                                                            PaletteType.hsv,
-                                                      ),
-                                                    ),
-                                                    actions: <Widget>[
-                                                      TextButton(
-                                                        child:
-                                                            const Text('Done'),
-                                                        onPressed: () {
-                                                          Navigator.of(context)
-                                                              .pop();
-                                                        },
-                                                      ),
-                                                    ],
-                                                  );
-                                                },
-                                              );
-                                            },
-                                            child: Container(
-                                              width: 40,
-                                              height: 40,
-                                              decoration: BoxDecoration(
-                                                color: _backgroundColor,
-                                                borderRadius:
-                                                    BorderRadius.circular(8),
-                                                border: Border.all(
-                                                    color: Colors.grey),
-                                              ),
-                                            ),
-                                          ),
-                                          const Spacer(),
-                                          SizedBox(
-                                            width: double.infinity,
-                                            child: ElevatedButton(
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: Colors.blue,
-                                                foregroundColor: Colors.white,
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 12),
-                                              ),
-                                              onPressed: () {
-                                                Navigator.pop(context);
-                                              },
-                                              child:
-                                                  const Text('Apply Effects'),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    );
-                                  },
-                                );
-                              },
-                            );
-                          },
-                          child: BottomNavbarItem(
-                            icon: Icons.auto_fix_high,
-                            label: 'Effects',
-                            isActive: _activeTool == 'effects',
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _activeTool = 'background';
-                            });
-                            _openBackgroundColorPicker();
-                          },
-                          child: BottomNavbarItem(
-                            icon: Icons.format_color_fill,
-                            label: 'Background',
-                            isActive: _activeTool == 'background',
-                          ),
-                        ),
-                        const SizedBox(width: 24),
-                        GestureDetector(
-                          onTap: () async {
-                            setState(() {
-                              _activeTool = 'image';
-                            });
-
-                            final result = await Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => const AddImageScreen()),
-                            );
-
-                            if (result != null && result is String) {
-                              setState(() {
-                                _backgroundImage = result;
-                              });
-                            }
-                          },
-                          child: BottomNavbarItem(
-                            icon: Icons.image,
-                            label: 'Image',
-                            isActive: _activeTool == 'image',
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            // Layer slider panel
-            if (_showLayerSlider)
-              Positioned(
-                right: 0,
-                top: 70,
-                bottom: 100,
-                width: 250,
+      body: Column(
+        children: [
+          Expanded(
+            child: Center(
+              child: RepaintBoundary(
+                key: _posterKey,
                 child: Container(
+                  width: posterWidth,
+                  height: posterHeight,
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
-                        blurRadius: 10,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(15),
-                      bottomLeft: Radius.circular(15),
-                    ),
+                    color: !_useGradient ? _backgroundColor : null,
+                    gradient: _useGradient
+                        ? LinearGradient(
+                            colors: _gradientColors,
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : null,
                   ),
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 15, horizontal: 10),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Stack(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'Layers',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
+                      // Background image with filters
+                      if (_posterImage != null)
+                        Positioned.fill(
+                          child: ColorFiltered(
+                            colorFilter: ColorFilter.matrix(
+                              ColorFilterGenerator.brightnessAdjustMatrix(
+                                  _brightness),
+                            ),
+                            child: ColorFiltered(
+                              colorFilter: ColorFilter.matrix(
+                                ColorFilterGenerator.contrastAdjustMatrix(
+                                    _contrast),
+                              ),
+                              child: ColorFiltered(
+                                colorFilter: ColorFilter.matrix(
+                                  ColorFilterGenerator.saturationAdjustMatrix(
+                                      _saturation),
+                                ),
+                                child: _appliedFilter != null
+                                    ? ColorFiltered(
+                                        colorFilter: ColorFilter.matrix(
+                                            _appliedFilter!.matrix),
+                                        child: Image.file(_posterImage!,
+                                            fit: BoxFit.cover),
+                                      )
+                                    : Image.file(_posterImage!,
+                                        fit: BoxFit.cover),
+                              ),
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.close),
-                            onPressed: () {
+                        ),
+
+                      // Social media icons
+                      ...socialIcons
+                          .map((item) => Positioned(
+                                left: item.position.dx,
+                                top: item.position.dy,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedItemId = item.id;
+                                      _selectedItemType = 'icon';
+                                    });
+                                  },
+                                  child: DraggableWidget(
+                                    item: item,
+                                    child: _applyAnimation(
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          border: _selectedItemId == item.id
+                                              ? Border.all(
+                                                  color: Colors.blue, width: 2)
+                                              : null,
+                                        ),
+                                        child: item.child,
+                                      ),
+                                      item.id,
+                                      item.animationType,
+                                    ),
+                                  ),
+                                ),
+                              ))
+                          .toList(),
+
+                      // Logo
+                      if (logoItem != null)
+                        Positioned(
+                          left: logoItem!.position.dx,
+                          top: logoItem!.position.dy,
+                          child: GestureDetector(
+                            onTap: () {
                               setState(() {
-                                _showLayerSlider = false;
+                                _selectedItemId = logoItem!.id;
+                                _selectedItemType = 'logo';
+                                _showLogoOptions(); // Show options when logo is tapped
                               });
                             },
-                          ),
-                        ],
-                      ),
-                      const Divider(),
-                      Expanded(
-                        child: ListView.builder(
-                          itemCount: _layers.length,
-                          itemBuilder: (context, index) {
-                            final layer = _layers[index];
-                            return ListTile(
-                              title: Text(layer.name),
-                              leading: IconButton(
-                                icon: Icon(
-                                  layer.isVisible
-                                      ? Icons.visibility
-                                      : Icons.visibility_off,
-                                  color: layer.isVisible
-                                      ? Colors.blue
-                                      : Colors.grey,
-                                ),
-                                onPressed: () {
-                                  _toggleLayerVisibility(layer.id);
-                                },
-                              ),
-                              dense: true,
-                            );
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildPosterCanvas() {
-    return Container(
-      width: _selectedAnimation == null ? double.infinity : null,
-      height: _selectedAnimation == null ? null : null,
-      alignment: Alignment.center,
-      color: _backgroundColor,
-      child: _selectedAnimation != null
-          ? _buildAnimatedPoster()
-          : (_backgroundImage.isNotEmpty)
-              ? Image.network(
-                  _backgroundImage,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                )
-              : Container(color: _backgroundColor),
-    );
-  }
-
-  Widget _buildAnimatedPoster() {
-    switch (_selectedAnimation) {
-      case 'Fade In':
-        return FadeTransition(
-          opacity: _animation,
-          child: Container(
-            color: _backgroundColor,
-            width: double.infinity,
-            height: double.infinity,
-            child: _backgroundImage.isNotEmpty
-                ? Image.network(
-                    _backgroundImage,
-                    fit: BoxFit.cover,
-                  )
-                : null,
-          ),
-        );
-      case 'Zoom In':
-        return ScaleTransition(
-          scale: _animation,
-          child: Container(
-            color: _backgroundColor,
-            width: double.infinity,
-            height: double.infinity,
-            child: _backgroundImage.isNotEmpty
-                ? Image.network(
-                    _backgroundImage,
-                    fit: BoxFit.cover,
-                  )
-                : null,
-          ),
-        );
-      case 'Slide In':
-        return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(-1.0, 0.0),
-            end: Offset.zero,
-          ).animate(_animationController),
-          child: Container(
-            color: _backgroundColor,
-            width: double.infinity,
-            height: double.infinity,
-            child: _backgroundImage.isNotEmpty
-                ? Image.network(
-                    _backgroundImage,
-                    fit: BoxFit.cover,
-                  )
-                : null,
-          ),
-        );
-      case 'Rotate':
-        return RotationTransition(
-          turns: _animation,
-          child: Container(
-            color: _backgroundColor,
-            width: double.infinity,
-            height: double.infinity,
-            child: _backgroundImage.isNotEmpty
-                ? Image.network(
-                    _backgroundImage,
-                    fit: BoxFit.cover,
-                  )
-                : null,
-          ),
-        );
-      default:
-        return Container(
-          color: _backgroundColor,
-          width: double.infinity,
-          height: double.infinity,
-          child: _backgroundImage.isNotEmpty
-              ? Image.network(
-                  _backgroundImage,
-                  fit: BoxFit.cover,
-                )
-              : null,
-        );
-    }
-  }
-
-  Widget _buildEditorItem(EditorItem item) {
-    return Positioned(
-      left: item.position.dx,
-      top: item.position.dy,
-      child: GestureDetector(
-        onTap: () {
-          setState(() {
-            // Deselect previous item
-            if (_selectedItem != null) {
-              _selectedItem!.isSelected = false;
-            }
-            // Select this item
-            item.isSelected = true;
-            _selectedItem = item;
-          });
-        },
-        onPanUpdate: (details) {
-          setState(() {
-            item.position = Offset(
-              item.position.dx + details.delta.dx,
-              item.position.dy + details.delta.dy,
-            );
-          });
-        },
-        child: Transform.scale(
-          scale: item.scale,
-          child: item.child,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSelectionControls(EditorItem item) {
-    return Positioned(
-      left: item.position.dx - 10,
-      top: item.position.dy - 10,
-      child: Container(
-        width: 150 * item.scale + 20, // Approximation of size
-        height: 50 * item.scale + 20, // Approximation of size
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: Colors.blue,
-            width: 2,
-          ),
-          borderRadius: BorderRadius.circular(5),
-        ),
-        child: Stack(
-          children: [
-            // Delete button
-            Positioned(
-              right: -5,
-              top: -5,
-              child: GestureDetector(
-                onTap: () {
-                  setState(() {
-                    _editorItems.remove(item);
-                    _selectedItem = null;
-                  });
-                },
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: const BoxDecoration(
-                    color: Colors.red,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-              ),
-            ),
-            // Rotate button
-            Positioned(
-              bottom: -5,
-              right: -5,
-              child: GestureDetector(
-                onTap: () {
-                  // Implement rotation logic
-                },
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: const BoxDecoration(
-                    color: Colors.blue,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.rotate_right,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void showAddTextBottomSheet(BuildContext context) {
-    final TextEditingController textController = TextEditingController();
-    Color selectedColor = Colors.black;
-    double fontSize = 20;
-    String fontFamily = 'Roboto';
-    FontWeight fontWeight = FontWeight.normal;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setModalState) {
-            return Container(
-              padding: EdgeInsets.only(
-                top: 20,
-                left: 20,
-                right: 20,
-                bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-              ),
-              height: MediaQuery.of(context).size.height * 0.8,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Add Text',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 20),
-                  TextField(
-                    controller: textController,
-                    decoration: const InputDecoration(
-                      hintText: 'Enter your text here',
-                      border: OutlineInputBorder(),
-                    ),
-                    maxLines: 3,
-                  ),
-                  const SizedBox(height: 20),
-                  const Text('Font Size',
-                      style: TextStyle(fontWeight: FontWeight.w500)),
-                  Slider(
-                    value: fontSize,
-                    min: 12,
-                    max: 40,
-                    divisions: 28,
-                    label: fontSize.round().toString(),
-                    onChanged: (value) {
-                      setModalState(() {
-                        fontSize = value;
-                      });
-                    },
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Color',
-                          style: TextStyle(fontWeight: FontWeight.w500)),
-                      GestureDetector(
-                        onTap: () {
-                          showDialog(
-                            context: context,
-                            builder: (BuildContext context) {
-                              return AlertDialog(
-                                title: const Text('Pick a color'),
-                                content: SingleChildScrollView(
-                                  child: ColorPicker(
-                                    pickerColor: selectedColor,
-                                    onColorChanged: (Color color) {
-                                      setModalState(() {
-                                        selectedColor = color;
-                                      });
-                                    },
-                                    pickerAreaHeightPercent: 0.8,
+                            child: DraggableWidget(
+                              item: logoItem!,
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // The actual logo container
+                                  Container(
+                                    width: 100 *
+                                        logoItem!.scale, // Apply scale to width
+                                    height: 100 *
+                                        logoItem!
+                                            .scale, // Apply scale to height
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      border: _selectedItemId == logoItem!.id
+                                          ? Border.all(
+                                              color: Colors.blue, width: 2)
+                                          : null,
+                                    ),
+                                    child: ClipOval(
+                                      child: logoItem!.child,
+                                    ),
                                   ),
-                                ),
-                                actions: <Widget>[
-                                  TextButton(
-                                    child: const Text('Done'),
-                                    onPressed: () {
-                                      Navigator.of(context).pop();
-                                    },
-                                  ),
+
+                                  // Show resize handles when logo is selected
+                                  if (_selectedItemId == logoItem!.id)
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: GestureDetector(
+                                        onPanUpdate: (details) {
+                                          final double newScale =
+                                              logoItem!.scale +
+                                                  details.delta.dx * 0.01;
+                                          // Constrain scale to reasonable bounds
+                                          if (newScale >= 0.5 &&
+                                              newScale <= 3.0) {
+                                            setState(() {
+                                              logoItem!.scale = newScale;
+                                            });
+                                          }
+                                        },
+                                        child: Container(
+                                          width: 20,
+                                          height: 20,
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            Icons.open_with,
+                                            color: Colors.white,
+                                            size: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
                                 ],
-                              );
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      // Text items
+                      ...textItems
+                          .map((item) => Positioned(
+                                left: item.position.dx,
+                                top: item.position.dy,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedItemId = item.id;
+                                      _selectedItemType = 'text';
+                                    });
+                                    _editTextItem(item);
+                                  },
+                                  child: DraggableWidget(
+                                    item: item,
+                                    child: _applyAnimation(
+                                      Container(
+                                        padding: const EdgeInsets.all(4),
+                                        decoration: BoxDecoration(
+                                          color: item.bgColor,
+                                          border: _selectedItemId == item.id
+                                              ? Border.all(
+                                                  color: Colors.blue, width: 2)
+                                              : null,
+                                        ),
+                                        child: Text(
+                                          item.text,
+                                          style: TextStyle(
+                                            fontSize: item.fontSize,
+                                            fontWeight: item.fontWeight,
+                                            color: item.textColor,
+                                          ),
+                                        ),
+                                      ),
+                                      item.id,
+                                      item.animationType,
+                                    ),
+                                  ),
+                                ),
+                              ))
+                          .toList(),
+
+                      // Sticker items
+                      ...stickerItems
+                          .map((item) => Positioned(
+                                left: item.position.dx,
+                                top: item.position.dy,
+                                child: GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      _selectedItemId = item.id;
+                                      _selectedItemType = 'sticker';
+                                    });
+                                    _editStickerItem(item);
+                                  },
+                                  child: DraggableWidget(
+                                    item: item,
+                                    child: _applyAnimation(
+                                      Container(
+                                        decoration: BoxDecoration(
+                                          border: _selectedItemId == item.id
+                                              ? Border.all(
+                                                  color: Colors.blue, width: 2)
+                                              : null,
+                                        ),
+                                        child: Icon(
+                                          item.icon,
+                                          size: item.size,
+                                          color: item.color,
+                                        ),
+                                      ),
+                                      item.id,
+                                      item.animationType,
+                                    ),
+                                  ),
+                                ),
+                              ))
+                          .toList(),
+
+                      // Contact info (always at bottom)
+                      if (contactInfoItem != null)
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedItemId = contactInfoItem!.id;
+                                _selectedItemType = 'contact';
+                              });
+                              _editContactInfo();
                             },
-                          );
-                        },
-                        child: Container(
-                          width: 30,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            color: selectedColor,
-                            borderRadius: BorderRadius.circular(5),
-                            border: Border.all(color: Colors.grey),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  const Text('Font Style',
-                      style: TextStyle(fontWeight: FontWeight.w500)),
-                  const SizedBox(height: 10),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildFontStyleOption(
-                          'Regular',
-                          fontWeight == FontWeight.normal,
-                          () {
-                            setModalState(() {
-                              fontWeight = FontWeight.normal;
-                            });
-                          },
-                        ),
-                        _buildFontStyleOption(
-                          'Bold',
-                          fontWeight == FontWeight.bold,
-                          () {
-                            setModalState(() {
-                              fontWeight = FontWeight.bold;
-                            });
-                          },
-                        ),
-                        _buildFontStyleOption(
-                          'Italic',
-                          fontWeight == FontWeight.w300,
-                          () {
-                            setModalState(() {
-                              fontWeight = FontWeight.w300;
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  const Text('Font Family',
-                      style: TextStyle(fontWeight: FontWeight.w500)),
-                  const SizedBox(height: 10),
-                  SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: Row(
-                      children: [
-                        _buildFontFamilyOption(
-                          'Roboto',
-                          fontFamily == 'Roboto',
-                          () {
-                            setModalState(() {
-                              fontFamily = 'Roboto';
-                            });
-                          },
-                        ),
-                        _buildFontFamilyOption(
-                          'Montserrat',
-                          fontFamily == 'Montserrat',
-                          () {
-                            setModalState(() {
-                              fontFamily = 'Montserrat';
-                            });
-                          },
-                        ),
-                        _buildFontFamilyOption(
-                          'Playfair',
-                          fontFamily == 'Playfair',
-                          () {
-                            setModalState(() {
-                              fontFamily = 'Playfair';
-                            });
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                      onPressed: () {
-                        if (textController.text.isNotEmpty) {
-                          final newItem = EditorItem(
-                            id: 'text_${DateTime.now().millisecondsSinceEpoch}',
-                            position: Offset(
-                              MediaQuery.of(context).size.width / 4,
-                              MediaQuery.of(context).size.height / 4,
-                            ),
-                            child: Text(
-                              textController.text,
-                              style: TextStyle(
-                                fontSize: fontSize,
-                                color: selectedColor,
-                                fontWeight: fontWeight,
-                                fontFamily: fontFamily,
-                                shadows: [
-                                  Shadow(
-                                    offset: Offset(
-                                        _textShadowOffset, _textShadowOffset),
-                                    blurRadius: _textShadowBlur,
-                                    color: _textShadowColor,
+                            child: DraggableWidget(
+                              item: contactInfoItem!,
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Colors.black.withOpacity(0.3),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: _selectedItemId == contactInfoItem!.id
+                                      ? Border.all(color: Colors.blue, width: 2)
+                                      : null,
+                                ),
+                                child: Text(
+                                  contactInfoItem!.text,
+                                  style: const TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.white,
                                   ),
-                                ],
+                                ),
                               ),
                             ),
-                          );
-
-                          setState(() {
-                            _editorItems.add(newItem);
-                          });
-
-                          Navigator.pop(context);
-                        }
-                      },
-                      child: const Text('Add Text'),
-                    ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            color: Colors.grey.shade200,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _buildToolButton(
+                    icon: Icons.image,
+                    label: 'Background',
+                    onPressed: _pickPosterImage,
+                  ),
+                  _buildToolButton(
+                    icon: Icons.photo_filter,
+                    label: 'Filter',
+                    onPressed: _applyImageFilter,
+                  ),
+                  _buildToolButton(
+                    icon: Icons.color_lens,
+                    label: 'Color',
+                    onPressed: _changeBackgroundColor,
+                  ),
+                  _buildToolButton(
+                    icon: Icons.text_fields,
+                    label: 'Add Text',
+                    onPressed: _addNewText,
+                  ),
+                  _buildToolButton(
+                    icon: Icons.emoji_emotions,
+                    label: 'Stickers',
+                    onPressed: _addSticker,
+                  ),
+                  _buildToolButton(
+                    icon: Icons.business,
+                    label: 'Logo',
+                    onPressed: _pickLogoImage,
+                  ),
+                  _buildToolButton(
+                    icon: Icons.contact_phone,
+                    label: 'Contact',
+                    onPressed: _editContactInfo,
                   ),
                 ],
               ),
-            );
-          },
-        );
-      },
-    );
-  }
-
-  Widget _buildFontStyleOption(
-      String title, bool isSelected, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(right: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.blue : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          title,
-          style: TextStyle(
-            color: isSelected ? Colors.white : Colors.black,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildFontFamilyOption(
-      String family, bool isSelected, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.only(right: 10),
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 8),
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.blue : Colors.grey.shade200,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Text(
-          family,
-          style: TextStyle(
-            fontFamily: family,
-            color: isSelected ? Colors.white : Colors.black,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _addStickerItem(String stickerPath) {
-    final newItem = EditorItem(
-      id: 'sticker_${DateTime.now().millisecondsSinceEpoch}',
-      position: Offset(
-        MediaQuery.of(context).size.width / 4,
-        MediaQuery.of(context).size.height / 4,
-      ),
-      child: Image.asset(
-        stickerPath,
-        width: 80,
-        height: 80,
-      ),
-    );
-
-    setState(() {
-      _editorItems.add(newItem);
-      _selectedItem = newItem;
-      _selectedItem!.isSelected = true;
-    });
-  }
-}
-
-class EditorItem {
-  final String id;
-  Offset position;
-  final Widget child;
-  bool isSelected;
-  double scale;
-  double rotation;
-
-  EditorItem({
-    required this.id,
-    required this.position,
-    required this.child,
-    this.isSelected = false,
-    this.scale = 1.0,
-    this.rotation = 0.0,
-  });
-}
-
-class Layer {
-  final String id;
-  final String name;
-  bool isVisible;
-
-  Layer({
-    required this.id,
-    required this.name,
-    this.isVisible = true,
-  });
-}
-
-// class BottomNavbarItem extends StatelessWidget {
-//   final IconData icon;
-//   final String label;
-//   final bool isActive;
-
-//   const BottomNavbarItem({
-//     Key? key,
-//     required this.icon,
-//     required this.label,
-//     this.isActive = false,
-//   }) : super(key: key);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Column(
-//       mainAxisSize: MainAxisSize.min,
-//       children: [
-//         Icon(
-//           icon,
-//           color: isActive ? Colors.blue : Colors.grey,
-//           size: 28,
-//         ),
-//         const SizedBox(height: 4),
-//         Text(
-//           label,
-//           style: TextStyle(
-//             color: isActive ? Colors.blue : Colors.grey,
-//             fontSize: 12,
-//           ),
-//         ),
-//       ],
-//     );
-//   }
-// }
-
-// class StickerPicker extends StatelessWidget {
-//   const StickerPicker({Key? key}) : super(key: key);
-
-//   @override
-//   Widget build(BuildContext context) {
-//     // Mock sticker data
-//     final stickerCategories = [
-//       {
-//         'name': 'Emojis',
-//         'stickers': [
-//           'assets/stickers/emoji1.png',
-//           'assets/stickers/emoji2.png',
-//           'assets/stickers/emoji3.png',
-//           'assets/stickers/emoji4.png',
-//         ],
-//       },
-//       {
-//         'name': 'Shapes',
-//         'stickers': [
-//           'assets/stickers/shape1.png',
-//           'assets/stickers/shape2.png',
-//           'assets/stickers/shape3.png',
-//           'assets/stickers/shape4.png',
-//         ],
-//       },
-//       {
-//         'name': 'Icons',
-//         'stickers': [
-//           'assets/stickers/icon1.png',
-//           'assets/stickers/icon2.png',
-//           'assets/stickers/icon3.png',
-//           'assets/stickers/icon4.png',
-//         ],
-//       },
-//     ];
-
-//     return DefaultTabController(
-//       length: stickerCategories.length,
-//       child: Column(
-//         children: [
-//           TabBar(
-//             tabs: stickerCategories.map((category) => Tab(text: category['name'] as String)).toList(),
-//             labelColor: Colors.blue,
-//             unselectedLabelColor: Colors.grey,
-//             indicatorColor: Colors.blue,
-//           ),
-//           Expanded(
-//             child: TabBarView(
-//               children: stickerCategories.map((category) {
-//                 return GridView.count(
-//                   crossAxisCount: 4,
-//                   padding: const EdgeInsets.all(16),
-//                   children: (category['stickers'] as List<String>).map((sticker) {
-//                     return GestureDetector(
-//                       onTap: () {
-//                         Navigator.pop(context, sticker);
-//                       },
-//                       child: Container(
-//                         margin: const EdgeInsets.all(8),
-//                         decoration: BoxDecoration(
-//                           border: Border.all(color: Colors.grey.shade300),
-//                           borderRadius: BorderRadius.circular(8),
-//                         ),
-//                         child: Image.asset(
-//                           sticker,
-//                           fit: BoxFit.contain,
-//                         ),
-//                       ),
-//                     );
-//                   }).toList(),
-//                 );
-//               }).toList(),
-//             ),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-class AddImageScreen extends StatelessWidget {
-  const AddImageScreen({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    // Mock image data
-    final backgroundImages = [
-      'https://picsum.photos/id/10/800/1200',
-      'https://picsum.photos/id/20/800/1200',
-      'https://picsum.photos/id/30/800/1200',
-      'https://picsum.photos/id/40/800/1200',
-      'https://picsum.photos/id/50/800/1200',
-      'https://picsum.photos/id/60/800/1200',
-      'https://picsum.photos/id/70/800/1200',
-      'https://picsum.photos/id/80/800/1200',
-    ];
-
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Choose Background Image'),
-      ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Padding(
-            padding: EdgeInsets.all(16.0),
-            child: Text(
-              'Select a background image',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          Expanded(
-            child: GridView.count(
-              crossAxisCount: 2,
-              padding: const EdgeInsets.all(16),
-              mainAxisSpacing: 16,
-              crossAxisSpacing: 16,
-              children: backgroundImages.map((imageUrl) {
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.pop(context, imageUrl);
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8),
-                      image: DecorationImage(
-                        image: NetworkImage(imageUrl),
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ),
-                );
-              }).toList(),
             ),
           ),
         ],
       ),
     );
+  }
+
+  Widget _buildToolButton({
+    required IconData icon,
+    required String label,
+    required VoidCallback onPressed,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: Icon(icon),
+            onPressed: onPressed,
+            tooltip: label,
+          ),
+          Text(label, style: const TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+  }
+}
+
+class DraggableWidget extends StatelessWidget {
+  final dynamic item;
+  final Widget child;
+
+  const DraggableWidget({
+    super.key,
+    required this.item,
+    required this.child,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onPanUpdate: (details) {
+        item.onPositionChanged(Offset(
+          item.position.dx + details.delta.dx,
+          item.position.dy + details.delta.dy,
+        ));
+      },
+      child: Transform.rotate(
+        angle: item.rotation,
+        child: child,
+      ),
+    );
+  }
+}
+
+class DraggableItem {
+  final String id;
+  final Widget child;
+  Offset position;
+  double rotation;
+  double scale;
+  bool isAnimated;
+  String animationType;
+  final Function(Offset) onPositionChanged;
+
+  DraggableItem({
+    required this.id,
+    required this.child,
+    required this.position,
+    required this.rotation,
+    required this.scale,
+    required this.isAnimated,
+    required this.animationType,
+    required this.onPositionChanged,
+  });
+}
+
+class DraggableTextItem {
+  final String id;
+  String text;
+  Offset position;
+  double fontSize;
+  FontWeight fontWeight;
+  Color textColor;
+  Color bgColor;
+  double rotation;
+  bool isAnimated;
+  String animationType;
+  final Function(Offset) onPositionChanged;
+
+  DraggableTextItem({
+    required this.id,
+    required this.text,
+    required this.position,
+    required this.fontSize,
+    required this.fontWeight,
+    required this.textColor,
+    required this.bgColor,
+    required this.rotation,
+    required this.isAnimated,
+    required this.animationType,
+    required this.onPositionChanged,
+  });
+}
+
+class DraggableStickerItem {
+  final String id;
+  final String stickerType;
+  final IconData icon;
+  Offset position;
+  double size;
+  Color color;
+  double rotation;
+  bool isAnimated;
+  String animationType;
+  final Function(Offset) onPositionChanged;
+
+  DraggableStickerItem({
+    required this.id,
+    required this.stickerType,
+    required this.icon,
+    required this.position,
+    required this.size,
+    required this.color,
+    required this.rotation,
+    required this.isAnimated,
+    required this.animationType,
+    required this.onPositionChanged,
+  });
+}
+
+// Preset filters
+// final List<Filter> presetFilters = [
+//   ColorFilterGenerator.addFilter('None', <double>[
+//     1,
+//     0,
+//     0,
+//     0,
+//     0,
+//     0,
+//     1,
+//     0,
+//     0,
+//     0,
+//     0,
+//     0,
+//     1,
+//     0,
+//     0,
+//     0,
+//     0,
+//     0,
+//     1,
+//     0,
+//   ]),
+//   ColorFilterGenerator.addFilter('Sepia', <double>[
+//     0.393,
+//     0.769,
+//     0.189,
+//     0,
+//     0,
+//     0.349,
+//     0.686,
+//     0.168,
+//     0,
+//     0,
+//     0.272,
+//     0.534,
+//     0.131,
+//     0,
+//     0,
+//     0,
+//     0,
+//     0,
+//     1,
+//     0,
+//   ]),
+//   ColorFilterGenerator.addFilter('Grayscale', <double>[
+//     0.2126,
+//     0.7152,
+//     0.0722,
+//     0,
+//     0,
+//     0.2126,
+//     0.7152,
+//     0.0722,
+//     0,
+//     0,
+//     0.2126,
+//     0.7152,
+//     0.0722,
+//     0,
+//     0,
+//     0,
+//     0,
+//     0,
+//     1,
+//     0,
+//   ]),
+//   ColorFilterGenerator.addFilter('Vintage', <double>[
+//     0.9,
+//     0.5,
+//     0.1,
+//     0,
+//     0,
+//     0.3,
+//     0.8,
+//     0.1,
+//     0,
+//     0,
+//     0.2,
+//     0.3,
+//     0.5,
+//     0,
+//     0,
+//     0,
+//     0,
+//     0,
+//     1,
+//     0,
+//   ]),
+//   ColorFilterGenerator.addFilter('Cold', <double>[
+//     0.8,
+//     0,
+//     0,
+//     0,
+//     0,
+//     0,
+//     1,
+//     0,
+//     0,
+//     0,
+//     0,
+//     0,
+//     1.2,
+//     0,
+//     0,
+//     0,
+//     0,
+//     0,
+//     1,
+//     0,
+//   ]),
+//   ColorFilterGenerator.addFilter('Warm', <double>[
+//     1.2,
+//     0,
+//     0,
+//     0,
+//     0,
+//     0,
+//     1.0,
+//     0,
+//     0,
+//     0,
+//     0,
+//     0,
+//     0.8,
+//     0,
+//     0,
+//     0,
+//     0,
+//     0,
+//     1,
+//     0,
+//   ]),
+// ];
+
+// class ColorFilterGenerator {
+//   static Filter addFilter(String name, List<double> matrix) {
+//     return Filter(name: name, matrix: matrix);
+//   }
+
+//   static List<double> brightnessAdjustMatrix(double value) {
+//     return <double>[
+//       1,
+//       0,
+//       0,
+//       0,
+//       value,
+//       0,
+//       1,
+//       0,
+//       0,
+//       value,
+//       0,
+//       0,
+//       1,
+//       0,
+//       value,
+//       0,
+//       0,
+//       0,
+//       1,
+//       0,
+//     ];
+//   }
+
+//   static List<double> contrastAdjustMatrix(double value) {
+//     final double v = value;
+//     final double o = -(128 * v) + 128;
+//     return <double>[
+//       v,
+//       0,
+//       0,
+//       0,
+//       o,
+//       0,
+//       v,
+//       0,
+//       0,
+//       o,
+//       0,
+//       0,
+//       v,
+//       0,
+//       o,
+//       0,
+//       0,
+//       0,
+//       1,
+//       0,
+//     ];
+//   }
+
+//   static List<double> saturationAdjustMatrix(double value) {
+//     final double v = value;
+//     final double invSat = 1 - v;
+//     final double R = 0.213 * invSat;
+//     final double G = 0.715 * invSat;
+//     final double B = 0.072 * invSat;
+
+//     return <double>[
+//       R + v,
+//       G,
+//       B,
+//       0,
+//       0,
+//       R,
+//       G + v,
+//       B,
+//       0,
+//       0,
+//       R,
+//       G,
+//       B + v,
+//       0,
+//       0,
+//       0,
+//       0,
+//       0,
+//       1,
+//       0,
+//     ];
+//   }
+// }
+
+class Filter {
+  final String name;
+  final List<double> matrix;
+
+  Filter({required this.name, required this.matrix});
+}
+
+class FilterOption {
+  final String name;
+  final ColorFilter filter;
+  final List<double> matrix;
+
+  FilterOption({
+    required this.name,
+    required this.filter,
+    required this.matrix,
+  });
+}
+
+class ColorFilterGenerator {
+  static List<double> brightnessAdjustMatrix(double value) {
+    return [
+      1,
+      0,
+      0,
+      0,
+      value,
+      0,
+      1,
+      0,
+      0,
+      value,
+      0,
+      0,
+      1,
+      0,
+      value,
+      0,
+      0,
+      0,
+      1,
+      0,
+    ];
+  }
+
+  static List<double> contrastAdjustMatrix(double value) {
+    final v = value;
+    final o = (1.0 - v) * 0.5;
+    return [
+      v,
+      0,
+      0,
+      0,
+      o,
+      0,
+      v,
+      0,
+      0,
+      o,
+      0,
+      0,
+      v,
+      0,
+      o,
+      0,
+      0,
+      0,
+      1,
+      0,
+    ];
+  }
+
+  static List<double> saturationAdjustMatrix(double value) {
+    final v = value;
+    final r = 0.2126 * (1 - v);
+    final g = 0.7152 * (1 - v);
+    final b = 0.0722 * (1 - v);
+    return [
+      r + v,
+      g,
+      b,
+      0,
+      0,
+      r,
+      g + v,
+      b,
+      0,
+      0,
+      r,
+      g,
+      b + v,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
+    ];
   }
 }

@@ -254,7 +254,7 @@ class PosterScreen extends StatelessWidget {
                   onTap: () {
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => const PosterTemplate(isCustom: false))
+                      MaterialPageRoute(builder: (context) => const PosterMaker(isCustom: false,))
                     );
                   },
                   child: GestureDetector(

@@ -75,16 +75,16 @@ class _BrandInfoState extends State<BrandInfo> {
                       siteName: site
                     );
 
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => PosterEditor(
-                          email: email,
-                          phoneNumber: phone,
-                          sitename: site,
-                        ),
-                      ),
-                    );
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (context) => PosterEditor(
+                    //       email: email,
+                    //       phoneNumber: phone,
+                    //       sitename: site,
+                    //     ),
+                    //   ),
+                    // );
                   } else {
                     ScaffoldMessenger.of(context).showSnackBar(
                       const SnackBar(content: Text('Please fill in all fields')),

@@ -1,791 +1,9 @@
-// import 'package:flutter/material.dart';
-// import 'package:image_picker/image_picker.dart';
-// import 'package:path_provider/path_provider.dart';
-// import 'package:share_plus/share_plus.dart';
-// import 'package:flutter/rendering.dart';
-// import 'dart:ui' as ui;
-// import 'dart:io';
-// import 'package:flutter/services.dart';
-// import 'dart:typed_data';
-// import 'package:permission_handler/permission_handler.dart';
-// import 'package:media_store_plus/media_store_plus.dart';
 
-// class PosterMakerApp extends StatelessWidget {
-//   final dynamic poster;
-//   final bool isCustom;
-
-//   const PosterMakerApp({
-//     super.key,
-//     this.poster,
-//     this.isCustom = false,
-//   });
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       title: 'Poster Maker',
-//       theme: ThemeData(
-//         primarySwatch: Colors.blue,
-//         visualDensity: VisualDensity.adaptivePlatformDensity,
-//       ),
-//       home: PosterMakerScreen(poster: poster, isCustom: isCustom),
-//       debugShowCheckedModeBanner: false,
-//     );
-//   }
-// }
-
-// class PosterMakerScreen extends StatefulWidget {
-//   final dynamic poster;
-//   final bool isCustom;
-
-//   const PosterMakerScreen({
-//     super.key,
-//     this.poster,
-//     this.isCustom = false,
-//   });
-
-//   @override
-//   _PosterMakerScreenState createState() => _PosterMakerScreenState();
-// }
-
-// class _PosterMakerScreenState extends State<PosterMakerScreen> {
-//   final GlobalKey _posterKey = GlobalKey();
-//   File? _posterImage;
-//   File? _logoImage;
-//   final TextEditingController _contactInfoController = TextEditingController(
-//     text: 'Email: info@example.com | Website: example.com | Phone: 123-456-7890',
-//   );
-
-//   // Default social media icons
-//   List<DraggableItem> socialIcons = [];
-//   // Text items
-//   List<DraggableTextItem> textItems = [];
-//   // Logo
-//   DraggableItem? logoItem;
-//   // Contact info text item
-//   DraggableTextItem? contactInfoItem;
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     _loadDefaultSocialIcons();
-
-//     // Initialize contact info text item
-//     contactInfoItem = DraggableTextItem(
-//       id: 'contact_info',
-//       text: _contactInfoController.text,
-//       position: const Offset(20, 0),
-//       onPositionChanged: (Offset newPosition) {
-//         setState(() {
-//           contactInfoItem?.position = newPosition;
-//         });
-//       },
-//     );
-
-//     // Load the passed poster if available
-//     _loadPassedPoster();
-//   }
-
-//   void _loadPassedPoster() {
-//     if (widget.poster != null) {
-//       // Handle different types of poster objects
-//       if (widget.poster is File) {
-//         setState(() {
-//           _posterImage = widget.poster;
-//         });
-//       } else if (widget.poster is String && widget.poster.toString().startsWith('http')) {
-//         // If poster is a URL, you could download it or handle appropriately
-//         // For demonstration, we'll just show a placeholder
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           const SnackBar(content: Text('Loading poster from URL...')),
-//         );
-//       } else if (widget.poster is Map) {
-//         // If poster is a Map or other complex object
-//         // Extract image path or data as needed for your specific implementation
-//         if (widget.poster['imagePath'] != null) {
-//           setState(() {
-//             _posterImage = File(widget.poster['imagePath']);
-//           });
-//         }
-//       }
-//     }
-//   }
-
-//   Future<void> _loadDefaultSocialIcons() async {
-//     // This would typically load actual icons, but we'll create placeholders for this example
-//     setState(() {
-//       socialIcons = [
-//         DraggableItem(
-//           id: 'facebook',
-//           child: Container(
-//             width: 40,
-//             height: 40,
-//             decoration: BoxDecoration(
-//               color: Colors.blue,
-//               borderRadius: BorderRadius.circular(8),
-//             ),
-//             child: const Icon(Icons.facebook, color: Colors.white),
-//           ),
-//           position: const Offset(10, 10),
-//           onPositionChanged: (Offset newPosition) {
-//             setState(() {
-//               final index = socialIcons.indexWhere((item) => item.id == 'facebook');
-//               if (index != -1) {
-//                 socialIcons[index].position = newPosition;
-//               }
-//             });
-//           },
-//         ),
-//         DraggableItem(
-//           id: 'instagram',
-//           child: Container(
-//             width: 40,
-//             height: 40,
-//             decoration: BoxDecoration(
-//               gradient: const LinearGradient(
-//                 colors: [Colors.purple, Colors.pink, Colors.orange],
-//                 begin: Alignment.topLeft,
-//                 end: Alignment.bottomRight,
-//               ),
-//               borderRadius: BorderRadius.circular(8),
-//             ),
-//             child: const Icon(Icons.camera_alt, color: Colors.white),
-//           ),
-//           position: const Offset(60, 10),
-//           onPositionChanged: (Offset newPosition) {
-//             setState(() {
-//               final index = socialIcons.indexWhere((item) => item.id == 'instagram');
-//               if (index != -1) {
-//                 socialIcons[index].position = newPosition;
-//               }
-//             });
-//           },
-//         ),
-//         DraggableItem(
-//           id: 'whatsapp',
-//           child: Container(
-//             width: 40,
-//             height: 40,
-//             decoration: BoxDecoration(
-//               color: Colors.green,
-//               borderRadius: BorderRadius.circular(8),
-//             ),
-//             child: const Icon(Icons.chat, color: Colors.white),
-//           ),
-//           position: const Offset(110, 10),
-//           onPositionChanged: (Offset newPosition) {
-//             setState(() {
-//               final index = socialIcons.indexWhere((item) => item.id == 'whatsapp');
-//               if (index != -1) {
-//                 socialIcons[index].position = newPosition;
-//               }
-//             });
-//           },
-//         ),
-//       ];
-//     });
-//   }
-
-//   Future<void> _pickPosterImage() async {
-//     final ImagePicker picker = ImagePicker();
-//     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-
-//     if (image != null) {
-//       setState(() {
-//         _posterImage = File(image.path);
-//       });
-//     }
-//   }
-
-//   Future<void> _pickLogoImage() async {
-//     final ImagePicker picker = ImagePicker();
-//     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-
-//     if (image != null) {
-//       final File logoFile = File(image.path);
-
-//       setState(() {
-//         _logoImage = logoFile;
-//         logoItem = DraggableItem(
-//           id: 'logo',
-//           child: Container(
-//             width: 80,
-//             height: 80,
-//             decoration: BoxDecoration(
-//               image: DecorationImage(
-//                 image: FileImage(logoFile),
-//                 fit: BoxFit.contain,
-//               ),
-//             ),
-//           ),
-//           position: const Offset(250, 10),
-//           onPositionChanged: (Offset newPosition) {
-//             setState(() {
-//               logoItem?.position = newPosition;
-//             });
-//           },
-//         );
-//       });
-//     }
-//   }
-
-//   void _addNewText() {
-//     final TextEditingController controller = TextEditingController(text: 'New Text');
-
-//     showDialog(
-//       context: context,
-//       builder: (context) => AlertDialog(
-//         title: const Text('Add Text'),
-//         content: TextField(
-//           controller: controller,
-//           decoration: const InputDecoration(hintText: 'Enter your text'),
-//         ),
-//         actions: [
-//           TextButton(
-//             onPressed: () => Navigator.pop(context),
-//             child: const Text('Cancel'),
-//           ),
-//           TextButton(
-//             onPressed: () {
-//               setState(() {
-//                 textItems.add(
-//                   DraggableTextItem(
-//                     id: 'text_${textItems.length}',
-//                     text: controller.text,
-//                     position: Offset(
-//                       MediaQuery.of(context).size.width / 2 - 50,
-//                       MediaQuery.of(context).size.height / 2 - 50,
-//                     ),
-//                     onPositionChanged: (Offset newPosition) {
-//                       setState(() {
-//                         final index = textItems.length - 1;
-//                         textItems[index].position = newPosition;
-//                       });
-//                     },
-//                   ),
-//                 );
-//               });
-//               Navigator.pop(context);
-//             },
-//             child: const Text('Add'),
-//           ),
-//         ],
-//       ),
-//     );
-//   }
-
-//   void _changeBackgroundColor() {
-//     // Demo function - would implement color picker
-//     // For simplicity, we'll just rotate through a few colors
-//     showDialog(
-//       context: context,
-//       builder: (context) => AlertDialog(
-//         title: const Text('Choose Background Color'),
-//         content: SizedBox(
-//           width: 300,
-//           height: 150,
-//           child: GridView.count(
-//             crossAxisCount: 4,
-//             children: [
-//               _colorOption(Colors.white),
-//               _colorOption(Colors.blue.shade100),
-//               _colorOption(Colors.green.shade100),
-//               _colorOption(Colors.yellow.shade100),
-//               _colorOption(Colors.orange.shade100),
-//               _colorOption(Colors.pink.shade100),
-//               _colorOption(Colors.purple.shade100),
-//               _colorOption(Colors.teal.shade100),
-//             ],
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-
-//   Widget _colorOption(Color color) {
-//     return GestureDetector(
-//       onTap: () {
-//         setState(() {
-//           // Here you would actually set the background color of your poster
-//           // For this demo, we'll just navigate back
-//           Navigator.pop(context);
-//         });
-//       },
-//       child: Container(
-//         margin: const EdgeInsets.all(5),
-//         decoration: BoxDecoration(
-//           color: color,
-//           border: Border.all(color: Colors.grey),
-//           borderRadius: BorderRadius.circular(5),
-//         ),
-//       ),
-//     );
-//   }
-
-//   // Updated capture poster method with modern implementation
-//   Future<void> _capturePoster() async {
-//     try {
-//       // Check for storage permissions
-//       var status = await Permission.storage.request();
-//       if (!status.isGranted) {
-//         // For Android 13+, also check for photos permission
-//         if (Platform.isAndroid) {
-//           status = await Permission.photos.request();
-//           if (!status.isGranted) {
-//             ScaffoldMessenger.of(context).showSnackBar(
-//               const SnackBar(content: Text('Storage permission is required to save the poster')),
-//             );
-//             return;
-//           }
-//         } else {
-//           ScaffoldMessenger.of(context).showSnackBar(
-//             const SnackBar(content: Text('Storage permission is required to save the poster')),
-//           );
-//           return;
-//         }
-//       }
-
-//       // Show a loading indicator
-//       _showLoadingDialog('Capturing poster...');
-
-//       // Render the poster to an image
-//       RenderRepaintBoundary boundary = _posterKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-//       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-//       ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-
-//       // Hide the loading dialog
-//       Navigator.pop(context);
-
-//       if (byteData != null) {
-//         Uint8List pngBytes = byteData.buffer.asUint8List();
-
-//         // Generate a unique filename with timestamp
-//         final fileName = 'poster_${DateTime.now().millisecondsSinceEpoch}.png';
-
-//         // First save to temporary directory (needed for sharing)
-//         final directory = await getTemporaryDirectory();
-//         final tempPath = '${directory.path}/$fileName';
-//         final File tempFile = File(tempPath);
-//         await tempFile.writeAsBytes(pngBytes);
-
-//         // Show options to the user
-//         showModalBottomSheet(
-//           context: context,
-//           builder: (context) => Column(
-//             mainAxisSize: MainAxisSize.min,
-//             children: [
-//               ListTile(
-//                 leading: const Icon(Icons.save),
-//                 title: const Text('Save to Gallery'),
-//                 onTap: () async {
-//                   Navigator.pop(context);
-//                   await _saveToGallery(pngBytes, fileName);
-//                 },
-//               ),
-//               ListTile(
-//                 leading: const Icon(Icons.share),
-//                 title: const Text('Share Poster'),
-//                 onTap: () async {
-//                   Navigator.pop(context);
-//                   await Share.shareXFiles([XFile(tempPath)], text: 'Check out my poster!');
-//                 },
-//               ),
-//               ListTile(
-//                 leading: const Icon(Icons.cancel),
-//                 title: const Text('Cancel'),
-//                 onTap: () {
-//                   Navigator.pop(context);
-//                 },
-//               ),
-//             ],
-//           ),
-//         );
-//       }
-//     } catch (e) {
-//       // Hide loading dialog if it's showing
-//       if (Navigator.canPop(context)) {
-//         Navigator.pop(context);
-//       }
-
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(content: Text('Error capturing poster: $e')),
-//       );
-//     }
-//   }
-
-//   // Loading dialog helper
-//   void _showLoadingDialog(String message) {
-//     showDialog(
-//       context: context,
-//       barrierDismissible: false,
-//       builder: (context) => AlertDialog(
-//         content: Row(
-//           children: [
-//             const CircularProgressIndicator(),
-//             const SizedBox(width: 20),
-//             Text(message),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   // Add this new method to save to the gallery using media_store_plus
-
-// Future<void> _saveToGallery(Uint8List imageBytes, String fileName) async {
-//   try {
-//     _showLoadingDialog('Saving to gallery...');
-
-//     // // Platform-specific save logic
-//     // if (Platform.isAndroid || Platform.isIOS) {
-//     //   final result = await saveImage(
-//     //     imageBytes,       // Image data as Uint8List
-//     //     relativePath: "MyPosters",  // Folder name in the gallery
-//     //     name: fileName,  // Image file name
-//     //   );
-
-//     //   Navigator.pop(context); // Close loading dialog
-
-//     //   if (result != null) {
-//     //     ScaffoldMessenger.of(context).showSnackBar(
-//     //       const SnackBar(content: Text('Poster saved to gallery successfully!'))
-//     //     );
-//     //   } else {
-//     //     ScaffoldMessenger.of(context).showSnackBar(
-//     //       const SnackBar(content: Text('Failed to save poster to gallery'))
-//     //     );
-//     //   }
-//     // }
-//   } catch (e) {
-//     // Hide loading dialog if it's showing
-//     if (Navigator.canPop(context)) {
-//       Navigator.pop(context);
-//     }
-
-//     ScaffoldMessenger.of(context).showSnackBar(
-//       SnackBar(content: Text('Error saving to gallery: $e')),
-//     );
-//   }
-// }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: SafeArea(
-//         child: Column(
-//           children: [
-//             // App Bar with back button and download button
-//             Container(
-//               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-//               child: Row(
-//                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                 children: [
-//                   IconButton(
-//                     icon: const Icon(Icons.arrow_back),
-//                     onPressed: () {
-//                       Navigator.pop(context); // Navigate back to previous screen
-//                     },
-//                   ),
-//                   const Spacer(),
-//                   TextButton.icon(
-//                     icon: const Icon(Icons.download),
-//                     label: const Text('Save/Share'),
-//                     onPressed: _capturePoster,
-//                   ),
-//                 ],
-//               ),
-//             ),
-
-//             // Poster canvas area
-//             Expanded(
-//               child: Padding(
-//                 padding: const EdgeInsets.all(16.0),
-//                 child: RepaintBoundary(
-//                   key: _posterKey,
-//                   child: Container(
-//                     decoration: BoxDecoration(
-//                       color: Colors.white,
-//                       border: Border.all(color: Colors.grey),
-//                       boxShadow: [
-//                         BoxShadow(
-//                           color: Colors.grey.withOpacity(0.5),
-//                           spreadRadius: 1,
-//                           blurRadius: 5,
-//                         ),
-//                       ],
-//                     ),
-//                     child: Stack(
-//                       fit: StackFit.expand,
-//                       children: [
-//                         // Poster background
-//                         if (_posterImage != null)
-//                           Image.file(
-//                             _posterImage!,
-//                             fit: BoxFit.cover,
-//                           )
-//                         else
-//                           Center(
-//                             child: IconButton(
-//                               icon: const Icon(Icons.add_photo_alternate, size: 50),
-//                               onPressed: _pickPosterImage,
-//                             ),
-//                           ),
-
-//                         // Social media icons (draggable)
-//                         ...socialIcons.map((item) => Positioned(
-//                           left: item.position.dx,
-//                           top: item.position.dy,
-//                           child: Draggable(
-//                             feedback: item.child,
-//                             childWhenDragging: Opacity(
-//                               opacity: 0.5,
-//                               child: item.child,
-//                             ),
-//                             onDragEnd: (details) {
-//                               final RenderBox renderBox = context.findRenderObject() as RenderBox;
-//                               final Offset localPosition = renderBox.globalToLocal(details.offset);
-//                               item.onPositionChanged(localPosition);
-//                             },
-//                             child: item.child,
-//                           ),
-//                         )),
-
-//                         // Logo (draggable)
-//                         if (logoItem != null)
-//                           Positioned(
-//                             left: logoItem!.position.dx,
-//                             top: logoItem!.position.dy,
-//                             child: GestureDetector(
-//                               onTap: _pickLogoImage,
-//                               child: Draggable(
-//                                 feedback: logoItem!.child,
-//                                 childWhenDragging: Opacity(
-//                                   opacity: 0.5,
-//                                   child: logoItem!.child,
-//                                 ),
-//                                 onDragEnd: (details) {
-//                                   final RenderBox renderBox = context.findRenderObject() as RenderBox;
-//                                   final Offset localPosition = renderBox.globalToLocal(details.offset);
-//                                   logoItem!.onPositionChanged(localPosition);
-//                                 },
-//                                 child: logoItem!.child,
-//                               ),
-//                             ),
-//                           )
-//                         else
-//                           Positioned(
-//                             right: 10,
-//                             top: 10,
-//                             child: GestureDetector(
-//                               onTap: _pickLogoImage,
-//                               child: Container(
-//                                 width: 80,
-//                                 height: 80,
-//                                 decoration: BoxDecoration(
-//                                   border: Border.all(color: Colors.grey),
-//                                   borderRadius: BorderRadius.circular(8),
-//                                 ),
-//                                 child: const Icon(Icons.add_photo_alternate, size: 30),
-//                               ),
-//                             ),
-//                           ),
-
-//                         // Added text items (draggable)
-//                         ...textItems.map((item) => Positioned(
-//                           left: item.position.dx,
-//                           top: item.position.dy,
-//                           child: Draggable(
-//                             feedback: Material(
-//                               color: Colors.transparent,
-//                               child: Text(
-//                                 item.text,
-//                                 style: const TextStyle(fontSize: 20),
-//                               ),
-//                             ),
-//                             childWhenDragging: Opacity(
-//                               opacity: 0.5,
-//                               child: Text(
-//                                 item.text,
-//                                 style: const TextStyle(fontSize: 20),
-//                               ),
-//                             ),
-//                             onDragEnd: (details) {
-//                               final RenderBox renderBox = context.findRenderObject() as RenderBox;
-//                               final Offset localPosition = renderBox.globalToLocal(details.offset);
-//                               item.onPositionChanged(localPosition);
-//                             },
-//                             child: Text(
-//                               item.text,
-//                               style: const TextStyle(fontSize: 20),
-//                             ),
-//                           ),
-//                         )),
-
-//                         // Contact info fixed area at bottom
-//                         Positioned(
-//                           left: 0,
-//                           right: 0,
-//                           bottom: 0,
-//                           child: Container(
-//                             height: 40,
-//                             color: Colors.white.withOpacity(0.7),
-//                             child: Center(
-//                               child: Draggable(
-//                                 feedback: Material(
-//                                   color: Colors.transparent,
-//                                   child: Text(
-//                                     contactInfoItem?.text ?? '',
-//                                     style: const TextStyle(fontSize: 14),
-//                                   ),
-//                                 ),
-//                                 childWhenDragging: Opacity(
-//                                   opacity: 0.5,
-//                                   child: Text(
-//                                     contactInfoItem?.text ?? '',
-//                                     style: const TextStyle(fontSize: 14),
-//                                   ),
-//                                 ),
-//                                 onDragEnd: (details) {
-//                                   final RenderBox renderBox = context.findRenderObject() as RenderBox;
-//                                   final Offset localPosition = renderBox.globalToLocal(details.offset);
-//                                   if (contactInfoItem != null) {
-//                                     contactInfoItem!.onPositionChanged(localPosition);
-//                                   }
-//                                 },
-//                                 child: GestureDetector(
-//                                   onTap: () {
-//                                     showDialog(
-//                                       context: context,
-//                                       builder: (context) => AlertDialog(
-//                                         title: const Text('Edit Contact Info'),
-//                                         content: TextField(
-//                                           controller: _contactInfoController,
-//                                           decoration: const InputDecoration(
-//                                             hintText: 'Email, Website, Mobile Number...',
-//                                           ),
-//                                         ),
-//                                         actions: [
-//                                           TextButton(
-//                                             onPressed: () => Navigator.pop(context),
-//                                             child: const Text('Cancel'),
-//                                           ),
-//                                           TextButton(
-//                                             onPressed: () {
-//                                               setState(() {
-//                                                 if (contactInfoItem != null) {
-//                                                   contactInfoItem!.text = _contactInfoController.text;
-//                                                 }
-//                                               });
-//                                               Navigator.pop(context);
-//                                             },
-//                                             child: const Text('Save'),
-//                                           ),
-//                                         ],
-//                                       ),
-//                                     );
-//                                   },
-//                                   child: Text(
-//                                     contactInfoItem?.text ?? '',
-//                                     style: const TextStyle(fontSize: 14),
-//                                   ),
-//                                 ),
-//                               ),
-//                             ),
-//                           ),
-//                         ),
-//                       ],
-//                     ),
-//                   ),
-//                 ),
-//               ),
-//             ),
-
-//             // Bottom editing tools
-//             Container(
-//               padding: const EdgeInsets.all(16),
-//               color: Colors.grey.shade200,
-//               child: Row(
-//                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-//                 children: [
-//                   _buildToolButton(Icons.text_fields, 'Text', _addNewText),
-//                   _buildToolButton(Icons.animation, 'Animation', () {
-//                     ScaffoldMessenger.of(context).showSnackBar(
-//                       const SnackBar(content: Text('Animation feature coming soon')),
-//                     );
-//                   }),
-//                   _buildToolButton(Icons.business, 'Brand', () {
-//                     ScaffoldMessenger.of(context).showSnackBar(
-//                       const SnackBar(content: Text('Brand info feature coming soon')),
-//                     );
-//                   }),
-//                   _buildToolButton(Icons.emoji_emotions, 'Sticker', () {
-//                     ScaffoldMessenger.of(context).showSnackBar(
-//                       const SnackBar(content: Text('Sticker feature coming soon')),
-//                     );
-//                   }),
-//                   _buildToolButton(Icons.auto_fix_high, 'Effect', () {
-//                     ScaffoldMessenger.of(context).showSnackBar(
-//                       const SnackBar(content: Text('Effect feature coming soon')),
-//                     );
-//                   }),
-//                   _buildToolButton(Icons.color_lens, 'Color', _changeBackgroundColor),
-//                 ],
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   Widget _buildToolButton(IconData icon, String label, VoidCallback onPressed) {
-//     return InkWell(
-//       onTap: onPressed,
-//       child: Column(
-//         mainAxisSize: MainAxisSize.min,
-//         children: [
-//           Icon(icon),
-//           const SizedBox(height: 4),
-//           Text(label, style: const TextStyle(fontSize: 12)),
-//         ],
-//       ),
-//     );
-//   }
-// }
-
-// // Class for draggable items (social icons, logo)
-// class DraggableItem {
-//   final String id;
-//   final Widget child;
-//   Offset position;
-//   final Function(Offset) onPositionChanged;
-
-//   DraggableItem({
-//     required this.id,
-//     required this.child,
-//     required this.position,
-//     required this.onPositionChanged,
-//   });
-// }
-
-// // Class for draggable text items
-// class DraggableTextItem {
-//   final String id;
-//   String text;
-//   Offset position;
-//   final Function(Offset) onPositionChanged;
-
-//   DraggableTextItem({
-//     required this.id,
-//     required this.text,
-//     required this.position,
-//     required this.onPositionChanged,
-//   });
-// }
 
 import 'dart:math';
 
 import 'package:company_project/models/category_modell.dart';
+import 'package:company_project/models/poster_size_model.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
@@ -804,12 +22,14 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image/image.dart' as img;
 
 class PosterMakerApp extends StatelessWidget {
-  final CategoryModel poster;
+  final dynamic poster;
+  final dynamic posterSize;
   final bool isCustom;
 
   const PosterMakerApp({
     super.key,
-    required this.poster,
+    this.poster,
+    this.posterSize,
     this.isCustom = false,
   });
 
@@ -821,7 +41,8 @@ class PosterMakerApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: PosterMakerScreen(poster: poster, isCustom: isCustom),
+      home: PosterMakerScreen(
+          poster: poster, isCustom: isCustom, posterSize: posterSize),
       debugShowCheckedModeBanner: false,
     );
   }
@@ -830,11 +51,13 @@ class PosterMakerApp extends StatelessWidget {
 class PosterMakerScreen extends StatefulWidget {
   final dynamic poster;
   final bool isCustom;
+  final PosterSize? posterSize;
 
   const PosterMakerScreen({
     super.key,
     this.poster,
     this.isCustom = false,
+    this.posterSize,
   });
 
   @override
@@ -904,11 +127,9 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
 
   @override
   void initState() {
-    print('lllllllllllllllllllllllll${widget.poster.images[0]}');
     super.initState();
     _loadDefaultSocialIcons();
-      _initializeFilters();
-
+    _initializeFilters();
 
     // Initialize contact info text item
     contactInfoItem = DraggableTextItem(
@@ -969,94 +190,270 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
   }
 
   void _initializeFilters() {
-  _filterOptions = [
-    FilterOption(
-      name: 'Normal',
-      filter: const ColorFilter.mode(Colors.transparent, BlendMode.srcOver),
-      matrix: [
-        1, 0, 0, 0, 0,
-        0, 1, 0, 0, 0,
-        0, 0, 1, 0, 0,
-        0, 0, 0, 1, 0,
-      ],
-    ),
-    FilterOption(
-      name: 'Sepia',
-      filter: ColorFilter.matrix([
-        0.393, 0.769, 0.189, 0, 0,
-        0.349, 0.686, 0.168, 0, 0,
-        0.272, 0.534, 0.131, 0, 0,
-        0, 0, 0, 1, 0,
-      ]),
-      matrix: [
-        0.393, 0.769, 0.189, 0, 0,
-        0.349, 0.686, 0.168, 0, 0,
-        0.272, 0.534, 0.131, 0, 0,
-        0, 0, 0, 1, 0,
-      ],
-    ),
-    FilterOption(
-      name: 'Grayscale',
-      filter: ColorFilter.matrix([
-        0.2126, 0.7152, 0.0722, 0, 0,
-        0.2126, 0.7152, 0.0722, 0, 0,
-        0.2126, 0.7152, 0.0722, 0, 0,
-        0, 0, 0, 1, 0,
-      ]),
-      matrix: [
-        0.2126, 0.7152, 0.0722, 0, 0,
-        0.2126, 0.7152, 0.0722, 0, 0,
-        0.2126, 0.7152, 0.0722, 0, 0,
-        0, 0, 0, 1, 0,
-      ],
-    ),
-    FilterOption(
-      name: 'Vintage',
-      filter: ColorFilter.matrix([
-        0.9, 0.5, 0.1, 0, 0,
-        0.3, 0.8, 0.1, 0, 0,
-        0.2, 0.3, 0.5, 0, 0,
-        0, 0, 0, 1, 0,
-      ]),
-      matrix: [
-        0.9, 0.5, 0.1, 0, 0,
-        0.3, 0.8, 0.1, 0, 0,
-        0.2, 0.3, 0.5, 0, 0,
-        0, 0, 0, 1, 0,
-      ],
-    ),
-    FilterOption(
-      name: 'Cold',
-      filter: ColorFilter.matrix([
-        1, 0, 0, 0, 0,
-        0, 1, 0, 0, 0,
-        0, 0.5, 1, 0, 0,
-        0, 0, 0, 1, 0,
-      ]),
-      matrix: [
-        1, 0, 0, 0, 0,
-        0, 1, 0, 0, 0,
-        0, 0.5, 1, 0, 0,
-        0, 0, 0, 1, 0,
-      ],
-    ),
-    FilterOption(
-      name: 'Warm',
-      filter: ColorFilter.matrix([
-        1.1, 0, 0, 0, 10,
-        0, 1.0, 0, 0, 0,
-        0, 0, 0.9, 0, 0,
-        0, 0, 0, 1, 0,
-      ]),
-      matrix: [
-        1.1, 0, 0, 0, 10,
-        0, 1.0, 0, 0, 0,
-        0, 0, 0.9, 0, 0,
-        0, 0, 0, 1, 0,
-      ],
-    ),
-  ];
-}
+    _filterOptions = [
+      FilterOption(
+        name: 'Normal',
+        filter: const ColorFilter.mode(Colors.transparent, BlendMode.srcOver),
+        matrix: [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ],
+      ),
+      FilterOption(
+        name: 'Sepia',
+        filter: ColorFilter.matrix([
+          0.393,
+          0.769,
+          0.189,
+          0,
+          0,
+          0.349,
+          0.686,
+          0.168,
+          0,
+          0,
+          0.272,
+          0.534,
+          0.131,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ]),
+        matrix: [
+          0.393,
+          0.769,
+          0.189,
+          0,
+          0,
+          0.349,
+          0.686,
+          0.168,
+          0,
+          0,
+          0.272,
+          0.534,
+          0.131,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ],
+      ),
+      FilterOption(
+        name: 'Grayscale',
+        filter: ColorFilter.matrix([
+          0.2126,
+          0.7152,
+          0.0722,
+          0,
+          0,
+          0.2126,
+          0.7152,
+          0.0722,
+          0,
+          0,
+          0.2126,
+          0.7152,
+          0.0722,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ]),
+        matrix: [
+          0.2126,
+          0.7152,
+          0.0722,
+          0,
+          0,
+          0.2126,
+          0.7152,
+          0.0722,
+          0,
+          0,
+          0.2126,
+          0.7152,
+          0.0722,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ],
+      ),
+      FilterOption(
+        name: 'Vintage',
+        filter: ColorFilter.matrix([
+          0.9,
+          0.5,
+          0.1,
+          0,
+          0,
+          0.3,
+          0.8,
+          0.1,
+          0,
+          0,
+          0.2,
+          0.3,
+          0.5,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ]),
+        matrix: [
+          0.9,
+          0.5,
+          0.1,
+          0,
+          0,
+          0.3,
+          0.8,
+          0.1,
+          0,
+          0,
+          0.2,
+          0.3,
+          0.5,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ],
+      ),
+      FilterOption(
+        name: 'Cold',
+        filter: ColorFilter.matrix([
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0.5,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ]),
+        matrix: [
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0.5,
+          1,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ],
+      ),
+      FilterOption(
+        name: 'Warm',
+        filter: ColorFilter.matrix([
+          1.1,
+          0,
+          0,
+          0,
+          10,
+          0,
+          1.0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.9,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ]),
+        matrix: [
+          1.1,
+          0,
+          0,
+          0,
+          10,
+          0,
+          1.0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.9,
+          0,
+          0,
+          0,
+          0,
+          0,
+          1,
+          0,
+        ],
+      ),
+    ];
+  }
 
   Future<void> _loadDefaultSocialIcons() async {
     // This would typically load actual icons, but we'll create placeholders for this example
@@ -2619,261 +2016,266 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
 
   // IMAGE FILTER METHODS
 
-void _applyImageFilter() {
-  if (_posterImage == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please select a poster image first.')),
-    );
-    return;
-  }
-  
-  // Store current values in case user cancels
-  final currentFilter = _appliedFilter;
-  final currentBrightness = _brightness;
-  final currentContrast = _contrast;
-  final currentSaturation = _saturation;
-  
-  // Show filter dialog
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (context) => StatefulBuilder(
-      builder: (context, setModalState) {
-        return Container(
-          height: MediaQuery.of(context).size.height * 0.7,
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Image Filters',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
+  void _applyImageFilter() {
+    if (_posterImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please select a poster image first.')),
+      );
+      return;
+    }
+
+    // Store current values in case user cancels
+    final currentFilter = _appliedFilter;
+    final currentBrightness = _brightness;
+    final currentContrast = _contrast;
+    final currentSaturation = _saturation;
+
+    // Show filter dialog
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return Container(
+            height: MediaQuery.of(context).size.height * 0.7,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Image Filters',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
-                  Row(
-                    children: [
-                      TextButton(
-                        onPressed: () {
-                          // Reset values and close
-                          setState(() {
-                            _appliedFilter = currentFilter;
-                            _brightness = currentBrightness;
-                            _contrast = currentContrast;
-                            _saturation = currentSaturation;
-                          });
-                          Navigator.pop(context);
-                        },
-                        child: const Text('Cancel'),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        onPressed: () {
-                          // Save the current values
-                          Navigator.pop(context);
-                        },
-                        child: const Text('Apply'),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              const Text(
-                'Presets',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: 100,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: _filterOptions.length,
-                  itemBuilder: (context, index) {
-                    final filter = _filterOptions[index];
-                    return GestureDetector(
-                      onTap: () {
-                        setModalState(() {
-                          setState(() {
-                            _appliedFilter = filter;
-                          });
-                        });
-                      },
-                      child: Container(
-                        width: 80,
-                        margin: const EdgeInsets.only(right: 12),
-                        decoration: BoxDecoration(
-                          border: _appliedFilter?.name == filter.name
-                              ? Border.all(color: Colors.blue, width: 2)
-                              : null,
-                          borderRadius: BorderRadius.circular(8),
+                    Row(
+                      children: [
+                        TextButton(
+                          onPressed: () {
+                            // Reset values and close
+                            setState(() {
+                              _appliedFilter = currentFilter;
+                              _brightness = currentBrightness;
+                              _contrast = currentContrast;
+                              _saturation = currentSaturation;
+                            });
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Cancel'),
                         ),
-                        child: Column(
-                          children: [
-                            Expanded(
-                              child: ClipRRect(
-                                borderRadius: const BorderRadius.vertical(
-                                  top: Radius.circular(8),
-                                ),
-                                child: ColorFiltered(
-                                  colorFilter: filter.filter,
-                                  child: Image.file(
-                                    _posterImage!,
-                                    fit: BoxFit.cover,
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Save the current values
+                            Navigator.pop(context);
+                          },
+                          child: const Text('Apply'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                const Text(
+                  'Presets',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 100,
+                  child: ListView.builder(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: _filterOptions.length,
+                    itemBuilder: (context, index) {
+                      final filter = _filterOptions[index];
+                      return GestureDetector(
+                        onTap: () {
+                          setModalState(() {
+                            setState(() {
+                              _appliedFilter = filter;
+                            });
+                          });
+                        },
+                        child: Container(
+                          width: 80,
+                          margin: const EdgeInsets.only(right: 12),
+                          decoration: BoxDecoration(
+                            border: _appliedFilter?.name == filter.name
+                                ? Border.all(color: Colors.blue, width: 2)
+                                : null,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Column(
+                            children: [
+                              Expanded(
+                                child: ClipRRect(
+                                  borderRadius: const BorderRadius.vertical(
+                                    top: Radius.circular(8),
+                                  ),
+                                  child: ColorFiltered(
+                                    colorFilter: filter.filter,
+                                    child: Image.file(
+                                      _posterImage!,
+                                      fit: BoxFit.cover,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(vertical: 4),
-                              width: double.infinity,
-                              decoration: const BoxDecoration(
-                                color: Colors.black54,
-                                borderRadius: BorderRadius.vertical(
-                                  bottom: Radius.circular(8),
+                              Container(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 4),
+                                width: double.infinity,
+                                decoration: const BoxDecoration(
+                                  color: Colors.black54,
+                                  borderRadius: BorderRadius.vertical(
+                                    bottom: Radius.circular(8),
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  filter.name,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
                                 ),
                               ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                filter.name,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Adjustments',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                // Brightness slider
+                Row(
+                  children: [
+                    const SizedBox(width: 16),
+                    const Icon(Icons.brightness_6),
+                    const SizedBox(width: 8),
+                    const Text('Brightness'),
+                    Expanded(
+                      child: Slider(
+                        value: _brightness,
+                        min: -1.0,
+                        max: 1.0,
+                        divisions: 20,
+                        onChanged: (value) {
+                          setModalState(() {
+                            setState(() {
+                              _brightness = value;
+                            });
+                          });
+                        },
                       ),
-                    );
-                  },
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 24),
-              const Text(
-                'Adjustments',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+                // Contrast slider
+                Row(
+                  children: [
+                    const SizedBox(width: 16),
+                    const Icon(Icons.contrast),
+                    const SizedBox(width: 8),
+                    const Text('Contrast'),
+                    Expanded(
+                      child: Slider(
+                        value: _contrast,
+                        min: 0.5,
+                        max: 2.0,
+                        divisions: 15,
+                        onChanged: (value) {
+                          setModalState(() {
+                            setState(() {
+                              _contrast = value;
+                            });
+                          });
+                        },
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 12),
-              // Brightness slider
-              Row(
-                children: [
-                  const SizedBox(width: 16),
-                  const Icon(Icons.brightness_6),
-                  const SizedBox(width: 8),
-                  const Text('Brightness'),
-                  Expanded(
-                    child: Slider(
-                      value: _brightness,
-                      min: -1.0,
-                      max: 1.0,
-                      divisions: 20,
-                      onChanged: (value) {
-                        setModalState(() {
-                          setState(() {
-                            _brightness = value;
+                // Saturation slider
+                Row(
+                  children: [
+                    const SizedBox(width: 16),
+                    const Icon(Icons.color_lens),
+                    const SizedBox(width: 8),
+                    const Text('Saturation'),
+                    Expanded(
+                      child: Slider(
+                        value: _saturation,
+                        min: 0.0,
+                        max: 2.0,
+                        divisions: 20,
+                        onChanged: (value) {
+                          setModalState(() {
+                            setState(() {
+                              _saturation = value;
+                            });
                           });
-                        });
-                      },
+                        },
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              // Contrast slider
-              Row(
-                children: [
-                  const SizedBox(width: 16),
-                  const Icon(Icons.contrast),
-                  const SizedBox(width: 8),
-                  const Text('Contrast'),
-                  Expanded(
-                    child: Slider(
-                      value: _contrast,
-                      min: 0.5,
-                      max: 2.0,
-                      divisions: 15,
-                      onChanged: (value) {
-                        setModalState(() {
-                          setState(() {
-                            _contrast = value;
-                          });
-                        });
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              // Saturation slider
-              Row(
-                children: [
-                  const SizedBox(width: 16),
-                  const Icon(Icons.color_lens),
-                  const SizedBox(width: 8),
-                  const Text('Saturation'),
-                  Expanded(
-                    child: Slider(
-                      value: _saturation,
-                      min: 0.0,
-                      max: 2.0,
-                      divisions: 20,
-                      onChanged: (value) {
-                        setModalState(() {
-                          setState(() {
-                            _saturation = value;
-                          });
-                        });
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              // Preview
-              Expanded(
-                child: Center(
-                  child: ColorFiltered(
-                    colorFilter: ColorFilter.matrix(
-                      ColorFilterGenerator.brightnessAdjustMatrix(_brightness),
-                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                // Preview
+                Expanded(
+                  child: Center(
                     child: ColorFiltered(
                       colorFilter: ColorFilter.matrix(
-                        ColorFilterGenerator.contrastAdjustMatrix(_contrast),
+                        ColorFilterGenerator.brightnessAdjustMatrix(
+                            _brightness),
                       ),
                       child: ColorFiltered(
                         colorFilter: ColorFilter.matrix(
-                          ColorFilterGenerator.saturationAdjustMatrix(_saturation),
+                          ColorFilterGenerator.contrastAdjustMatrix(_contrast),
                         ),
-                        child: _appliedFilter != null
-                            ? ColorFiltered(
-                                colorFilter: ColorFilter.matrix(_appliedFilter!.matrix),
-                                child: Image.file(_posterImage!, fit: BoxFit.contain),
-                              )
-                            : Image.file(_posterImage!, fit: BoxFit.contain),
+                        child: ColorFiltered(
+                          colorFilter: ColorFilter.matrix(
+                            ColorFilterGenerator.saturationAdjustMatrix(
+                                _saturation),
+                          ),
+                          child: _appliedFilter != null
+                              ? ColorFiltered(
+                                  colorFilter: ColorFilter.matrix(
+                                      _appliedFilter!.matrix),
+                                  child: Image.file(_posterImage!,
+                                      fit: BoxFit.contain),
+                                )
+                              : Image.file(_posterImage!, fit: BoxFit.contain),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-        );
-      },
-    ),
-  );
-}
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 
   // BACKGROUND COLOR METHODS
   void _changeBackgroundColor() {
@@ -3078,6 +2480,41 @@ void _applyImageFilter() {
 
   @override
   Widget build(BuildContext context) {
+    // Get screen dimensions
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
+    // Default dimensions (if posterSize is null)
+    double posterWidth = screenWidth;
+    double posterHeight = screenHeight * 0.7;
+
+    // If we have a posterSize, calculate appropriate dimensions
+    if (widget.posterSize != null) {
+      // Extract dimensions from size string (format: "width*height")
+      final sizeString = widget.posterSize!.size;
+      final parts = sizeString.split('*');
+
+      if (parts.length == 2) {
+        double width = double.tryParse(parts[0]) ?? 0;
+        double height = double.tryParse(parts[1]) ?? 0;
+
+        if (width > 0 && height > 0) {
+          // Keep aspect ratio but fit within screen
+          double aspectRatio = width / height;
+
+          // Calculate max height and width while maintaining aspect ratio
+          if (aspectRatio > 1) {
+            // Wider than tall
+            posterWidth = min(screenWidth, screenWidth * 0.9);
+            posterHeight = posterWidth / aspectRatio;
+          } else {
+            // Taller than wide
+            posterHeight = min(screenHeight * 0.7, screenHeight * 0.6);
+            posterWidth = posterHeight * aspectRatio;
+          }
+        }
+      }
+    }
     return Scaffold(
       appBar: AppBar(
         title: const Text('Poster Maker'),
@@ -3101,8 +2538,8 @@ void _applyImageFilter() {
               child: RepaintBoundary(
                 key: _posterKey,
                 child: Container(
-                  width: MediaQuery.of(context).size.width,
-                  height: MediaQuery.of(context).size.height * 0.7,
+                  width: posterWidth,
+                  height: posterHeight,
                   decoration: BoxDecoration(
                     color: (!_useGradient && widget.poster.images.isEmpty)
                         ? _backgroundColor
@@ -3805,14 +3242,29 @@ class FilterOption {
   });
 }
 
-
 class ColorFilterGenerator {
   static List<double> brightnessAdjustMatrix(double value) {
     return [
-      1, 0, 0, 0, value,
-      0, 1, 0, 0, value,
-      0, 0, 1, 0, value,
-      0, 0, 0, 1, 0,
+      1,
+      0,
+      0,
+      0,
+      value,
+      0,
+      1,
+      0,
+      0,
+      value,
+      0,
+      0,
+      1,
+      0,
+      value,
+      0,
+      0,
+      0,
+      1,
+      0,
     ];
   }
 
@@ -3820,10 +3272,26 @@ class ColorFilterGenerator {
     final v = value;
     final o = (1.0 - v) * 0.5;
     return [
-      v, 0, 0, 0, o,
-      0, v, 0, 0, o,
-      0, 0, v, 0, o,
-      0, 0, 0, 1, 0,
+      v,
+      0,
+      0,
+      0,
+      o,
+      0,
+      v,
+      0,
+      0,
+      o,
+      0,
+      0,
+      v,
+      0,
+      o,
+      0,
+      0,
+      0,
+      1,
+      0,
     ];
   }
 
@@ -3833,10 +3301,26 @@ class ColorFilterGenerator {
     final g = 0.7152 * (1 - v);
     final b = 0.0722 * (1 - v);
     return [
-      r + v, g, b, 0, 0,
-      r, g + v, b, 0, 0,
-      r, g, b + v, 0, 0,
-      0, 0, 0, 1, 0,
+      r + v,
+      g,
+      b,
+      0,
+      0,
+      r,
+      g + v,
+      b,
+      0,
+      0,
+      r,
+      g,
+      b + v,
+      0,
+      0,
+      0,
+      0,
+      0,
+      1,
+      0,
     ];
   }
 }

@@ -737,6 +737,7 @@ import 'package:company_project/providers/poster_provider.dart';
 import 'package:company_project/providers/story_provider.dart';
 import 'package:company_project/views/presentation/pages/home/details_screen.dart';
 import 'package:company_project/views/presentation/pages/home/poster/create_poster_template.dart';
+import 'package:company_project/views/presentation/pages/home/poster/poster_maker_screen.dart';
 import 'package:company_project/views/presentation/widgets/add_story.dart';
 import 'package:company_project/views/presentation/widgets/date_selector_screen.dart';
 import 'package:company_project/views/presentation/widgets/story_screen.dart';
@@ -1551,7 +1552,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => PosterTemplate(
+                                builder: (context) => PosterMakerApp(
                                   poster: poster,
                                   isCustom: false,
                                 ),
