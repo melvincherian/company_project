@@ -2320,7 +2320,7 @@
 
 import 'dart:io';
 import 'dart:async';
-import 'dart:ui' as ui;
+// import 'dart:ui' as ui;
 import 'package:company_project/views/presentation/pages/home/video/audio_selection_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -2538,7 +2538,7 @@ class _UploadImageState extends State<UploadImage> {
     _animationValue = 0.0;
 
     // Use a faster update rate for smoother animations
-    const animationUpdateRate = 16; // ~60fps for smooth motion
+    const animationUpdateRate = 60; // ~60fps for smooth motion
 
     _animationTimer = Timer.periodic(
         const Duration(milliseconds: animationUpdateRate), (timer) {
@@ -2685,6 +2685,7 @@ class _UploadImageState extends State<UploadImage> {
       });
     }
   }
+  
 
   // Apply a filter to an individual image
 
@@ -3941,7 +3942,7 @@ class _EditImagesScreenState extends State<EditImagesScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addMoreImages,
-        child: const Icon(Icons.add_photo_alternate),
+        child:  Icon(Icons.add_photo_alternate),
         backgroundColor: const Color.fromARGB(255, 51, 68, 196),
       ),
     );

@@ -1,7 +1,75 @@
+import 'package:company_project/views/cutomers/get_invoice.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class CreateNewInvoice extends StatelessWidget {
+class CreateNewInvoice extends StatefulWidget {
   const CreateNewInvoice({super.key});
+
+  @override
+  State<CreateNewInvoice> createState() => _CreateNewInvoiceState();
+}
+
+class _CreateNewInvoiceState extends State<CreateNewInvoice> {
+  DateTime invoiceDate = DateTime.now();
+  DateTime dueDate = DateTime.now();
+  TextEditingController nameController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedData();
+  }
+
+  Future<void> _loadSavedData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedName = prefs.getString('invoice_name');
+    final savedInvoiceDate = prefs.getString('invoice_date');
+    final savedDueDate = prefs.getString('due_date');
+
+    setState(() {
+      if (savedName != null) nameController.text = savedName;
+      if (savedInvoiceDate != null) {
+        invoiceDate = DateTime.tryParse(savedInvoiceDate) ?? invoiceDate;
+      }
+      if (savedDueDate != null) {
+        dueDate = DateTime.tryParse(savedDueDate) ?? dueDate;
+      }
+    });
+  }
+
+  Future<void> _saveData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('invoice_name', nameController.text);
+    await prefs.setString('invoice_date', invoiceDate.toIso8601String());
+    await prefs.setString('due_date', dueDate.toIso8601String());
+  }
+
+  Future<void> _pickDates() async {
+    final pickedInvoiceDate = await showDatePicker(
+      context: context,
+      initialDate: invoiceDate,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+    if (pickedInvoiceDate != null) {
+      final pickedDueDate = await showDatePicker(
+        context: context,
+        initialDate: dueDate,
+        firstDate: pickedInvoiceDate,
+        lastDate: DateTime(2100),
+      );
+      if (pickedDueDate != null) {
+        setState(() {
+          invoiceDate = pickedInvoiceDate;
+          dueDate = pickedDueDate;
+        });
+      }
+    }
+  }
+
+  String formatDate(DateTime date) {
+    return "${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}";
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -44,32 +112,36 @@ class CreateNewInvoice extends StatelessWidget {
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text('Invoice Date', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                        SizedBox(height: 4),
-                        Text('09/05/2025', style: TextStyle(fontWeight: FontWeight.bold)),
+                      children: [
+                        const Text('Invoice Date', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        const SizedBox(height: 4),
+                        Text(formatDate(invoiceDate), style: const TextStyle(fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
-                        Text('Due Date', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                        SizedBox(height: 4),
-                        Text('09/05/2025', style: TextStyle(fontWeight: FontWeight.bold)),
+                      children: [
+                        const Text('Due Date', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                        const SizedBox(height: 4),
+                        Text(formatDate(dueDate), style: const TextStyle(fontWeight: FontWeight.bold)),
                       ],
                     ),
                   ),
-                  const Icon(Icons.edit, size: 18, color: Colors.blue),
+                  IconButton(
+                    icon: const Icon(Icons.edit, size: 18, color: Colors.blue),
+                    onPressed: _pickDates,
+                  ),
                 ],
               ),
             ),
             const SizedBox(height: 16),
             const Text('Name/Business Name', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 8),
-            const TextField(
-              decoration: InputDecoration(
+            TextField(
+              controller: nameController,
+              decoration: const InputDecoration(
                 labelText: 'Name',
                 border: OutlineInputBorder(),
               ),
@@ -158,8 +230,9 @@ class CreateNewInvoice extends StatelessWidget {
               width: double.infinity,
               height: 50,
               child: ElevatedButton(
-                onPressed: () {
-                  // Save action
+                onPressed: () async {
+                  await _saveData();
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => const GetInvoice()));
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1DA1F2),
@@ -167,7 +240,7 @@ class CreateNewInvoice extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Save', style: TextStyle(fontWeight: FontWeight.bold,color: Colors.white)),
+                child: const Text('Save', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white)),
               ),
             ),
           ],

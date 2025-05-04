@@ -1,5 +1,4 @@
 import 'package:company_project/views/cutomers/create_new_invoice.dart';
-import 'package:company_project/views/cutomers/get_invoice.dart';
 import 'package:flutter/material.dart';
 
 class CreateInvoiceScreen extends StatelessWidget {
@@ -91,7 +90,7 @@ class CreateInvoiceScreen extends StatelessWidget {
                   ),
                   GestureDetector(
                     onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=>GetInvoice()));
+                    // Navigator.push(context, MaterialPageRoute(builder: (context)=>GetInvoice()));
                     },
                     child: const Icon(Icons.arrow_forward_ios, size: 16))
                 ],

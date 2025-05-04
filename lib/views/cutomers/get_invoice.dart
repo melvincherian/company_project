@@ -1,7 +1,34 @@
+import 'package:company_project/views/cutomers/create_new_invoice.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class GetInvoice extends StatelessWidget {
+class GetInvoice extends StatefulWidget {
   const GetInvoice({super.key});
+
+  @override
+  State<GetInvoice> createState() => _GetInvoiceState();
+}
+
+class _GetInvoiceState extends State<GetInvoice> {
+  String invoiceDate = '';
+  String invoiceNumber = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInvoiceData();
+  }
+
+  Future<void> _loadInvoiceData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedInvoiceDate = prefs.getString('invoice_date') ?? '';
+    final savedInvoiceNumber = prefs.getString('invoice_number') ?? '';
+
+    setState(() {
+      invoiceDate = savedInvoiceDate.isNotEmpty ? savedInvoiceDate : 'N/A';
+      invoiceNumber = savedInvoiceNumber.isNotEmpty ? savedInvoiceNumber : 'N/A';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +42,9 @@ class GetInvoice extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.edit, color: Colors.blue),
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (context) => const CreateNewInvoice()));
+            },
           ),
         ],
         backgroundColor: Colors.white,
@@ -37,8 +66,8 @@ class GetInvoice extends StatelessWidget {
                 children: [
                   const Text('Invoice', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
-                  const Text('Date: 02-05-2025'),
-                  const Text('Invoice: #123456'),
+                  Text('Date: $invoiceDate', style: const TextStyle(fontWeight: FontWeight.bold)),
+                  Text('Invoice: $invoiceNumber', style: const TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 16),
                   Table(
                     border: TableBorder.symmetric(

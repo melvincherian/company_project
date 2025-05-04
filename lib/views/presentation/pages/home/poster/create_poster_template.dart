@@ -12,10 +12,8 @@ import 'dart:io';
 import 'package:flutter/services.dart';
 import 'dart:typed_data';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:media_store_plus/media_store_plus.dart';
 // Added packages for enhanced functionality
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
-import 'package:photofilters/photofilters.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image/image.dart' as img;
 
@@ -2396,7 +2394,7 @@ class _PosterMakerAppScreenState extends State<PosterMakerAppScreen>
         await file.writeAsBytes(buffer);
 
         // Save to gallery
-        final mediaStorePlugin = MediaStore();
+        // final mediaStorePlugin = MediaStore();
 
 // await mediaStorePlugin.saveFile(
 //   tempFilePath: file.path,
