@@ -1,5 +1,3 @@
-
-
 import 'dart:math';
 
 import 'package:company_project/models/category_modell.dart';
@@ -20,6 +18,7 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:photofilters/photofilters.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:image/image.dart' as img;
+import 'package:http/http.dart' as http;
 
 class PosterMakerApp extends StatelessWidget {
   final dynamic poster;
@@ -69,6 +68,7 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
   final GlobalKey _posterKey = GlobalKey();
   File? _posterImage;
   File? _logoImage;
+  File? _picImage;
   final TextEditingController _contactInfoController = TextEditingController(
     text: 'info@example.com | www.example.com | 1234567890',
   );
@@ -80,7 +80,9 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
 
   // Items for fixed elements
   DraggableItem? logoItem;
+  DraggableItem? picItem;
   DraggableTextItem? contactInfoItem;
+  late File file;
 
   // Background color and gradient properties
   Color _backgroundColor = Colors.white;
@@ -168,12 +170,39 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
       // Handle different types of poster objects
       if (widget.poster is File) {
         setState(() {
-          _posterImage = widget.poster;
+          _posterImage = widget.poster.images[0];
         });
       } else if (widget.poster is String &&
           widget.poster.toString().startsWith('http')) {
-        // If poster is a URL, you could download it or handle appropriately
-        // For demonstration, we'll just show a placeholder
+        Future<void> urlToFile(dynamic url) async {
+          // 1. Fetch image data
+          final uri = Uri.parse(url);
+          final response = await http.get(uri);
+          if (response.statusCode != 200) {
+            throw Exception('Failed to download image: ${response.statusCode}');
+          }
+          final bytes = response.bodyBytes;
+
+          // 2. Get a temporary directory
+          final tempDir = await getTemporaryDirectory();
+
+          // 3. Create a unique filename
+          final fileName = uri.pathSegments.isNotEmpty
+              ? uri.pathSegments.last
+              : DateTime.now().millisecondsSinceEpoch.toString();
+
+          final file = File('${tempDir.path}/$fileName');
+
+          // 4. Write the bytes to the file
+          await file.writeAsBytes(bytes, flush: true);
+
+          _posterImage = file;
+
+          print('kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk$_posterImage');
+        }
+
+        urlToFile(widget.poster.images[0]);
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Loading poster from URL...')),
         );
@@ -186,6 +215,8 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
           });
         }
       }
+    }else{
+      print('Poster is null');
     }
   }
 
@@ -601,6 +632,46 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
     }
   }
 
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      final File picFile = File(image.path);
+
+      // Preserve the current position and scale if updating an existing logo
+      final Offset position = picItem?.position ?? const Offset(250, 10);
+      final double scale = picItem?.scale ?? 1.0;
+
+      setState(() {
+        _picImage = picFile;
+        picItem = DraggableItem(
+          id: 'pic',
+          child: Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: FileImage(picFile),
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          position: position,
+          rotation: 0,
+          scale: scale,
+          isAnimated: false,
+          animationType: 'none',
+          onPositionChanged: (Offset newPosition) {
+            setState(() {
+              picItem?.position = newPosition;
+            });
+          },
+        );
+      });
+    }
+  }
+
   void _showLogoOptions() {
     if (_selectedItemType == 'logo' && _selectedItemId == logoItem?.id) {
       showModalBottomSheet(
@@ -635,6 +706,53 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
                 ListTile(
                   leading: Icon(Icons.zoom_in),
                   title: Text('Resize Logo'),
+                  subtitle: Text('Drag the blue handle to resize'),
+                  onTap: () {
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+          );
+        },
+      );
+    }
+  }
+
+  void _showPicOptions() {
+    if (_selectedItemType == 'pic' && _selectedItemId == picItem?.id) {
+      showModalBottomSheet(
+        context: context,
+        builder: (context) {
+          return Container(
+            padding: EdgeInsets.all(16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: Icon(Icons.photo_library),
+                  title: Text('Change Pic'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    _pickImage();
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.delete),
+                  title: Text('Remove Pic'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    setState(() {
+                      picItem = null;
+                      _picImage = null;
+                      _selectedItemId = '';
+                      _selectedItemType = '';
+                    });
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.zoom_in),
+                  title: Text('Resize Pic'),
                   subtitle: Text('Drag the blue handle to resize'),
                   onTap: () {
                     Navigator.pop(context);
@@ -2017,11 +2135,48 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
   // IMAGE FILTER METHODS
 
   void _applyImageFilter() {
-    if (_posterImage == null) {
+    if (_posterImage == null && widget.poster.images[0] == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Please select a poster image first.')),
       );
       return;
+    }
+    file = File(widget.poster.images[0]);
+    if(_posterImage == null){
+       widget.poster.toString().startsWith('http'); {
+        Future<void> urlToFile(dynamic url) async {
+          // 1. Fetch image data
+          final uri = Uri.parse(url);
+          final response = await http.get(uri);
+          if (response.statusCode != 200) {
+            throw Exception('Failed to download image: ${response.statusCode}');
+          }
+          final bytes = response.bodyBytes;
+
+          // 2. Get a temporary directory
+          final tempDir = await getTemporaryDirectory();
+
+          // 3. Create a unique filename
+          final fileName = uri.pathSegments.isNotEmpty
+              ? uri.pathSegments.last
+              : DateTime.now().millisecondsSinceEpoch.toString();
+
+          final file = File('${tempDir.path}/$fileName');
+
+          // 4. Write the bytes to the file
+          await file.writeAsBytes(bytes, flush: true);
+
+          _posterImage = file;
+
+          print('kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk$_posterImage');
+        }
+
+        urlToFile(widget.poster.images[0]);
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Loading poster from URL...')),
+        );
+      };
     }
 
     // Store current values in case user cancels
@@ -2125,7 +2280,7 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
                                   child: ColorFiltered(
                                     colorFilter: filter.filter,
                                     child: Image.file(
-                                      _posterImage!,
+                                       _posterImage!,
                                       fit: BoxFit.cover,
                                     ),
                                   ),
@@ -2260,10 +2415,11 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
                               ? ColorFiltered(
                                   colorFilter: ColorFilter.matrix(
                                       _appliedFilter!.matrix),
-                                  child: Image.file(_posterImage!,
+                                  child: Image.file(_posterImage ??= file,
                                       fit: BoxFit.contain),
                                 )
-                              : Image.file(_posterImage!, fit: BoxFit.contain),
+                              : Image.file(_posterImage ??= file,
+                                  fit: BoxFit.contain),
                         ),
                       ),
                     ),
@@ -2700,6 +2856,77 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
                           ),
                         ),
 
+                      if (picItem != null)
+                        Positioned(
+                          left: picItem!.position.dx,
+                          top: picItem!.position.dy,
+                          child: GestureDetector(
+                            onTap: () {
+                              setState(() {
+                                _selectedItemId = picItem!.id;
+                                _selectedItemType = 'pic';
+                                _showPicOptions(); // Show options when logo is tapped
+                              });
+                            },
+                            child: DraggableWidget(
+                              item: picItem!,
+                              child: Stack(
+                                alignment: Alignment.center,
+                                children: [
+                                  // The actual logo container
+                                  Container(
+                                    width: 100 *
+                                        picItem!.scale, // Apply scale to width
+                                    height: 100 *
+                                        picItem!.scale, // Apply scale to height
+                                    decoration: BoxDecoration(
+                                      border: _selectedItemId == picItem!.id
+                                          ? Border.all(
+                                              color: Colors.blue, width: 2)
+                                          : null,
+                                    ),
+                                    child: picItem!.child,
+                                  ),
+
+                                  // Show resize handles when logo is selected
+                                  if (_selectedItemId == picItem!.id)
+                                    Positioned(
+                                      right: 0,
+                                      bottom: 0,
+                                      child: GestureDetector(
+                                        onPanUpdate: (details) {
+                                          final double newScale =
+                                              picItem!.scale +
+                                                  details.delta.dx * 0.01;
+                                          // Constrain scale to reasonable bounds
+                                          if (newScale >= 0.5 &&
+                                              newScale <= 3.0) {
+                                            setState(() {
+                                              picItem!.scale = newScale;
+                                            });
+                                          }
+                                        },
+                                        child: Container(
+                                          width: 20,
+                                          height: 20,
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue,
+                                            shape: BoxShape.circle,
+                                          ),
+                                          child: Icon(
+                                            Icons.open_with,
+                                            color: Colors.white,
+                                            size: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
                       // Text items
                       ...textItems
                           .map((item) => Positioned(
@@ -2864,6 +3091,11 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
                     label: 'Contact',
                     onPressed: _editContactInfo,
                   ),
+                  _buildToolButton(
+                    icon: Icons.camera,
+                    label: 'Add Image',
+                    onPressed: _pickImage,
+                  ),
                 ],
               ),
             ),
@@ -2894,6 +3126,7 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
     );
   }
 }
+
 
 class DraggableWidget extends StatelessWidget {
   final dynamic item;
