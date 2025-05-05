@@ -9,6 +9,8 @@ import 'package:company_project/views/presentation/pages/home/my_profile.dart';
 import 'package:company_project/views/presentation/pages/home/partner_screen.dart';
 import 'package:company_project/views/presentation/pages/home/refer_earn_screen.dart';
 import 'package:company_project/views/presentation/pages/home/settings_screen.dart';
+import 'package:company_project/views/privacy/privacy_policy.dart';
+import 'package:company_project/views/privacy/terms_and_conditions.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -162,7 +164,17 @@ class PlaningDetailsScreen extends StatelessWidget {
                   const Divider(),
                   _menuTile(Icons.star_rate, "Rate App"),
                   const Divider(),
-                  _menuTile(Icons.description, "Policies"),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>PrivacyPolicy()));
+                    },
+                    child: _menuTile(Icons.description, "Policies")),
+                  const Divider(),
+                   GestureDetector(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=> const TermsAndConditions()));
+                    },
+                    child: _menuTile(Icons.policy, "Terms and Conditions")),
                   const Divider(),
                   GestureDetector(
                       onTap: () async {

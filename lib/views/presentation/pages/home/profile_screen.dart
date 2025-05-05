@@ -1,101 +1,164 @@
+// ignore_for_file: unnecessary_null_comparison
+
+import 'package:company_project/models/business_poster_model.dart';
 import 'package:company_project/views/presentation/pages/home/business/bakery_clothing_screen.dart';
 import 'package:company_project/views/presentation/pages/home/business/business_detail_screen.dart';
+import 'package:company_project/views/presentation/widgets/business_category_card.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../../../providers/business_poster_provider.dart';
+import '../../../../../providers/business_category_provider.dart';
 
-class VirtualBusinessScreen extends StatelessWidget {
+class VirtualBusinessScreen extends StatefulWidget {
   const VirtualBusinessScreen({super.key});
 
   @override
+  State<VirtualBusinessScreen> createState() => _VirtualBusinessScreenState();
+}
+
+class _VirtualBusinessScreenState extends State<VirtualBusinessScreen> {
+  @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      Provider.of<BusinessPosterProvider>(context, listen: false)
+          .fetchPosters();
+      Provider.of<BusinessCategoryProvider>(context, listen: false)
+          .fetchCategories();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final posterProvider = Provider.of<BusinessPosterProvider>(context);
+    final categoryProvider = Provider.of<BusinessCategoryProvider>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Virtual Business Card',style: TextStyle(fontWeight: FontWeight.bold),),
-        leading:  IconButton(onPressed: (){}, icon: const Icon(Icons.arrow_back_ios)),
+        title: const Text('Virtual Business Card',
+            style: TextStyle(fontWeight: FontWeight.bold)),
+        leading: IconButton(
+            onPressed: () => Navigator.pop(context),
+            icon: const Icon(Icons.arrow_back_ios)),
       ),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 100,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: 4,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                itemBuilder: (context, index) {
-                  final titles = ['Professional', 'Single Page', 'Multi Page', 'Micro'];
-                  return Row(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.only(right: 35),
-                        child: Column(
-                          children: [
-                          
-                            const CircleAvatar(
-                              
-                              radius: 30,
-                              backgroundImage: NetworkImage('https://s3-alpha-sig.figma.com/img/6587/0f9b/0822fcf05ccb90322b60619df1b47c86?Expires=1746403200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=IU7XlnJBOJlPwd~t-kfV2mCmP5ceWg7xP0i8BROTLiiDUWEKcMOFx5Kq0tDTFqeyHYUiVIGWfQ7n~O4ZFQ~Mqdp8rF9eN591BlmmLf0s3gPM-C7BjfLSQB2OOqxMKgiejKrS2n7QHjwzxZbVgTHp3FmbxPoMQIAzgtKM8yNznLpK49FKar55gByyhURWpEZwZ9P4Bj~-mFyBEbogZHJyk~0tWMi3gyL7K61bvyAQ9~6JZjgtmSM9vlZ-9~UysDKRI5fwigFnmIQ2hjCIGg4fuMvoMjXWRYvXGghIRY8FJCSUWILt4DVKWOun2K2Fw1aZBypK1Z6Dp-UHYKg4EKqMFA__'),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(titles[index], style: const TextStyle(fontSize: 12)),
-                          ],
-                        ),
+      body: posterProvider.isLoading || categoryProvider.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : posterProvider.error != null
+              ? Center(child: Text('Poster Error: ${posterProvider.error}'))
+              : categoryProvider.errorMessage != null
+                  ? Center(
+                      child: Text(
+                          'Category Error: ${categoryProvider.errorMessage}'))
+                  : SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildCategoryCircleAvatars(categoryProvider),
+                          _sectionTitle("Bakery & Clothing Cards", context),
+                          _cardList(posterProvider.posters),
+                          _sectionTitle("Trending Cards", context),
+                          _cardList(posterProvider.posters),
+                        ],
                       ),
-                    ],
-                  );
-                },
-              ),
+                    ),
+    );
+  }
+
+  Widget _buildCategoryCircleAvatars(BusinessCategoryProvider provider) {
+    return SizedBox(
+      height: 100,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: provider.categories.length,
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        itemBuilder: (context, index) {
+          final category = provider.categories[index];
+          return Padding(
+            padding: const EdgeInsets.only(right: 25),
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    final categoryName = category.categoryName ?? '';
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            CategoryPostersScreen(categoryName: categoryName),
+                      ),
+                    );
+                  },
+                  child: CircleAvatar(
+                    radius: 30,
+                    backgroundImage: category.image != null
+                        ? NetworkImage(category.image!)
+                        : null,
+                    backgroundColor: Colors.grey[300],
+                    child: category.image == null
+                        ? const Icon(Icons.image_not_supported)
+                        : null,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                SizedBox(
+                  width: 70,
+                  child: Text(
+                    category.categoryName ?? '',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontSize: 12),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
             ),
-
-            _sectionTitle("Bakery & Clothing Cards",context),
-            _cardList(),
-
-            _sectionTitle("Trending Cards",context),
-            _cardList(),
-          ],
-        ),
+          );
+        },
       ),
     );
   }
 
-  Widget _sectionTitle(String title,context) {
+  Widget _sectionTitle(String title, BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(title,
-              style:  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              style:
+                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           GestureDetector(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context)=>const BakeryCards()));
+              // Navigator.push(context,
+              //     MaterialPageRoute(builder: (_) => const BakeryCards()));
             },
-            child: Row(
+            child: const Row(
               children: [
-                const Text('View All', style: TextStyle(color: Colors.black)),
-                Icon(Icons.arrow_forward_ios,size: 19,)
+                Text('View All', style: TextStyle(color: Colors.black)),
+                Icon(Icons.arrow_forward_ios, size: 19),
               ],
-            )),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _cardList() {
+  Widget _cardList(List<BusinessPosterModel> posters) {
     return SizedBox(
       height: 260,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: 5,
+        itemCount: posters.length,
         padding: const EdgeInsets.only(left: 12),
         itemBuilder: (context, index) {
-          return _businessCard(context);
+          return _businessCard(context, posters[index]);
         },
       ),
     );
   }
 
-  Widget _businessCard(context) {
+  Widget _businessCard(BuildContext context, BusinessPosterModel poster) {
     return Container(
       width: 200,
       margin: const EdgeInsets.only(right: 12),
@@ -117,29 +180,44 @@ class VirtualBusinessScreen extends StatelessWidget {
         children: [
           GestureDetector(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context)=>BusinessDetailScreen()));
+              Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                      builder: (_) =>  BusinessDetailScreen(poster:poster)));
             },
-            child: Image.network('https://s3-alpha-sig.figma.com/img/4a7b/1cfa/0f786a0abe78d4b2afdba27b4863f29a?Expires=1746403200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=sf0T-1o1kfke-z9y738n5-VQ6ipQoapjOAGQd36kb~rMEfa51o-R6O7K4VKqFScAEuN0qpZer7XCj68DoV3PstVHrIr-K5--aorSK0LIJYKA9X-xUQ5CbN-rGizqnaLxMl9UsvkkfKkkFmD5~H4FraNGI5jToPoN~PX77~cScAzEk20OSdYePSSNqzqxJuW3YnFcr6NiCOUW7XO4jmNpy0qlqrC6k~8-OIwd9WmdGGxq46ao99HcvjE~5MSAIGu7YmykHX4Xbmjw1tC01Oc-SW7rFnRLUj82rKHnow3ruJOSTYHlEA~WVmB7cWNag6NBpHV1TVAy1F9EYQWqv9jpfA__',fit: BoxFit.cover,height: 125,width: 300,)),
-          const SizedBox(height: 8),
-          const Text(
-            'BUSINESS CONFERENCE',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            child: poster.images.isNotEmpty
+                ? Image.network(poster.images.first,
+                    height: 125, width: 300, fit: BoxFit.cover)
+                : const Placeholder(fallbackHeight: 125),
           ),
-          const Text('SPEAKER', style: TextStyle(color: Colors.blue, fontSize: 10)),
-          const Text('Matthew Smith', style: TextStyle(fontSize: 12)),
+          const SizedBox(height: 8),
+          Text(
+            poster.name,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          ),
+          Text(poster.categoryName,
+              style: const TextStyle(color: Colors.blue, fontSize: 10)),
+          Text(poster.description,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 12)),
           const SizedBox(height: 4),
-          const Text('01.14.20XX', style: TextStyle(fontSize: 12)),
+          Text(poster.createdAt.toString().split('T').first,
+              style: const TextStyle(fontSize: 12)),
           const SizedBox(height: 6),
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('₹250', style: TextStyle(fontWeight: FontWeight.bold)),
-              Text('₹350',
-                  style: TextStyle(
+              Text('₹${poster.price}',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              Text('₹${poster.offerPrice}',
+                  style: const TextStyle(
                     color: Colors.grey,
                     decoration: TextDecoration.lineThrough,
                   )),
-              Text('40% Off', style: TextStyle(color: Colors.green)),
+              Text(
+                  '${((1 - (poster.price / poster.offerPrice)) * 100).round()}% Off',
+                  style: const TextStyle(color: Colors.green)),
             ],
           ),
         ],

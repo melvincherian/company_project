@@ -1,5 +1,7 @@
 import 'package:company_project/providers/auth_provider.dart';
 import 'package:company_project/providers/brand_info_provider.dart';
+import 'package:company_project/providers/business_category_provider.dart';
+import 'package:company_project/providers/business_poster_provider.dart';
 import 'package:company_project/providers/category_poster_provider.dart';
 import 'package:company_project/providers/category_provider.dart';
 import 'package:company_project/providers/category_providerr.dart';
@@ -42,7 +44,9 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_)=>FestivalPosterProvider()),
         ChangeNotifierProvider(create: (_)=>BrandInfoProvider()),
         ChangeNotifierProvider(create: (_)=>CreateCustomerProvider()),
-        ChangeNotifierProvider(create: (_)=>CategoryProviderr())
+        ChangeNotifierProvider(create: (_)=>CategoryProviderr()),
+        ChangeNotifierProvider(create: (_)=>BusinessCategoryProvider()),
+        ChangeNotifierProvider(create: (_)=>BusinessPosterProvider())
         
       ],
       child:const MaterialApp(

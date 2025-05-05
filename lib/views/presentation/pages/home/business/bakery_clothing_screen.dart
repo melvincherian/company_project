@@ -103,7 +103,7 @@ class BusinessCard extends StatelessWidget {
 
           GestureDetector(
             onTap: () {
-              Navigator.push(context, MaterialPageRoute(builder: (context)=>const BusinessDetailScreen()));
+              // Navigator.push(context, MaterialPageRoute(builder: (context)=>const BusinessDetailScreen()));
             },
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),

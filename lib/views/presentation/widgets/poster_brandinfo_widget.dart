@@ -1,5 +1,4 @@
 import 'package:company_project/providers/brand_info_provider.dart';
-import 'package:company_project/views/presentation/pages/home/poster/create_poster_template.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
