@@ -1,4 +1,6 @@
 import 'package:company_project/providers/auth_provider.dart';
+import 'package:company_project/views/birthday_greeting_screen.dart';
+import 'package:company_project/views/change_industry_screen.dart';
 import 'package:company_project/views/cutomers/add_customers.dart';
 import 'package:company_project/views/cutomers/create_invoice_screen.dart';
 import 'package:company_project/views/cutomers/subscription_screen.dart';
@@ -7,10 +9,12 @@ import 'package:company_project/views/presentation/pages/home/add_user.dart';
 import 'package:company_project/views/presentation/pages/home/brand_mall_screen.dart';
 import 'package:company_project/views/presentation/pages/home/my_profile.dart';
 import 'package:company_project/views/presentation/pages/home/partner_screen.dart';
+import 'package:company_project/views/presentation/pages/home/poster/edit_brand.dart';
 import 'package:company_project/views/presentation/pages/home/refer_earn_screen.dart';
 import 'package:company_project/views/presentation/pages/home/settings_screen.dart';
 import 'package:company_project/views/privacy/privacy_policy.dart';
 import 'package:company_project/views/privacy/terms_and_conditions.dart';
+import 'package:company_project/views/remove_background_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -33,9 +37,31 @@ class PlaningDetailsScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                _iconTile(Icons.cake, "B'day\nGreetings"),
-                _iconTile(Icons.info, "Brand\nInfo"),
-                _iconTile(Icons.layers_clear, "Remove\nBG"),
+                GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => BirthdayGreetingScreen()));
+                    },
+                    child: _iconTile(Icons.cake, "B'day\nGreetings")),
+                GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const EditBrand()));
+                    },
+                    child: _iconTile(Icons.info, "Brand\nInfo")),
+                GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) =>
+                                  const RemoveBackgroundScreen()));
+                    },
+                    child: _iconTile(Icons.layers_clear, "Remove\nBG")),
                 _iconTile(Icons.text_fields, "Caption"),
                 _iconTile(Icons.sticky_note_2, "WhatsApp\nSticker"),
                 _iconTile(Icons.sticky_note_2, "Auto\nProduct Ad"),
@@ -61,8 +87,7 @@ class PlaningDetailsScreen extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  _infoText("Login Number:", "+916525363763",
-                      color: Colors.blue),
+                  _infoText("Login Number:", "+8051281283", color: Colors.blue),
                   const SizedBox(height: 10),
                   _infoText("Current Plan:", "Trail Plan", color: Colors.blue),
                   const SizedBox(height: 10),
@@ -81,7 +106,14 @@ class PlaningDetailsScreen extends StatelessWidget {
                       },
                       child: _menuTile(Icons.help_outline, "How To Use")),
                   const Divider(),
-                  _menuTile(Icons.business, "Change Industry"),
+                  GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => ChangeIndustryScreen()));
+                      },
+                      child: _menuTile(Icons.business, "Change Industry")),
                   const Divider(),
                   GestureDetector(
                       onTap: () {
@@ -119,7 +151,7 @@ class PlaningDetailsScreen extends StatelessWidget {
                       },
                       child: _menuTile(Icons.settings, "Settings")),
 
-                                  const Divider(),
+                  const Divider(),
                   GestureDetector(
                       onTap: () {
                         Navigator.push(
@@ -129,27 +161,29 @@ class PlaningDetailsScreen extends StatelessWidget {
                       },
                       child: _menuTile(Icons.person_2, "Add Customer")),
 
-                       const Divider(),
+                  const Divider(),
                   GestureDetector(
                       onTap: () {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const SubscriptionScreen()));
+                                builder: (context) =>
+                                    const SubscriptionScreen()));
                       },
                       child: _menuTile(Icons.subscript, "Subscription")),
 
-                                      const Divider(),
+                  const Divider(),
                   GestureDetector(
                       onTap: () {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => const CreateInvoiceScreen()));
+                                builder: (context) =>
+                                    const CreateInvoiceScreen()));
                       },
-                      child: _menuTile(Icons.receipt_long_outlined, "Create Invoice")),
+                      child: _menuTile(
+                          Icons.receipt_long_outlined, "Create Invoice")),
 
-                      
                   const Divider(),
                   _menuTile(Icons.mail, "Contact Us"),
                   const Divider(),
@@ -165,16 +199,23 @@ class PlaningDetailsScreen extends StatelessWidget {
                   _menuTile(Icons.star_rate, "Rate App"),
                   const Divider(),
                   GestureDetector(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context)=>PrivacyPolicy()));
-                    },
-                    child: _menuTile(Icons.description, "Policies")),
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) => PrivacyPolicy()));
+                      },
+                      child: _menuTile(Icons.description, "Policies")),
                   const Divider(),
-                   GestureDetector(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (context)=> const TermsAndConditions()));
-                    },
-                    child: _menuTile(Icons.policy, "Terms and Conditions")),
+                  GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (context) =>
+                                    const TermsAndConditions()));
+                      },
+                      child: _menuTile(Icons.policy, "Terms and Conditions")),
                   const Divider(),
                   GestureDetector(
                       onTap: () async {

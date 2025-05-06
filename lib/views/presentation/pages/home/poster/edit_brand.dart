@@ -549,6 +549,14 @@ class _EditBrandState extends State<EditBrand> {
                           
                           // Save to shared preferences
                           await brandData.saveToPrefs();
+
+                           ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              backgroundColor: Colors.green,
+                              content: Text("Brand info saved successfully"),
+                              duration: Duration(seconds: 2),
+                            ),
+                          );
                           
                           // Return the brand data to the previous screen
                           Navigator.pop(context, brandData);
@@ -576,3 +584,199 @@ class _EditBrandState extends State<EditBrand> {
     );
   }
 }
+
+
+
+
+
+
+
+// import 'dart:convert';
+// import 'dart:io';
+
+// import 'package:flutter/material.dart';
+// import 'package:image_picker/image_picker.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
+
+// class EditBrandScreen extends StatefulWidget {
+//   const EditBrandScreen({super.key});
+
+//   @override
+//   State<EditBrandScreen> createState() => _EditBrandScreenState();
+// }
+
+// class _EditBrandScreenState extends State<EditBrandScreen> {
+//   File? _logoImage;
+//   File? _extraElementImage;
+//   final TextEditingController _businessNameController = TextEditingController();
+//   final TextEditingController _mobileNumberController = TextEditingController();
+//   final TextEditingController _addressController = TextEditingController();
+//   final TextEditingController _emailController = TextEditingController();
+//   final TextEditingController _websiteController = TextEditingController();
+
+//   final List<String> _socialMediaOptions = ['Instagram', 'WhatsApp', 'Facebook', 'LinkedIn'];
+//   final List<String> _selectedSocialMedia = [];
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     _loadSavedData();
+//   }
+
+//   Future<void> _loadSavedData() async {
+//     final prefs = await SharedPreferences.getInstance();
+//     _businessNameController.text = prefs.getString('businessName') ?? '';
+//     _mobileNumberController.text = prefs.getString('mobileNumber') ?? '';
+//     _addressController.text = prefs.getString('address') ?? '';
+//     _emailController.text = prefs.getString('email') ?? '';
+//     _websiteController.text = prefs.getString('website') ?? '';
+//     _selectedSocialMedia.addAll(json.decode(prefs.getString('socialMedia') ?? '[]').cast<String>());
+
+//     final logoPath = prefs.getString('logoImage');
+//     final extraPath = prefs.getString('extraElementImage');
+//     if (logoPath != null) _logoImage = File(logoPath);
+//     if (extraPath != null) _extraElementImage = File(extraPath);
+//     setState(() {});
+//   }
+
+//   Future<void> _pickImage(bool isLogo) async {
+//     final picker = ImagePicker();
+//     final picked = await picker.pickImage(source: ImageSource.gallery);
+//     if (picked != null) {
+//       setState(() {
+//         if (isLogo) {
+//           _logoImage = File(picked.path);
+//         } else {
+//           _extraElementImage = File(picked.path);
+//         }
+//       });
+//     }
+//   }
+
+//   Future<void> _saveData() async {
+//     final prefs = await SharedPreferences.getInstance();
+//     await prefs.setString('businessName', _businessNameController.text);
+//     await prefs.setString('mobileNumber', _mobileNumberController.text);
+//     await prefs.setString('address', _addressController.text);
+//     await prefs.setString('email', _emailController.text);
+//     await prefs.setString('website', _websiteController.text);
+//     await prefs.setString('socialMedia', json.encode(_selectedSocialMedia));
+//     if (_logoImage != null) await prefs.setString('logoImage', _logoImage!.path);
+//     if (_extraElementImage != null) await prefs.setString('extraElementImage', _extraElementImage!.path);
+
+//     ScaffoldMessenger.of(context).showSnackBar(
+//       const SnackBar(
+//         backgroundColor: Colors.green,
+//         content: Text('Brand data saved successfully')),
+//     );
+//   }
+
+//   Widget _buildImageUpload(String label, File? image, bool isLogo) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+//         const SizedBox(height: 8),
+//         GestureDetector(
+//           onTap: () => _pickImage(isLogo),
+//           child: Container(
+//             width: 100,
+//             height: 100,
+//             decoration: BoxDecoration(
+//               border: Border.all(color: Colors.grey),
+//               color: Colors.grey[100],
+//             ),
+//             child: image != null
+//                 ? Image.file(image, fit: BoxFit.cover)
+//                 : const Icon(Icons.add_a_photo),
+//           ),
+//         ),
+//       ],
+//     );
+//   }
+
+//   Widget _buildTextField(String label, TextEditingController controller, {TextInputType? inputType}) {
+//     return Column(
+//       crossAxisAlignment: CrossAxisAlignment.start,
+//       children: [
+//         Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
+//         const SizedBox(height: 6),
+//         TextField(
+//           controller: controller,
+//           keyboardType: inputType,
+//           decoration: const InputDecoration(
+//             border: OutlineInputBorder(),
+//             isDense: true,
+//           ),
+//         ),
+//         const SizedBox(height: 16),
+//       ],
+//     );
+//   }
+
+//   Widget _buildCheckbox(String label) {
+//     return CheckboxListTile(
+//       title: Text(label),
+//       value: _selectedSocialMedia.contains(label),
+//       onChanged: (bool? value) {
+//         setState(() {
+//           if (value == true) {
+//             _selectedSocialMedia.add(label);
+//           } else {
+//             _selectedSocialMedia.remove(label);
+//           }
+//         });
+//       },
+//       controlAffinity: ListTileControlAffinity.leading,
+//     );
+//   }
+
+//   @override
+//   void dispose() {
+//     _businessNameController.dispose();
+//     _mobileNumberController.dispose();
+//     _addressController.dispose();
+//     _emailController.dispose();
+//     _websiteController.dispose();
+//     super.dispose();
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text('Edit Brand',style: TextStyle(fontWeight: FontWeight.bold),)),
+//       body: SingleChildScrollView(
+//         padding: const EdgeInsets.all(16),
+//         child: Column(
+//           crossAxisAlignment: CrossAxisAlignment.start,
+//           children: [
+//             Row(
+//               mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//               children: [
+//                 _buildImageUpload('Upload Logo', _logoImage, true),
+//                 const SizedBox(width: 20),
+//                 _buildImageUpload('Upload Extra Element', _extraElementImage, false),
+//               ],
+//             ),
+//             const SizedBox(height: 20),
+//             _buildTextField("Business Name", _businessNameController),
+//             _buildTextField("Mobile Number", _mobileNumberController, inputType: TextInputType.phone),
+//             _buildTextField("Address", _addressController),
+//             _buildTextField("Email", _emailController, inputType: TextInputType.emailAddress),
+//             _buildTextField("Website", _websiteController),
+//             const Text("Social Media", style: TextStyle(fontWeight: FontWeight.bold)),
+//             ..._socialMediaOptions.map(_buildCheckbox).toList(),
+//             const SizedBox(height: 24),
+//             Center(
+//               child: ElevatedButton(
+//                 onPressed: _saveData,
+//                 child: const Text('Save'),
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }

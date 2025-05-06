@@ -1,7 +1,6 @@
 // ignore_for_file: unnecessary_null_comparison
 
 import 'package:company_project/models/business_poster_model.dart';
-import 'package:company_project/views/presentation/pages/home/business/bakery_clothing_screen.dart';
 import 'package:company_project/views/presentation/pages/home/business/business_detail_screen.dart';
 import 'package:company_project/views/presentation/widgets/business_category_card.dart';
 import 'package:flutter/material.dart';

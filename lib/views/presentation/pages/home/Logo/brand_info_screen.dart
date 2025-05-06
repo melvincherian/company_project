@@ -1,3 +1,5 @@
+// ignore_for_file: sort_child_properties_last
+
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -45,20 +47,20 @@ class _BrandInfoScreenState extends State<BrandInfoScreen> {
                     onTap: () {
                       Navigator.of(context).pop();
                     },
-                    child: Icon(Icons.arrow_back_ios_new),
+                    child: const Icon(Icons.arrow_back_ios_new),
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   // Icon(Icons.layers),
-                  Spacer(),
+                  const Spacer(),
                   ElevatedButton.icon(
                     onPressed: () {},
-                    icon: Icon(Icons.download, color: Colors.white),
-                    label: Text(
+                    icon: const Icon(Icons.download, color: Colors.white),
+                    label: const Text(
                       "Download",
                       style: TextStyle(color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF6C47FF),
+                      backgroundColor: const Color(0xFF6C47FF),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -89,7 +91,7 @@ class _BrandInfoScreenState extends State<BrandInfoScreen> {
                   // Header
                   Row(
                     children: [
-                      Text(
+                      const Text(
                         "Brand Info",
                         style: TextStyle(
                           color: Colors.white,
@@ -97,29 +99,29 @@ class _BrandInfoScreenState extends State<BrandInfoScreen> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Spacer(),
+                      const Spacer(),
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => EditBrand(),
+                              builder: (context) => const EditBrand(),
                             ),
                           );
                         },
-                        child: CircleAvatar(
+                        child: const CircleAvatar(
                           child: Icon(Icons.edit, color: Colors.blue),
                           backgroundColor: Colors.white,
                         ),
                       ),
-                      SizedBox(width: 8),
-                      Text(
+                      const SizedBox(width: 8),
+                      const Text(
                         'Edit',
                         style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ],
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
                   // Buttons Row
                   Row(
@@ -137,7 +139,7 @@ class _BrandInfoScreenState extends State<BrandInfoScreen> {
                     ],
                   ),
 
-                  SizedBox(height: 12),
+                  const SizedBox(height: 12),
 
                   // Contact number display
                   if (_showContactNumber)
@@ -145,7 +147,8 @@ class _BrandInfoScreenState extends State<BrandInfoScreen> {
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
                         'Contact: $_contactNumber',
-                        style: TextStyle(color: Colors.white, fontSize: 16),
+                        style:
+                            const TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ),
                 ],
@@ -161,19 +164,19 @@ class _BrandInfoScreenState extends State<BrandInfoScreen> {
     return Column(
       children: [
         Container(
-          padding: EdgeInsets.all(10),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: Colors.black),
         ),
-        SizedBox(height: 6),
+        const SizedBox(height: 6),
         SizedBox(
           width: 70,
           child: Text(
             label,
-            style: TextStyle(color: Colors.white, fontSize: 10),
+            style: const TextStyle(color: Colors.white, fontSize: 10),
             textAlign: TextAlign.center,
           ),
         )

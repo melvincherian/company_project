@@ -1,6 +1,5 @@
 import 'package:company_project/models/poster_size_model.dart';
 import 'package:company_project/views/presentation/pages/home/poster/create_poster_template.dart';
-import 'package:company_project/views/presentation/pages/home/poster/poster_maker_screen.dart';
 import 'package:flutter/material.dart';
 
 // class CreatePost extends StatelessWidget {
