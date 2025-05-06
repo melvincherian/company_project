@@ -1,4 +1,3 @@
-import 'package:company_project/views/presentation/pages/home/business/business_detail_screen.dart';
 import 'package:flutter/material.dart';
 
 class BakeryCards extends StatelessWidget {

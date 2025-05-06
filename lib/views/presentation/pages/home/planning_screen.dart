@@ -42,7 +42,7 @@ class PlaningDetailsScreen extends StatelessWidget {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) => BirthdayGreetingScreen()));
+                              builder: (context) =>const BirthdayGreetingScreen()));
                     },
                     child: _iconTile(Icons.cake, "B'day\nGreetings")),
                 GestureDetector(
@@ -123,15 +123,15 @@ class PlaningDetailsScreen extends StatelessWidget {
                                 builder: (context) => const ReferEarnScreen()));
                       },
                       child: _menuTile(Icons.share, "Refer & Earn")),
-                  const Divider(),
-                  GestureDetector(
-                      onTap: () {
-                        Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (context) => const BrandMallScreen()));
-                      },
-                      child: _menuTile(Icons.store, "Brand Mall")),
+                  // const Divider(),
+                  // GestureDetector(
+                  //     onTap: () {
+                  //       Navigator.push(
+                  //           context,
+                  //           MaterialPageRoute(
+                  //               builder: (context) => const BrandMallScreen()));
+                  //     },
+                  //     child: _menuTile(Icons.store, "Brand Mall")),
                   const Divider(),
                   GestureDetector(
                       onTap: () {

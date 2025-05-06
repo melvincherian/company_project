@@ -1,5 +1,8 @@
+// ignore_for_file: unused_field
+
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -22,13 +25,42 @@ class _AddBusinessState extends State<AddBusiness> {
   final _websiteController = TextEditingController();
 
   File? _imageFile;
+  Uint8List? _imageBytes;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadBusinessData();
+  }
+
+  Future<void> _loadBusinessData() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    _businessNameController.text = prefs.getString('business_name') ?? '';
+    _ownerNameController.text = prefs.getString('owner_name') ?? '';
+    _contactController.text = prefs.getString('contact_number') ?? '';
+    _whatsappController.text = prefs.getString('whatsapp_number') ?? '';
+    _addressController.text = prefs.getString('address') ?? '';
+    _emailController.text = prefs.getString('email') ?? '';
+    _websiteController.text = prefs.getString('website') ?? '';
+
+    final imageBase64 = prefs.getString('business_image') ?? '';
+    if (imageBase64.isNotEmpty) {
+      setState(() {
+        _imageBytes = base64Decode(imageBase64);
+      });
+    }
+  }
 
   Future<void> _pickImage() async {
     final pickedFile =
         await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedFile != null) {
+      final image = File(pickedFile.path);
+      final bytes = await image.readAsBytes();
       setState(() {
-        _imageFile = File(pickedFile.path);
+        _imageFile = image;
+        _imageBytes = bytes;
       });
     }
   }
@@ -36,9 +68,7 @@ class _AddBusinessState extends State<AddBusiness> {
   Future<void> _saveBusinessData() async {
     final prefs = await SharedPreferences.getInstance();
 
-    final imageBytes =
-        _imageFile != null ? await _imageFile!.readAsBytes() : null;
-    final imageBase64 = imageBytes != null ? base64Encode(imageBytes) : '';
+    final imageBase64 = _imageBytes != null ? base64Encode(_imageBytes!) : '';
 
     await prefs.setString('business_name', _businessNameController.text);
     await prefs.setString('owner_name', _ownerNameController.text);
@@ -126,15 +156,14 @@ class _AddBusinessState extends State<AddBusiness> {
         ),
         child: Column(
           children: [
-            _imageFile != null
+            _imageBytes != null
                 ? CircleAvatar(
                     radius: 32,
-                    backgroundImage: FileImage(_imageFile!),
+                    backgroundImage: MemoryImage(_imageBytes!),
                   )
                 : const CircleAvatar(
                     radius: 32,
                     child: Icon(Icons.camera_alt_outlined),
-                   // default placeholder
                   ),
             const SizedBox(height: 8),
             const Text("Logo Name",
