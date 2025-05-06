@@ -1,4 +1,4 @@
-// ignore_for_file: unnecessary_null_comparison
+// ignore_for_file: unnecessary_null_comparison, use_build_context_synchronously
 
 import 'package:company_project/models/business_poster_model.dart';
 import 'package:company_project/views/presentation/pages/home/business/business_detail_screen.dart';

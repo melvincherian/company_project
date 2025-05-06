@@ -1,3 +1,5 @@
+// ignore_for_file: unnecessary_import
+
 import 'package:company_project/views/presentation/pages/home/reward_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart'; // Import for Clipboard
