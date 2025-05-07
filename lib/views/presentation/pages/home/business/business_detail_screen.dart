@@ -1,15 +1,50 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:company_project/models/business_poster_model.dart';
 import 'package:company_project/views/presentation/pages/home/business/add_business.dart';
 
-class BusinessDetailScreen extends StatelessWidget {
+class BusinessDetailScreen extends StatefulWidget {
   final BusinessPosterModel poster;
 
   const BusinessDetailScreen({super.key, required this.poster});
 
   @override
+  State<BusinessDetailScreen> createState() => _BusinessDetailScreenState();
+}
+
+class _BusinessDetailScreenState extends State<BusinessDetailScreen> {
+  Duration remaining = const Duration(hours: 5, minutes: 37, seconds: 45);
+  late Timer _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _startTimer();
+  }
+
+  void _startTimer() {
+    _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (remaining.inSeconds > 0) {
+        setState(() {
+          remaining = remaining - const Duration(seconds: 1);
+        });
+      } else {
+        _timer.cancel();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer.cancel();
+    super.dispose();
+  }
+
+  String twoDigits(int n) => n.toString().padLeft(2, '0');
+
+  @override
   Widget build(BuildContext context) {
-    final discount = ((1 - (poster.price / poster.offerPrice)) * 100).round();
+    final discount = ((1 - (widget.poster.price / widget.poster.offerPrice)) * 100).round();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -27,7 +62,7 @@ class BusinessDetailScreen extends StatelessWidget {
                   ),
                   const SizedBox(width: 10),
                   Text(
-                    poster.categoryName,
+                    widget.poster.categoryName,
                     style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
                   ),
                 ],
@@ -51,9 +86,9 @@ class BusinessDetailScreen extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      poster.images.isNotEmpty
+                      widget.poster.images.isNotEmpty
                           ? Image.network(
-                              poster.images.first,
+                              widget.poster.images.first,
                               height: 200,
                               width: 400,
                               fit: BoxFit.cover,
@@ -64,12 +99,12 @@ class BusinessDetailScreen extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            '₹${poster.price}',
+                            '₹${widget.poster.price}',
                             style: const TextStyle(
                                 fontWeight: FontWeight.bold, fontSize: 18),
                           ),
                           Text(
-                            '₹${poster.offerPrice}',
+                            '₹${widget.poster.offerPrice}',
                             style: const TextStyle(
                                 decoration: TextDecoration.lineThrough),
                           ),
@@ -90,12 +125,12 @@ class BusinessDetailScreen extends StatelessWidget {
                   color: const Color(0xffe8f5ff),
                   borderRadius: BorderRadius.circular(16),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _TimerBox(title: "Hours", value: "05"),
-                    _TimerBox(title: "Min", value: "37"),
-                    _TimerBox(title: "Sec", value: "45"),
+                    _TimerBox(title: "Hours", value: twoDigits(remaining.inHours)),
+                    _TimerBox(title: "Min", value: twoDigits(remaining.inMinutes.remainder(60))),
+                    _TimerBox(title: "Sec", value: twoDigits(remaining.inSeconds.remainder(60))),
                   ],
                 ),
               ),
@@ -106,30 +141,30 @@ class BusinessDetailScreen extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                poster.description,
+                widget.poster.description,
                 style: const TextStyle(color: Colors.black87),
               ),
               const SizedBox(height: 30),
               Row(
                 children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        // Implement free trial functionality here
-                      },
-                      icon: const Icon(Icons.download, color: Colors.black),
-                      label: const Text(
-                        'Free Trial',
-                        style: TextStyle(color: Colors.black),
-                      ),
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Colors.grey),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                    ),
-                  ),
+                  // Expanded(
+                  //   child: OutlinedButton.icon(
+                  //     onPressed: () {
+                  //       // Implement free trial functionality here
+                  //     },
+                  //     icon: const Icon(Icons.download, color: Colors.black),
+                  //     label: const Text(
+                  //       'Free Trial',
+                  //       style: TextStyle(color: Colors.black),
+                  //     ),
+                  //     style: OutlinedButton.styleFrom(
+                  //       side: const BorderSide(color: Colors.grey),
+                  //       shape: RoundedRectangleBorder(
+                  //         borderRadius: BorderRadius.circular(20),
+                  //       ),
+                  //     ),
+                  //   ),
+                  // ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: ElevatedButton.icon(

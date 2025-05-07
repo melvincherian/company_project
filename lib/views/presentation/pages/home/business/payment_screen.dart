@@ -72,20 +72,24 @@ class _PaymentScreenState extends State<PaymentScreen> {
                 'card'),
             _buildPaymentMethodRadioButton(
                 'Phonepe',
-                'https://seeklogo.com/images/P/phonepe-logo-0F28165B13-seeklogo.com.png',
+                'https://is1-ssl.mzstatic.com/image/thumb/Purple221/v4/6d/3a/bf/6d3abfde-5db0-2319-012a-b6fde0710c67/AppIcon-0-0-1x_U007emarketing-0-6-0-85-220.png/1200x630wa.png,',
                 'phonepe'),
             _buildPaymentMethodRadioButton(
                 'Google pay',
-                'https://upload.wikimedia.org/wikipedia/commons/5/5a/Google_Pay_Logo.svg',
+                'https://play-lh.googleusercontent.com/HArtbyi53u0jnqhnnxkQnMx9dHOERNcprZyKnInd2nrfM7Wd9ivMNTiz7IJP6-mSpwk',
                 'googlepay'),
             _buildPaymentMethodRadioButton(
                 'Paytm',
-                'https://upload.wikimedia.org/wikipedia/commons/5/55/Paytm_logo.png',
+                'https://yt3.googleusercontent.com/nfovxGynnTWHMBFQfUjZzbFrViXNa9MYLZXuRFXhWGAfwWwIBsqV_4B5A_LGu0sZlMenuimmsQ=s900-c-k-c0x00ffffff-no-rj',
                 'paytm'),
             _buildPaymentMethodRadioButton(
                 'Cash on Delivery',
                 'https://cdn-icons-png.flaticon.com/512/891/891419.png',
                 'cash'),
+                  _buildPaymentMethodRadioButton(
+                'Razor Pay',
+                'https://media.tradly.app/images/marketplace/34521/razor_pay_icon-ICtywSbN.png',
+                'Razorpay'),
             const SizedBox(height: 32.0),
             SizedBox(
               width: double.infinity,
@@ -94,6 +98,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
                   backgroundColor: const Color.fromARGB(255, 28, 50, 139),
                 ),
                 onPressed: () {
+                  //  ScaffoldMessenger.of(context);
+
                   print('Facebook: ${_controller[0].text}');
                   print('Instagram: ${_controller[1].text}');
                   print('Twitter: ${_controller[2].text}');
@@ -126,12 +132,12 @@ class _PaymentScreenState extends State<PaymentScreen> {
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
           suffixIcon: Padding(
             padding: const EdgeInsets.all(10),
-            child: Image.network(
-              imageUrl,
-              width: 24,
-              height: 24,
-              errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
-            ),
+            // child: Image.network(
+            //   imageUrl,
+            //   width: 24,
+            //   height: 24,
+            //   // errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported),
+            // ),
           ),
         ),
       ),

@@ -720,14 +720,18 @@
 import 'dart:convert';
 
 import 'package:company_project/helper/storage_helper.dart';
-import 'package:company_project/models/poster_model.dart';
+import 'package:company_project/models/category_modell.dart';
+import 'package:company_project/providers/category_provider.dart';
+import 'package:company_project/providers/category_providerr.dart';
 import 'package:company_project/providers/date_time_provider.dart';
 import 'package:company_project/providers/poster_provider.dart';
 import 'package:company_project/providers/story_provider.dart';
 import 'package:company_project/views/presentation/pages/home/details_screen.dart';
 import 'package:company_project/views/presentation/pages/home/poster/create_poster_template.dart';
 import 'package:company_project/views/presentation/pages/home/poster/poster_maker_screen.dart';
+import 'package:company_project/views/presentation/pages/home/search_screen.dart';
 import 'package:company_project/views/presentation/widgets/add_story.dart';
+import 'package:company_project/views/presentation/widgets/category_widget.dart';
 import 'package:company_project/views/presentation/widgets/date_selector_screen.dart';
 import 'package:company_project/views/presentation/widgets/stories_widget.dart';
 import 'package:company_project/views/presentation/widgets/story_screen.dart';
@@ -735,6 +739,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:company_project/models/story_model.dart';
 import 'package:http/http.dart' as http;
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -744,14 +749,53 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  List<CategoryModel> items = [];
+
+  bool serchValue = false;
+
+  int _currentIndex = 0;
+  final CarouselController _carouselController = CarouselController();
+
+  // final List<Map<String, dynamic>> _bannerData = [
+  //   {
+  //     'image': 'assets/assets/4db504a1da2c0272db46bf139b7be4d117bf4487.png',
+  //     'title': 'Ugadi Posters\nare Ready',
+  //     'buttonText': 'Explore Now',
+  //   },
+  //   {
+  //     'image': 'assets/assets/banner2.png', // Add your other banner images
+  //     'title': 'Festival\nCollection',
+  //     'buttonText': 'Shop Now',
+  //   },
+  //   {
+  //     'image': 'assets/assets/banner3.png', // Add your other banner images
+  //     'title': 'Special\nOffers',
+  //     'buttonText': 'View Deals',
+  //   },
+  // ];
+
   String currentUserId = '680634a4bb1d44fb0c93aae2';
 
   bool _isLoading = false;
+
+  final TextEditingController _searchController = TextEditingController();
+  bool _isListening = false;
+  String _searchText = '';
+
+    late stt.SpeechToText _speech;
+     List<dynamic> _filteredCategories = [];
+
+    
+
+
+  late final CategoryProviderr categoryprovider;
   Map<String, List<Map<String, dynamic>>> _categorizedPosters = {};
 
   @override
   void initState() {
     super.initState();
+     _speech = stt.SpeechToText();
+    _initializeSpeech();
     _loadUserId();
     print('HomeScreen init - about to fetch posters and stories');
     Future.microtask(() {
@@ -770,6 +814,9 @@ class _HomeScreenState extends State<HomeScreen> {
             'Fetch stories completed - story count: ${storyProvider.stories.length}');
 
         showSubscriptionModal(context);
+
+        categoryprovider =
+            Provider.of<CategoryProviderr>(context, listen: false);
       });
     });
 
@@ -777,6 +824,78 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchFestivalPosters(context.read<DateTimeProvider>().selectedDate);
     });
+  }
+   
+     Future<void> _fetchCategories() async {
+    await Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
+    setState(() {
+      _filteredCategories = Provider.of<CategoryProvider>(context, listen: false).categories;
+    });
+  }
+
+  
+  @override
+  void dispose() {
+    _searchController.dispose();
+    _speech.stop();
+    super.dispose();
+  }
+
+
+
+   Future<void> _initializeSpeech() async {
+    bool available = await _speech.initialize(
+      onStatus: (status) => debugPrint('Speech status: $status'),
+      onError: (error) => debugPrint('Speech error: $error'),
+    );
+    if (!available) {
+      debugPrint('Speech recognition not available');
+    }
+  }
+
+
+
+   void _startListening() async {
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (status) => debugPrint('Speech status: $status'),
+        onError: (error) => debugPrint('Speech error: $error'),
+      );
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (result) {
+            setState(() {
+              _searchText = result.recognizedWords;
+              _searchController.text = _searchText;
+            });
+            _filterCategories();
+          },
+        );
+      } else {
+        debugPrint('The user has denied the use of speech recognition.');
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+    }
+  }
+
+   void _filterCategories() {
+    final categoryProvider = Provider.of<CategoryProvider>(context, listen: false);
+    if (_searchText.isEmpty) {
+      setState(() {
+        _filteredCategories = categoryProvider.categories;
+      });
+    } else {
+      setState(() {
+        _filteredCategories = categoryProvider.categories
+            .where((category) => category.categoryname
+                .toLowerCase()
+                .contains(_searchText.toLowerCase()))
+            .toList();
+      });
+    }
   }
 
   Future<void> _loadUserId() async {
@@ -787,6 +906,19 @@ class _HomeScreenState extends State<HomeScreen> {
             .user.id; // Adjust this based on your LoginResponse structure
       });
       print('User ID: $currentUserId');
+    }
+  }
+
+  void handleSearch(String query) {
+    final trimmedQuery = query.trim();
+
+    if (trimmedQuery.isEmpty) {
+      serchValue = false;
+    } else {
+      final items = categoryprovider.searchItems(trimmedQuery);
+      print('melvin$items');
+
+      serchValue = true;
     }
   }
 
@@ -960,9 +1092,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+
+     final categoryProvider = Provider.of<CategoryProvider>(context);
+    if (_filteredCategories.isEmpty && categoryProvider.categories.isNotEmpty) {
+      _filteredCategories = categoryProvider.categories;
+    }
+
+
+    //  bool serchValue=false;
+    final searchController = TextEditingController();
     final posterProvider = Provider.of<PosterProvider>(context);
     final storyProvider = Provider.of<StoryProvider>(context);
-
+    final categoryprovider = Provider.of<CategoryProviderr>(context);
+    
     print(
         'Building HomeScreen - PosterProvider isLoading: ${posterProvider.isLoading}');
     print(
@@ -990,6 +1132,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final chemicalPosters = posters
         .where((poster) => poster.categoryName.toLowerCase() == 'chemical')
         .toList();
+    
 
     print('Ugadi poster count: ${ugadiPosters.length}');
     print('Clothing poster count: ${clothingPosters.length}');
@@ -1058,8 +1201,54 @@ class _HomeScreenState extends State<HomeScreen> {
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: Colors.black12),
                       ),
-                      child: const Icon(Icons.translate, size: 24),
-                    )
+                      child: GestureDetector(
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            shape: const RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(20)),
+                            ),
+                            builder: (BuildContext context) {
+                              return Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  ListTile(
+                                    title: const Text('Telugu'),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      // Handle language change
+                                    },
+                                  ),
+                                  ListTile(
+                                    title: const Text('English'),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      // Handle language change
+                                    },
+                                  ),
+                                  ListTile(
+                                    title: const Text('Hindi'),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      // Handle language change
+                                    },
+                                  ),
+                                  ListTile(
+                                    title: const Text('Tamil'),
+                                    onTap: () {
+                                      Navigator.pop(context);
+                                      // Handle language change
+                                    },
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        child: const Icon(Icons.translate, size: 24),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),
@@ -1075,521 +1264,539 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: TextFormField(
-                          decoration: InputDecoration(
-                            border: InputBorder.none,
-                            hintText: 'Search Poster by Topic',
-                            hintStyle: TextStyle(color: Colors.grey[600]),
-                          ),
+                            decoration: InputDecoration(
+                              border: InputBorder.none,
+                              hintText: 'Search Poster by Topic',
+                              hintStyle: TextStyle(color: Colors.grey[600]),
+                            ),
+                            controller: searchController,
+                            onChanged: (query) {
+                              handleSearch(query);
+                            }),
+                      ),
+                      // const CircleAvatar(
+                      //   radius: 23,
+                      //   backgroundColor: Color(0xFF6C4EF9),
+                      //   child: Icon(Icons.mic, color: Colors.white),
+                      // )
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 15),
+                if(serchValue==false)
+                //  (serchValue == false)?CategoryGridView(categoryList: items):
+                  Column(
+                    children: [
+                      Container(
+                        height: 140,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(20),
+                            image: const DecorationImage(
+                                image: AssetImage(
+                                    'assets/assets/4db504a1da2c0272db46bf139b7be4d117bf4487.png'),
+                                fit: BoxFit.cover)),
+                        child: Stack(
+                          children: [
+                            Positioned(
+                                top: 16,
+                                left: 16,
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      'Ugadi Posters\nare Ready',
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    ElevatedButton(
+                                        onPressed: () {},
+                                        style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.white,
+                                            foregroundColor: Colors.black,
+                                            shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8))),
+                                        child: const Text(
+                                          'Explore Now',
+                                          style: TextStyle(fontSize: 17),
+                                        ))
+                                  ],
+                                )),
+                          ],
                         ),
                       ),
-                      const CircleAvatar(
-                        radius: 23,
-                        backgroundColor: Color(0xFF6C4EF9),
-                        child: Icon(Icons.mic, color: Colors.white),
-                      )
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 15),
-                Container(
-                  height: 140,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(20),
-                      image: const DecorationImage(
-                          image: AssetImage(
-                              'assets/assets/4db504a1da2c0272db46bf139b7be4d117bf4487.png'),
-                          fit: BoxFit.cover)),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                          top: 16,
-                          left: 16,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Ugadi Posters\nare Ready',
-                                style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white),
-                              ),
-                              const SizedBox(height: 8),
-                              ElevatedButton(
-                                  onPressed: () {},
-                                  style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: Colors.black,
-                                      shape: RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(8))),
-                                  child: const Text(
-                                    'Explore Now',
-                                    style: TextStyle(fontSize: 17),
-                                  ))
-                            ],
-                          )),
-                    ],
-                  ),
-                ),
 
-                // Stories Section - UPDATED
-                SizedBox(
-                  height: 120,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: stories.length +
-                        (!_currentUserHasStory()
-                            ? 1
-                            : 0), // Add 1 for "Add Story" if user has no story
-                    itemBuilder: (context, index) {
-                      // First position shows either "Add Story" or user's own story
-                      if (index == 0) {
-                        // If user has no story, show "Add Story" button
-                        if (!_currentUserHasStory()) {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                            child: GestureDetector(
-                              onTap: _openAddStory,
-                              child: Column(
-                                children: [
-                                  const SizedBox(height: 16),
-                                  Stack(
-                                    children: [
-                                      CircleAvatar(
-                                        radius: 30,
-                                        backgroundColor: Colors.grey[300],
-                                        child: const Icon(
-                                          Icons.add,
-                                          size: 32,
-                                          color: Colors.black87,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    'Add Story',
-                                    style: TextStyle(color: Colors.black),
-                                  )
-                                ],
-                              ),
-                            ),
-                          );
-                        } else {
-                          // Show user's own story first
-                          final userStory = _getCurrentUserStory()!;
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                            child: GestureDetector(
-                              onTap: () {
-                                // Find the index of this story in the overall stories list
-                                final storyIndex = stories
-                                    .indexWhere((s) => s.id == userStory.id);
-                                _openStoryViewer(storyIndex);
-                              },
-                              child: Column(
-                                children: [
-                                  const SizedBox(height: 16),
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: const Color(0xFF6C4EF9),
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: CircleAvatar(
-                                      radius: 30,
-                                      backgroundImage: NetworkImage(
-                                        'https://posterbnaobackend.onrender.com/${userStory.images[0]}',
-                                      ),
-                                      onBackgroundImageError:
-                                          (exception, stackTrace) {
-                                        print(
-                                            'Error loading story image: $exception');
-                                      },
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  const Text(
-                                    'Your Story',
-                                    style: TextStyle(color: Colors.black),
-                                  )
-                                ],
-                              ),
-                            ),
-                          );
-                        }
-                      } else {
-                        // For other users' stories
-                        // Adjust index based on whether user has story
-                        final adjustedIndex =
-                            _currentUserHasStory() ? index : index - 1;
-
-                        // Filter out current user's story from the list shown here
-                        final filteredStories = stories.toList();
-                        // .where((s) => s.userId == currentUserId)
-                        // .toList();
-
-                        if (adjustedIndex < filteredStories.length) {
-                          final story = filteredStories[adjustedIndex];
-
-                          // Find the index of this story in the overall stories list for viewer
-                          final viewerIndex =
-                              stories.indexWhere((s) => s.id == story.id);
-
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 14),
-                            child: GestureDetector(
-                              onTap: () => _openStoryViewer(viewerIndex),
-                              child: Column(
-                                children: [
-                                  const SizedBox(height: 16),
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: const Color(0xFF6C4EF9),
-                                        width: 2,
-                                      ),
-                                    ),
-                                    child: CircleAvatar(
-                                      radius: 30,
-                                      backgroundImage: NetworkImage(
-                                        'https://posterbnaobackend.onrender.com/${story.images[0]}',
-                                      ),
-                                      onBackgroundImageError:
-                                          (exception, stackTrace) {
-                                        print(
-                                            'Error loading story image: $exception');
-                                      },
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    story.caption,
-                                    style: TextStyle(color: Colors.black),
-                                  )
-                                ],
-                              ),
-                            ),
-                          );
-                        }
-                        return const SizedBox
-                            .shrink(); // Fallback for any out-of-bounds indices
-                      }
-                    },
-                  ),
-                ),
-
-                // StoriesWidget(currentUserId: currentUserId),
-
-                const SizedBox(height: 15),
-                const Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Upcoming Festivals',
-                      style:
-                          TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 15),
-                Consumer<DateTimeProvider>(
-                    builder: (context, dateTimeProvider, _) {
-                  return DateSelectorRow(
-                    selectedDate: dateTimeProvider.selectedDate,
-                    onDateSelected: (date) {
-                      dateTimeProvider.setStartDate(date);
-                      // Fetch festival posters when date is changed
-                      _fetchFestivalPosters(date);
-                    },
-                  );
-                }),
-
-                // Festival posters based on selected date
-                const SizedBox(height: 20),
-                _isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : _categorizedPosters.isEmpty
-                        ? Center(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(20),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.withOpacity(0.1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    Icons.event_busy,
-                                    size: 70,
-                                    color: const Color(0xFF6C4EF9)
-                                        .withOpacity(0.7),
-                                  ),
-                                ),
-                                const SizedBox(height: 20),
-                                Text(
-                                  'No Festivals Found',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.grey[800],
-                                  ),
-                                ),
-                                const SizedBox(height: 10),
-                                Text(
-                                  'Try selecting a different date',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.grey[600],
-                                  ),
-                                ),
-                                const SizedBox(height: 25),
-                                Container(
+                      // Stories Section - UPDATED
+                      SizedBox(
+                        height: 120,
+                        child: ListView.builder(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: stories.length +
+                              (!_currentUserHasStory()
+                                  ? 1
+                                  : 0), // Add 1 for "Add Story" if user has no story
+                          itemBuilder: (context, index) {
+                            // First position shows either "Add Story" or user's own story
+                            if (index == 0) {
+                              // If user has no story, show "Add Story" button
+                              if (!_currentUserHasStory()) {
+                                return Padding(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 24, vertical: 12),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(25),
-                                    border: Border.all(
-                                        color: const Color(0xFF6C4EF9)
-                                            .withOpacity(0.3)),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.grey.withOpacity(0.2),
-                                        spreadRadius: 1,
-                                        blurRadius: 5,
-                                        offset: const Offset(0, 3),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.calendar_today,
-                                        size: 18,
-                                        color: const Color(0xFF6C4EF9),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Check Other Dates',
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w500,
-                                          color: const Color(0xFF6C4EF9),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          )
-                        : Column(
-                            children: _categorizedPosters.entries.map((entry) {
-                              return Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Category header
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        entry.key, // Category name
-                                        style: const TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold),
-                                      ),
-                                      TextButton(
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  DetailsScreen(
-                                                category:
-                                                    entry.key.toLowerCase() +
-                                                        'poster',
+                                      horizontal: 14),
+                                  child: GestureDetector(
+                                    onTap: _openAddStory,
+                                    child: Column(
+                                      children: [
+                                        const SizedBox(height: 16),
+                                        Stack(
+                                          children: [
+                                            CircleAvatar(
+                                              radius: 30,
+                                              backgroundColor: Colors.grey[300],
+                                              child: const Icon(
+                                                Icons.add,
+                                                size: 32,
+                                                color: Colors.black87,
                                               ),
                                             ),
-                                          );
-                                        },
-                                        child: const Row(
-                                          children: [
-                                            Text(
-                                              'View All',
-                                              style: TextStyle(
-                                                  color: Colors.black),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 4),
+                                        const Text(
+                                          'Add Story',
+                                          style: TextStyle(color: Colors.black),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              } else {
+                                // Show user's own story first
+                                final userStory = _getCurrentUserStory()!;
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14),
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      // Find the index of this story in the overall stories list
+                                      final storyIndex = stories.indexWhere(
+                                          (s) => s.id == userStory.id);
+                                      _openStoryViewer(storyIndex);
+                                    },
+                                    child: Column(
+                                      children: [
+                                        const SizedBox(height: 16),
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: const Color(0xFF6C4EF9),
+                                              width: 2,
                                             ),
+                                          ),
+                                          child: CircleAvatar(
+                                            radius: 30,
+                                            backgroundImage: NetworkImage(
+                                              'https://posterbnaobackend.onrender.com/${userStory.images[0]}',
+                                            ),
+                                            onBackgroundImageError:
+                                                (exception, stackTrace) {
+                                              print(
+                                                  'Error loading story image: $exception');
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        const Text(
+                                          'Your Story',
+                                          style: TextStyle(color: Colors.black),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }
+                            } else {
+                              // For other users' stories
+                              // Adjust index based on whether user has story
+                              final adjustedIndex =
+                                  _currentUserHasStory() ? index : index - 1;
+
+                              // Filter out current user's story from the list shown here
+                              final filteredStories = stories.toList();
+                              // .where((s) => s.userId == currentUserId)
+                              // .toList();
+
+                              if (adjustedIndex < filteredStories.length) {
+                                final story = filteredStories[adjustedIndex];
+
+                                // Find the index of this story in the overall stories list for viewer
+                                final viewerIndex =
+                                    stories.indexWhere((s) => s.id == story.id);
+
+                                return Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 14),
+                                  child: GestureDetector(
+                                    onTap: () => _openStoryViewer(viewerIndex),
+                                    child: Column(
+                                      children: [
+                                        const SizedBox(height: 16),
+                                        Container(
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: const Color(0xFF6C4EF9),
+                                              width: 2,
+                                            ),
+                                          ),
+                                          child: CircleAvatar(
+                                            radius: 30,
+                                            backgroundImage: NetworkImage(
+                                              'https://posterbnaobackend.onrender.com/${story.images[0]}',
+                                            ),
+                                            onBackgroundImageError:
+                                                (exception, stackTrace) {
+                                              print(
+                                                  'Error loading story image: $exception');
+                                            },
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          story.caption,
+                                          style: TextStyle(color: Colors.black),
+                                        )
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }
+                              return const SizedBox
+                                  .shrink(); // Fallback for any out-of-bounds indices
+                            }
+                          },
+                        ),
+                      ),
+
+                      // StoriesWidget(currentUserId: currentUserId),
+
+                      const SizedBox(height: 15),
+                      const Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Upcoming Festivals',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold, fontSize: 19),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 15),
+                      Consumer<DateTimeProvider>(
+                          builder: (context, dateTimeProvider, _) {
+                        return DateSelectorRow(
+                          selectedDate: dateTimeProvider.selectedDate,
+                          onDateSelected: (date) {
+                            dateTimeProvider.setStartDate(date);
+                            // Fetch festival posters when date is changed
+                            _fetchFestivalPosters(date);
+                          },
+                        );
+                      }),
+
+                      // Festival posters based on selected date
+                      const SizedBox(height: 20),
+                      _isLoading
+                          ? const Center(child: CircularProgressIndicator())
+                          : _categorizedPosters.isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(20),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey.withOpacity(0.1),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Icon(
+                                          Icons.event_busy,
+                                          size: 70,
+                                          color: const Color(0xFF6C4EF9)
+                                              .withOpacity(0.7),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 20),
+                                      Text(
+                                        'No Festivals Found',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.grey[800],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Text(
+                                        'Try selecting a different date',
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: Colors.grey[600],
+                                        ),
+                                      ),
+                                      const SizedBox(height: 25),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 24, vertical: 12),
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius:
+                                              BorderRadius.circular(25),
+                                          border: Border.all(
+                                              color: const Color(0xFF6C4EF9)
+                                                  .withOpacity(0.3)),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color:
+                                                  Colors.grey.withOpacity(0.2),
+                                              spreadRadius: 1,
+                                              blurRadius: 5,
+                                              offset: const Offset(0, 3),
+                                            ),
+                                          ],
+                                        ),
+                                        child:const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
                                             Icon(
-                                              Icons.arrow_forward_ios,
-                                              size: 19,
-                                              color: Colors.black,
-                                            )
+                                              Icons.calendar_today,
+                                              size: 18,
+                                              color:  Color(0xFF6C4EF9),
+                                            ),
+                                             SizedBox(width: 8),
+                                            Text(
+                                              'Check Other Dates',
+                                              style: TextStyle(
+                                                fontSize: 14,
+                                                fontWeight: FontWeight.w500,
+                                                color:  Color(0xFF6C4EF9),
+                                              ),
+                                            ),
                                           ],
                                         ),
                                       ),
                                     ],
                                   ),
-                                  // Festival poster list for this category
-                                  _buildFestivalPosterList(
-                                      entry.key, entry.value),
-                                  const SizedBox(height: 10),
-                                ],
-                              );
-                            }).toList(),
-                          ),
+                                )
+                              : Column(
+                                  children:
+                                      _categorizedPosters.entries.map((entry) {
+                                    return Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        // Category header
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              entry.key, // Category name
+                                              style: const TextStyle(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.bold),
+                                            ),
+                                            TextButton(
+                                              onPressed: () {
+                                                Navigator.push(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        DetailsScreen(
+                                                      category: entry.key
+                                                              .toLowerCase() +
+                                                          'poster',
+                                                    ),
+                                                  ),
+                                                );
+                                              },
+                                              child: const Row(
+                                                children: [
+                                                  Text(
+                                                    'View All',
+                                                    style: TextStyle(
+                                                        color: Colors.black),
+                                                  ),
+                                                  Icon(
+                                                    Icons.arrow_forward_ios,
+                                                    size: 19,
+                                                    color: Colors.black,
+                                                  )
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        // Festival poster list for this category
+                                        _buildFestivalPosterList(
+                                            entry.key, entry.value),
+                                        const SizedBox(height: 10),
+                                      ],
+                                    );
+                                  }).toList(),
+                                ),
 
-                // Regular category sections
-                // Only show these if we want to display regular categories alongside festival categories
+                      // Regular category sections
+                      // Only show these if we want to display regular categories alongside festival categories
 
-                // Ugadi Posters Section
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //   children: [
-                //     const Text(
-                //       'Ugadi',
-                //       style:
-                //           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                //     ),
-                //     TextButton(
-                //         onPressed: () {
-                //           Navigator.push(
-                //               context,
-                //               MaterialPageRoute(
-                //                   builder: (context) => const DetailsScreen(
-                //                       category: 'ugadiposter')));
-                //         },
-                //         child: Row(
-                //           children: [
-                //             const Text(
-                //               'View All',
-                //               style: TextStyle(color: Colors.black),
-                //             ),
-                //             Icon(
-                //               Icons.arrow_forward_ios,
-                //               size: 19,
-                //               color: Colors.black,
-                //             )
-                //           ],
-                //         ))
-                //   ],
-                // ),
-                // _buildPosterList(ugadiPosters),
+                      // Ugadi Posters Section
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      //   children: [
+                      //     const Text(
+                      //       'Ugadi',
+                      //       style:
+                      //           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      //     ),
+                      //     TextButton(
+                      //         onPressed: () {
+                      //           Navigator.push(
+                      //               context,
+                      //               MaterialPageRoute(
+                      //                   builder: (context) => const DetailsScreen(
+                      //                       category: 'ugadiposter')));
+                      //         },
+                      //         child: Row(
+                      //           children: [
+                      //             const Text(
+                      //               'View All',
+                      //               style: TextStyle(color: Colors.black),
+                      //             ),
+                      //             Icon(
+                      //               Icons.arrow_forward_ios,
+                      //               size: 19,
+                      //               color: Colors.black,
+                      //             )
+                      //           ],
+                      //         ))
+                      //   ],
+                      // ),
+                      // _buildPosterList(ugadiPosters),
 
-                // // Clothing Posters Section
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //   children: [
-                //     const Text(
-                //       'Clothing',
-                //       style:
-                //           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                //     ),
-                //     TextButton(
-                //       onPressed: () {
-                //         Navigator.push(
-                //             context,
-                //             MaterialPageRoute(
-                //                 builder: (context) => const DetailsScreen(
-                //                       category: 'clothingposter',
-                //                     )));
-                //       },
-                //       child: Row(
-                //         children: [
-                //           const Text(
-                //             'View All',
-                //             style: TextStyle(color: Colors.black),
-                //           ),
-                //           Icon(
-                //             Icons.arrow_forward_ios,
-                //             size: 19,
-                //             color: Colors.black,
-                //           )
-                //         ],
-                //       ),
-                //     )
-                //   ],
-                // ),
-                // _buildPosterList(clothingPosters),
+                      // // Clothing Posters Section
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      //   children: [
+                      //     const Text(
+                      //       'Clothing',
+                      //       style:
+                      //           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      //     ),
+                      //     TextButton(
+                      //       onPressed: () {
+                      //         Navigator.push(
+                      //             context,
+                      //             MaterialPageRoute(
+                      //                 builder: (context) => const DetailsScreen(
+                      //                       category: 'clothingposter',
+                      //                     )));
+                      //       },
+                      //       child: Row(
+                      //         children: [
+                      //           const Text(
+                      //             'View All',
+                      //             style: TextStyle(color: Colors.black),
+                      //           ),
+                      //           Icon(
+                      //             Icons.arrow_forward_ios,
+                      //             size: 19,
+                      //             color: Colors.black,
+                      //           )
+                      //         ],
+                      //       ),
+                      //     )
+                      //   ],
+                      // ),
+                      // _buildPosterList(clothingPosters),
 
-                // // Beauty Posters Section
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //   children: [
-                //     const Text(
-                //       'Beauty',
-                //       style:
-                //           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                //     ),
-                //     TextButton(
-                //       onPressed: () {
-                //         Navigator.push(
-                //             context,
-                //             MaterialPageRoute(
-                //                 builder: (context) => const DetailsScreen(
-                //                       category: 'beautyposter',
-                //                     )));
-                //       },
-                //       child: Row(
-                //         children: [
-                //           const Text(
-                //             'View All',
-                //             style: TextStyle(color: Colors.black),
-                //           ),
-                //           Icon(
-                //             Icons.arrow_forward_ios,
-                //             size: 19,
-                //             color: Colors.black,
-                //           )
-                //         ],
-                //       ),
-                //     )
-                //   ],
-                // ),
-                // _buildPosterList(beautyPosters),
+                      // // Beauty Posters Section
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      //   children: [
+                      //     const Text(
+                      //       'Beauty',
+                      //       style:
+                      //           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      //     ),
+                      //     TextButton(
+                      //       onPressed: () {
+                      //         Navigator.push(
+                      //             context,
+                      //             MaterialPageRoute(
+                      //                 builder: (context) => const DetailsScreen(
+                      //                       category: 'beautyposter',
+                      //                     )));
+                      //       },
+                      //       child: Row(
+                      //         children: [
+                      //           const Text(
+                      //             'View All',
+                      //             style: TextStyle(color: Colors.black),
+                      //           ),
+                      //           Icon(
+                      //             Icons.arrow_forward_ios,
+                      //             size: 19,
+                      //             color: Colors.black,
+                      //           )
+                      //         ],
+                      //       ),
+                      //     )
+                      //   ],
+                      // ),
+                      // _buildPosterList(beautyPosters),
 
-                // // Chemical Posters Section
-                // Row(
-                //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                //   children: [
-                //     const Text(
-                //       'Chemical',
-                //       style:
-                //           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                //     ),
-                //     TextButton(
-                //       onPressed: () {
-                //         Navigator.push(
-                //             context,
-                //             MaterialPageRoute(
-                //                 builder: (context) => const DetailsScreen(
-                //                     category: 'chemicalposter')));
-                //       },
-                //       child: Row(
-                //         children: [
-                //           const Text(
-                //             'View All',
-                //             style: TextStyle(color: Colors.black),
-                //           ),
-                //           Icon(
-                //             Icons.arrow_forward_ios,
-                //             size: 19,
-                //             color: Colors.black,
-                //           )
-                //         ],
-                //       ),
-                //     )
-                //   ],
-                // ),
-                // _buildPosterList(chemicalPosters),
+                      // // Chemical Posters Section
+                      // Row(
+                      //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      //   children: [
+                      //     const Text(
+                      //       'Chemical',
+                      //       style:
+                      //           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      //     ),
+                      //     TextButton(
+                      //       onPressed: () {
+                      //         Navigator.push(
+                      //             context,
+                      //             MaterialPageRoute(
+                      //                 builder: (context) => const DetailsScreen(
+                      //                     category: 'chemicalposter')));
+                      //       },
+                      //       child: Row(
+                      //         children: [
+                      //           const Text(
+                      //             'View All',
+                      //             style: TextStyle(color: Colors.black),
+                      //           ),
+                      //           Icon(
+                      //             Icons.arrow_forward_ios,
+                      //             size: 19,
+                      //             color: Colors.black,
+                      //           )
+                      //         ],
+                      //       ),
+                      //     )
+                      //   ],
+                      // ),
+                      // _buildPosterList(chemicalPosters),
+                    ],
+                  ),
+                  
+                  
               ],
             ),
           ),
@@ -1716,7 +1923,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       left: 16, right: 16, top: 8, bottom: 8),
                   child: Row(
                     children: [
-                      Expanded(
+                    const  Expanded(
                         child: Text(
                           'Subscriptions Plans',
                           style: TextStyle(
@@ -1872,12 +2079,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Row(
                     children: [
-                      Icon(Icons.check_circle, size: 16, color: Colors.green),
+                    const  Icon(Icons.check_circle, size: 16, color: Colors.green),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           feature,
-                          style: TextStyle(fontSize: 14),
+                          style:const TextStyle(fontSize: 14),
                         ),
                       ),
                     ],
@@ -1889,7 +2096,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Align(
               alignment: Alignment.bottomRight,
               child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
@@ -1898,7 +2105,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.grey.withOpacity(0.15),
                       spreadRadius: 1,
                       blurRadius: 2,
-                      offset: Offset(0, 1),
+                      offset:const Offset(0, 1),
                     ),
                   ],
                 ),

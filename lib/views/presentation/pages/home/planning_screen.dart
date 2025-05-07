@@ -26,7 +26,7 @@ class PlaningDetailsScreen extends StatelessWidget {
     final authprovider = Provider.of<AuthProvider>(context);
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color.fromARGB(255, 75, 33, 243),
+        backgroundColor: Colors.yellow,
         automaticallyImplyLeading: false,
       ),
       body: Row(

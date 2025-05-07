@@ -72,6 +72,7 @@ dependencies:
   media_store_plus: ^0.1.3
   photofilters: ^3.0.0
   pdf: ^3.8.4
+  carousel_slider: ^5.0.0
   # google_fonts: ^5.1.0
   # image_cropper: ^9.1.0
   # image_gallery_saver: ^2.0.3
@@ -108,6 +109,9 @@ flutter:
     - assets/lottie/
     - assets/assets/4db504a1da2c0272db46bf139b7be4d117bf4487.png
     - assets/unnamed.png
+    - assets/assets/4e71f25b9da2a00e2c56e397c0aab306442e3108.png
+    - assets/assets/749a63d69697825d9370d3aa37338c6f45d73082.png
+    - assets/assets/1641620950s-background-removing-landing-page-banner-design.jpg
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

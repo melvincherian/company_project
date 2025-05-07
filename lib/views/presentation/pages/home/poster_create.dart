@@ -207,9 +207,9 @@ class PosterScreen extends StatelessWidget {
               bottomRight: Radius.circular(30),
             ),
             child: Container(
-              color: const Color.fromARGB(255, 138, 135, 198),
+              color: const Color.fromARGB(255, 253, 224, 59),
               child: AppBar(
-                backgroundColor: const Color.fromARGB(255, 138, 135, 198),
+                backgroundColor: const Color.fromARGB(255, 253, 224, 59),
                 elevation: 0,
                 automaticallyImplyLeading: false,
               ),
@@ -236,7 +236,7 @@ class PosterScreen extends StatelessWidget {
                         },
                         child: const _TabButton(text: 'Create Poster', selected: true)
                       ),
-                      const _TabButton(text: 'Video Ad Maker', selected: false)
+                      // const _TabButton(text: 'Video Ad Maker', selected: false)
                     ],
                   ),
                 )

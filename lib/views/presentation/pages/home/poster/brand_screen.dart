@@ -1,3 +1,4 @@
+// ignore_for_file: use_key_in_widget_constructors
 
 import 'package:company_project/views/presentation/pages/home/poster/edit_brand.dart';
 import 'package:flutter/material.dart';
@@ -19,20 +20,20 @@ class FlyerScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.of(context).pop();
                     },
-                    child: Icon(Icons.arrow_back_ios_new),
+                    child: const Icon(Icons.arrow_back_ios_new),
                   ),
-                  SizedBox(width: 10),
-                  Icon(Icons.layers),
-                  Spacer(),
+                  const SizedBox(width: 10),
+                  const Icon(Icons.layers),
+                  const Spacer(),
                   ElevatedButton.icon(
                     onPressed: () {},
-                    icon: Icon(Icons.download, color: Colors.white),
-                    label: Text(
+                    icon: const Icon(Icons.download, color: Colors.white),
+                    label: const Text(
                       "Download",
                       style: TextStyle(color: Colors.white),
                     ),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Color(0xFF6C47FF),
+                      backgroundColor: const Color(0xFF6C47FF),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -63,7 +64,7 @@ class FlyerScreen extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Text(
+                      const Text(
                         "Brand Info",
                         style: TextStyle(
                           color: Colors.white,
@@ -71,26 +72,27 @@ class FlyerScreen extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      Spacer(),
+                      const Spacer(),
                       GestureDetector(
                         onTap: () {
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (context) => EditBrand()),
+                            MaterialPageRoute(
+                                builder: (context) => const EditBrand()),
                           );
                         },
-                        child: CircleAvatar(
+                        child: const CircleAvatar(
                           child: Icon(Icons.edit, color: Colors.blue),
                         ),
                       ),
-                      SizedBox(width: 10),
-                      Text(
+                      const SizedBox(width: 10),
+                      const Text(
                         'Edit',
                         style: TextStyle(color: Colors.white, fontSize: 16),
                       ),
                     ],
                   ),
-                  SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
                   // Button Row with Equal Spacing
                   Row(

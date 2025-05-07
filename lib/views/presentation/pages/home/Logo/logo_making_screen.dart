@@ -10,7 +10,7 @@ class LogoMakingScreen extends StatefulWidget {
 }
 
 class _LogoMakingScreenState extends State<LogoMakingScreen> {
-  final List<String> categories = ["Business Ads", "Education", "Ugadi", "Beauty"];
+  // final List<String> categories = ["Business Ads", "Education", "Ugadi", "Beauty"];
   int selectedIndex = 0;
 
   @override
@@ -33,60 +33,60 @@ class _LogoMakingScreenState extends State<LogoMakingScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Category Tabs
-          SizedBox(
-  height: 70,
-  child: ListView.builder(
-    scrollDirection: Axis.horizontal,
-    padding: const EdgeInsets.symmetric(horizontal: 16),
-    itemCount: categories.length,
-    itemBuilder: (context, index) {
-      final isSelected = index == selectedIndex;
-      return GestureDetector(
-        onTap: () => setState(() => selectedIndex = index),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
-          curve: Curves.easeInOut,
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-          decoration: BoxDecoration(
-            gradient: isSelected
-                ? const LinearGradient(
-                    colors: [Colors.deepPurple, Colors.deepPurpleAccent],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  )
-                : null,
-            color: isSelected ? null : Colors.white,
-            borderRadius: BorderRadius.circular(28),
-            border: Border.all(
-              color: isSelected ? Colors.deepPurple.shade100 : Colors.grey.shade300,
-              width: 1.2,
-            ),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.deepPurple.withOpacity(0.3),
-                      blurRadius: 10,
-                      offset: const Offset(0, 4),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Center(
-            child: Text(
-              categories[index],
-              style: TextStyle(
-                color: isSelected ? Colors.white : Colors.black87,
-                fontWeight: FontWeight.w600,
-                fontSize: 15,
-              ),
-            ),
-          ),
-        ),
-      );
-    },
-  ),
-),
+//           SizedBox(
+//   height: 70,
+//   child: ListView.builder(
+//     scrollDirection: Axis.horizontal,
+//     padding: const EdgeInsets.symmetric(horizontal: 16),
+//     itemCount: categories.length,
+//     itemBuilder: (context, index) {
+//       final isSelected = index == selectedIndex;
+//       return GestureDetector(
+//         onTap: () => setState(() => selectedIndex = index),
+//         child: AnimatedContainer(
+//           duration: const Duration(milliseconds: 250),
+//           curve: Curves.easeInOut,
+//           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+//           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+//           decoration: BoxDecoration(
+//             gradient: isSelected
+//                 ? const LinearGradient(
+//                     colors: [Colors.deepPurple, Colors.deepPurpleAccent],
+//                     begin: Alignment.topLeft,
+//                     end: Alignment.bottomRight,
+//                   )
+//                 : null,
+//             color: isSelected ? null : Colors.white,
+//             borderRadius: BorderRadius.circular(28),
+//             border: Border.all(
+//               color: isSelected ? Colors.deepPurple.shade100 : Colors.grey.shade300,
+//               width: 1.2,
+//             ),
+//             boxShadow: isSelected
+//                 ? [
+//                     BoxShadow(
+//                       color: Colors.deepPurple.withOpacity(0.3),
+//                       blurRadius: 10,
+//                       offset: const Offset(0, 4),
+//                     ),
+//                   ]
+//                 : [],
+//           ),
+//           child: Center(
+//             child: Text(
+//               categories[index],
+//               style: TextStyle(
+//                 color: isSelected ? Colors.white : Colors.black87,
+//                 fontWeight: FontWeight.w600,
+//                 fontSize: 15,
+//               ),
+//             ),
+//           ),
+//         ),
+//       );
+//     },
+//   ),
+// ),
 
           const SizedBox(height: 10),
 
@@ -129,8 +129,8 @@ class LogoTile extends StatelessWidget {
               onTap: () {
                 _showBottomPopupsecond(context);
               },
-              child: Image.network(
-                'https://s3-alpha-sig.figma.com/img/749a/63d6/9697825d9370d3aa37338c6f45d73082?Expires=1746403200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=mFNw~oFq2My~ihdJhfvWb8GCWkTTzACoj6tA8dmFUfU7-59sEAFf-IIv6z7HDwUwSjXM34kQ9e-5-OR4b5L9xS2ll~1a5a-qU8bgvMxqbdSK01qm1ddjaIK0oPAX4JWFKCdv8jOIxS2Rh6ibUh9Fc7pJg~KlRdADVS6CNaA05ddCFTGxHDHlY~WdcakYhVi--rdIZ8z~H7k-9BX6ntzBD-cOCQ-Xc0QWz6hIBVRneKzkUZ5DmmFrLIkclljxNijLsHpOCOYH5-wODw8eDpzWEAOO~LaHmyKGRrTNtulGndSk-z~R4vm1LGe6eBDpIJTmWijTPu1-Z3eiF~wq0lKZuQ__',
+              child: Image.asset(
+                'assets/assets/749a63d69697825d9370d3aa37338c6f45d73082.png',
                 height: 100,
                 width: double.infinity,
                 fit: BoxFit.cover,
@@ -150,8 +150,8 @@ class LogoTile extends StatelessWidget {
             elevation: 4,
             child: ClipRRect(
                  borderRadius: BorderRadius.circular(14),
-              child: Image.network(
-                'https://s3-alpha-sig.figma.com/img/4e71/f25b/9da2a00e2c56e397c0aab306442e3108?Expires=1746403200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=bXabt491VjIxVWXU4BwFOpRQ0~dptbneilGiT0gLdaKzX1SjMqGtvvfCpkQG~RWVPnkq11fJt8JmQJ5af5eZY3ng~K-gfxAjE117qFSPH-Hms5MkgfGBrDbcWrI3yZCNDM2G4gje4blA-m3jaRn9ZqRM8qobMkHHK5huEGvljuXC5aFsKaZq3VXT82fLc-em0wuVfGsEy~5TtzK5i7AqD7N~jD2ZT3C4xzKbSBXi0OFqwQUIs03A3I0wv7BxDbBq3g50CQs9rVXd77dNpPoAq4KYz2ZzsmyXgUlJhXAmugo4uIOssMg-uxiTATfvprOVsXRMhAfcrcT9XKu9lFpYkA__',
+              child: Image.asset(
+                'assets/assets/4e71f25b9da2a00e2c56e397c0aab306442e3108.png',
                 height: 92,
                 width: double.infinity,
                
@@ -187,8 +187,8 @@ class LogoTile extends StatelessWidget {
                 padding: const EdgeInsets.all(12.0),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    'https://s3-alpha-sig.figma.com/img/4e71/f25b/9da2a00e2c56e397c0aab306442e3108?Expires=1746403200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=bXabt491VjIxVWXU4BwFOpRQ0~dptbneilGiT0gLdaKzX1SjMqGtvvfCpkQG~RWVPnkq11fJt8JmQJ5af5eZY3ng~K-gfxAjE117qFSPH-Hms5MkgfGBrDbcWrI3yZCNDM2G4gje4blA-m3jaRn9ZqRM8qobMkHHK5huEGvljuXC5aFsKaZq3VXT82fLc-em0wuVfGsEy~5TtzK5i7AqD7N~jD2ZT3C4xzKbSBXi0OFqwQUIs03A3I0wv7BxDbBq3g50CQs9rVXd77dNpPoAq4KYz2ZzsmyXgUlJhXAmugo4uIOssMg-uxiTATfvprOVsXRMhAfcrcT9XKu9lFpYkA__',
+                  child: Image.asset(
+                    'assets/assets/4e71f25b9da2a00e2c56e397c0aab306442e3108.png',
                     height: 120,
                     width: 120,
                     fit: BoxFit.contain,
@@ -255,8 +255,8 @@ class LogoTile extends StatelessWidget {
                 padding: const EdgeInsets.all(12.0),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(12),
-                  child: Image.network(
-                    'https://s3-alpha-sig.figma.com/img/749a/63d6/9697825d9370d3aa37338c6f45d73082?Expires=1746403200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=mFNw~oFq2My~ihdJhfvWb8GCWkTTzACoj6tA8dmFUfU7-59sEAFf-IIv6z7HDwUwSjXM34kQ9e-5-OR4b5L9xS2ll~1a5a-qU8bgvMxqbdSK01qm1ddjaIK0oPAX4JWFKCdv8jOIxS2Rh6ibUh9Fc7pJg~KlRdADVS6CNaA05ddCFTGxHDHlY~WdcakYhVi--rdIZ8z~H7k-9BX6ntzBD-cOCQ-Xc0QWz6hIBVRneKzkUZ5DmmFrLIkclljxNijLsHpOCOYH5-wODw8eDpzWEAOO~LaHmyKGRrTNtulGndSk-z~R4vm1LGe6eBDpIJTmWijTPu1-Z3eiF~wq0lKZuQ__',
+                  child: Image.asset(
+                    'assets/assets/749a63d69697825d9370d3aa37338c6f45d73082.png',
                     height: 120,
                     width: 120,
                     fit: BoxFit.contain,

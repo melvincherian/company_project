@@ -214,25 +214,25 @@ class RegisterScreen extends StatelessWidget {
                                     ],
                                     ),
                                     const SizedBox(height: 12),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        _buildSocialIcon(
-                                          'https://cdn-icons-png.flaticon.com/512/2991/2991148.png',
-                                          onPressed: () {},
-                                        ),
-                                        const SizedBox(width: 16),
-                                        _buildSocialIcon(
-                                          'https://img.freepik.com/premium-vector/x-new-social-network-black-app-icon-twitter-rebranded-as-x-twitter-s-logo-was-changed_277909-568.jpg?semt=ais_hybrid&w=740',
-                                          onPressed: () {},
-                                        ),
-                                        const SizedBox(width: 16),
-                                        _buildSocialIcon(
-                                          'https://cdn-icons-png.flaticon.com/512/5968/5968764.png',
-                                          onPressed: () {},
-                                        ),
-                                      ],
-                                    ),
+                                    // Row(
+                                    //   mainAxisAlignment: MainAxisAlignment.center,
+                                    //   children: [
+                                    //     _buildSocialIcon(
+                                    //       'https://cdn-icons-png.flaticon.com/512/2991/2991148.png',
+                                    //       onPressed: () {},
+                                    //     ),
+                                    //     const SizedBox(width: 16),
+                                    //     _buildSocialIcon(
+                                    //       'https://img.freepik.com/premium-vector/x-new-social-network-black-app-icon-twitter-rebranded-as-x-twitter-s-logo-was-changed_277909-568.jpg?semt=ais_hybrid&w=740',
+                                    //       onPressed: () {},
+                                    //     ),
+                                    //     const SizedBox(width: 16),
+                                    //     _buildSocialIcon(
+                                    //       'https://cdn-icons-png.flaticon.com/512/5968/5968764.png',
+                                    //       onPressed: () {},
+                                    //     ),
+                                    //   ],
+                                    // ),
                                     const SizedBox(height: 20),
                                   ],
                                 ),

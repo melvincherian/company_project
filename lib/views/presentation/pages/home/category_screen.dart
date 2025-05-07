@@ -745,6 +745,7 @@
 import 'package:company_project/providers/category_providerr.dart';
 import 'package:company_project/views/presentation/pages/home/details_screen.dart';
 import 'package:company_project/views/presentation/pages/home/poster/poster_maker_screen.dart';
+import 'package:company_project/views/presentation/pages/home/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -829,9 +830,15 @@ class _CategoryScreenState extends State<CategoryScreen> {
                         child: const Icon(Icons.translate),
                       ),
                       SizedBox(width: screenWidth * 0.03),
-                      CircleAvatar(
-                        backgroundColor: Colors.grey[200],
-                        child: const Icon(Icons.search),
+                      GestureDetector(
+                        onTap: () {
+
+                          Navigator.push(context, MaterialPageRoute(builder: (context)=>SearchScreen()));
+                        },
+                        child: CircleAvatar(
+                          backgroundColor: Colors.grey[200],
+                          child: const Icon(Icons.search),
+                        ),
                       )
                     ],
                   )
@@ -840,27 +847,27 @@ class _CategoryScreenState extends State<CategoryScreen> {
               SizedBox(height: screenHeight * 0.025),
 
               // Category chips
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  children: categories.map((cat) {
-                    return Padding(
-                      padding: EdgeInsets.only(right: screenWidth * 0.02),
-                      child: Chip(
-                        label: Text(cat),
-                        backgroundColor: cat == 'Business Ads'
-                            ? const Color.fromARGB(255, 107, 22, 255)
-                            : const Color.fromARGB(255, 250, 250, 250),
-                        labelStyle: TextStyle(
-                            color: cat == 'Business Ads'
-                                ? Colors.white
-                                : Colors.grey),
-                      ),
-                    );
-                  }).toList(),
-                ),
-              ),
-              SizedBox(height: screenHeight * 0.025),
+              // SingleChildScrollView(
+              //   scrollDirection: Axis.horizontal,
+              //   child: Row(
+              //     children: categories.map((cat) {
+              //       return Padding(
+              //         padding: EdgeInsets.only(right: screenWidth * 0.02),
+              //         child: Chip(
+              //           label: Text(cat),
+              //           backgroundColor: cat == 'Business Ads'
+              //               ? const Color.fromARGB(255, 107, 22, 255)
+              //               : const Color.fromARGB(255, 250, 250, 250),
+              //           labelStyle: TextStyle(
+              //               color: cat == 'Business Ads'
+              //                   ? Colors.white
+              //                   : Colors.grey),
+              //         ),
+              //       );
+              //     }).toList(),
+              //   ),
+              // ),
+              SizedBox(height: screenHeight * 0.011),
 
               // Category sections - dynamically created from displayCategories list
               for (final category in displayCategories)

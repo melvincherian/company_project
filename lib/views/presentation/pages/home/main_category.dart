@@ -166,99 +166,88 @@
 
 // ignore_for_file: use_build_context_synchronously
 
-import 'package:company_project/views/presentation/pages/home/navbar_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:company_project/providers/category_provider.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:async';
-
-// Alternative speech recognition approach using platform channels directly
-// This approach doesn't require additional packages but uses core Flutter functionality
+import 'package:company_project/views/presentation/pages/home/navbar_screen.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
 
 class BusinessIndustryScreen extends StatefulWidget {
   const BusinessIndustryScreen({super.key});
 
   @override
-  State<BusinessIndustryScreen> createState() => _BusinessIndustryScreenState();
+  State<BusinessIndustryScreen> createState() => _ChangeIndustryScreenState();
 }
 
-class _BusinessIndustryScreenState extends State<BusinessIndustryScreen> {
+class _ChangeIndustryScreenState extends State<BusinessIndustryScreen> {
   int? _selectedIndex;
   final TextEditingController _searchController = TextEditingController();
   bool _isListening = false;
   String _searchText = '';
   List<dynamic> _filteredCategories = [];
 
+  late stt.SpeechToText _speech;
+
   @override
   void initState() {
     super.initState();
-    Future.microtask(() async {
-      await Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
-      // Initialize filtered categories with all categories
-      setState(() {
-        _filteredCategories = Provider.of<CategoryProvider>(context, listen: false).categories;
-      });
+    _speech = stt.SpeechToText();
+    _initializeSpeech();
+    _fetchCategories();
+  }
+
+  Future<void> _initializeSpeech() async {
+    bool available = await _speech.initialize(
+      onStatus: (status) => debugPrint('Speech status: $status'),
+      onError: (error) => debugPrint('Speech error: $error'),
+    );
+    if (!available) {
+      debugPrint('Speech recognition not available');
+    }
+  }
+
+  Future<void> _fetchCategories() async {
+    await Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
+    setState(() {
+      _filteredCategories = Provider.of<CategoryProvider>(context, listen: false).categories;
     });
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _speech.stop();
     super.dispose();
   }
 
-  // Show speech input dialog - simpler approach that uses the system's speech recognition
   void _startListening() async {
-    // Set isListening state for UI feedback
-    setState(() {
-      _isListening = true;
-    });
-
-    // Show dialog with speech recognition
-    final result = await showDialog<String>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Speak now'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SizedBox(height: 16),
-            Icon(Icons.mic, size: 50, color: Colors.blue),
-            SizedBox(height: 16),
-            Text('Listening...'),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-
-    // Reset listening state
-    setState(() {
-      _isListening = false;
-    });
-
-    // Handle text input from system keyboard instead (as a fallback)
-    // This is a simplified approach - in a production app, you would
-    // integrate with platform-specific speech APIs
-    if (result != null && result.isNotEmpty) {
-      setState(() {
-        _searchText = result;
-        _searchController.text = result;
-      });
-      _filterCategories();
+    if (!_isListening) {
+      bool available = await _speech.initialize(
+        onStatus: (status) => debugPrint('Speech status: $status'),
+        onError: (error) => debugPrint('Speech error: $error'),
+      );
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (result) {
+            setState(() {
+              _searchText = result.recognizedWords;
+              _searchController.text = _searchText;
+            });
+            _filterCategories();
+          },
+        );
+      } else {
+        debugPrint('The user has denied the use of speech recognition.');
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
     }
   }
 
-  // Filter categories based on search text
   void _filterCategories() {
     final categoryProvider = Provider.of<CategoryProvider>(context, listen: false);
-    
     if (_searchText.isEmpty) {
       setState(() {
         _filteredCategories = categoryProvider.categories;
@@ -277,8 +266,6 @@ class _BusinessIndustryScreenState extends State<BusinessIndustryScreen> {
   @override
   Widget build(BuildContext context) {
     final categoryProvider = Provider.of<CategoryProvider>(context);
-    
-    // If this is the first build or categories changed, update filtered list
     if (_filteredCategories.isEmpty && categoryProvider.categories.isNotEmpty) {
       _filteredCategories = categoryProvider.categories;
     }
@@ -303,8 +290,7 @@ class _BusinessIndustryScreenState extends State<BusinessIndustryScreen> {
                       child: GridView.builder(
                         padding: const EdgeInsets.all(16),
                         itemCount: _filteredCategories.length,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 3,
                           mainAxisSpacing: 16,
                           crossAxisSpacing: 16,
@@ -312,22 +298,22 @@ class _BusinessIndustryScreenState extends State<BusinessIndustryScreen> {
                         itemBuilder: (context, index) {
                           final category = _filteredCategories[index];
                           final isSelected = _selectedIndex == index;
-                      
+
                           return GestureDetector(
                             onTap: () {
-                              Navigator.push(context, MaterialPageRoute(builder: (context) => const NavbarScreen()));
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const NavbarScreen()),
+                              );
                               setState(() {
                                 _selectedIndex = index;
                               });
                             },
                             child: _buildCategoryCard(
                               category.categoryname,
-                              isSelected
-                                  ? const Color(0xFF413B99)
-                                  : const Color(0xFFF9F9F9),
+                              isSelected ? const Color(0xFF413B99) : const Color(0xFFF9F9F9),
                               category.image,
-                              textColor:
-                                  isSelected ? Colors.white : Colors.black,
+                              textColor: isSelected ? Colors.white : Colors.black,
                               hasBorder: true,
                             ),
                           );
@@ -355,8 +341,7 @@ class _BusinessIndustryScreenState extends State<BusinessIndustryScreen> {
               },
               decoration: InputDecoration(
                 hintText: 'Search "Posters"',
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 prefixIcon: const Icon(Icons.search),
                 filled: true,
                 fillColor: const Color.fromARGB(255, 252, 250, 250),
@@ -373,9 +358,7 @@ class _BusinessIndustryScreenState extends State<BusinessIndustryScreen> {
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: _isListening 
-                    ? Colors.red
-                    : const Color.fromARGB(255, 97, 74, 160),
+                color: _isListening ? Colors.red : const Color.fromARGB(255, 97, 74, 160),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Icon(

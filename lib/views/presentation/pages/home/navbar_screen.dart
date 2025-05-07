@@ -24,46 +24,56 @@ class NavbarScreen extends StatelessWidget {
     ];
 
     return Scaffold(
+      backgroundColor: Colors.white,
       body: pages[bottomnavbarProvider.currentIndex],
-      bottomNavigationBar: CurvedNavigationBar(
-        backgroundColor: Colors.white,
-        color: Colors.white,
-        buttonBackgroundColor: const Color.fromARGB(255, 108, 120, 249),
-        height: 65,
-        index: bottomnavbarProvider.currentIndex,
-        onTap: (index) {
-          bottomnavbarProvider.setIndex(index);
-        },
-        items: const [
-          Icon(
-            Icons.home,
-            size: 30,
-            color: Colors.grey,
-          ),
-          Icon(
-            Icons.category,
-            size: 30,
-            color: Colors.grey,
-          ),
-          Icon(
-            Icons.post_add,
-            size: 30,
-            color: Colors.grey,
-          ),
-          Icon(
-            Icons.person,
-            size: 30,
-            color: Colors.grey,
-          ),
-          Icon(
-            Icons.book,
-            size: 30,
-            color: Colors.grey,
-          ),
-        ],
-        animationDuration: const Duration(milliseconds: 300),
-        animationCurve: Curves.easeOut,
+      bottomNavigationBar: Container(
+        color: const Color(0xFF101526), // Dark navy background
+        child: CurvedNavigationBar(
+          backgroundColor: Colors.transparent,
+          color: const Color(0xFF101526),
+          buttonBackgroundColor: Colors.yellow,
+          height: 65,
+          index: bottomnavbarProvider.currentIndex,
+          onTap: (index) {
+            bottomnavbarProvider.setIndex(index);
+          },
+          items: const [
+            _NavBarItem(icon: Icons.home, label: 'Home'),
+            _NavBarItem(icon: Icons.category, label: 'Category'),
+            _NavBarItem(icon: Icons.edit, label: 'Create'),
+            _NavBarItem(icon: Icons.business_center_outlined, label: 'VbizCard'),
+            _NavBarItem(icon: Icons.menu, label: 'Menu'),
+          ],
+          animationDuration: Duration(milliseconds: 300),
+          animationCurve: Curves.easeOut,
+        ),
       ),
+    );
+  }
+}
+
+class _NavBarItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+
+  const _NavBarItem({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(icon, size: 26, color: Colors.white),
+        SizedBox(height: 2),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
     );
   }
 }

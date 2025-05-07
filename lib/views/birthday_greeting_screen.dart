@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:company_project/views/add_customer_screen.dart';
@@ -78,21 +80,20 @@ class _BirthdayGreetingScreenState extends State<BirthdayGreetingScreen> {
           ),
           const SizedBox(height: 20),
           Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Expanded(
-                child: GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                            builder: (context) => const AddCustomerScreen()));
-                  },
-                  child: _iconCard("Add Customer\nDetails", Icons.person_add),
-                ),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => const AddCustomerScreen()));
+                },
+                child: _iconCard("Add Customer\nDetails", Icons.person_add),
               ),
-              Expanded(
-                child: _iconCard("Import Customer\nDetails", Icons.file_upload),
-              ),
+              // Expanded(
+              //   child: _iconCard("Import Customer\nDetails", Icons.file_upload),
+              // ),
             ],
           ),
           const SizedBox(height: 30),
