@@ -1,8 +1,10 @@
 import 'dart:io';
 import 'dart:async';
+import 'dart:ui'as ui;
 // import 'dart:ui' as ui;
 import 'package:company_project/views/presentation/pages/home/video/audio_selection_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/services.dart';
@@ -13,6 +15,7 @@ import 'package:ffmpeg_kit_flutter/ffmpeg_kit.dart';
 import 'package:ffmpeg_kit_flutter/return_code.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:share_plus/share_plus.dart';
 
 // Filter model
 enum FilterType {
@@ -43,6 +46,41 @@ class UploadImage extends StatefulWidget {
 }
 
 class _UploadImageState extends State<UploadImage> {
+
+   final GlobalKey _posterKey = GlobalKey();
+
+
+Future<void> _shareVideo() async {
+  try {
+    if (_posterKey.currentContext == null) {
+      throw Exception("Poster widget is not ready yet.");
+    }
+
+    final boundary =
+        _posterKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+
+    if (boundary.debugNeedsPaint) {
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+    final image = await boundary.toImage(pixelRatio: 3.0);
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+
+    if (byteData != null) {
+      final buffer = byteData.buffer.asUint8List();
+      final tempDir = await getTemporaryDirectory();
+      final fileName = 'poster_${DateTime.now().millisecondsSinceEpoch}.png';
+      final file = File('${tempDir.path}/$fileName');
+      await file.writeAsBytes(buffer);
+      await Share.shareXFiles([XFile(file.path)], text: 'Check out my poster!');
+    }
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Failed to share poster: $e')),
+    );
+  }
+}
+
   List<File> _images = [];
   List<File> _processedImages = []; // Filtered images
   int _currentIndex = 0;
@@ -88,7 +126,7 @@ class _UploadImageState extends State<UploadImage> {
     _animationTimer?.cancel();
     super.dispose();
   }
-  
+
   Future<void> _pickInitialImages() async {
     try {
       final List<XFile>? pickedFiles = await _picker.pickMultiImage();
@@ -114,9 +152,6 @@ class _UploadImageState extends State<UploadImage> {
       print('Error picking images: $e');
     }
   }
-
-
-
 
   void _openEditImagesScreen() {
     // Pause playback when going to edit screen
@@ -181,7 +216,9 @@ class _UploadImageState extends State<UploadImage> {
                 }
               } else {
                 // At the end of the video, pause playback
-                _currentIndex = 0; // Loop back to start
+                _currentIndex = 0;
+                precacheImage(FileImage(_processedImages[0]), context);
+                // Loop back to start
                 // _isPlaying = false; // Uncomment if you want to stop at the end instead of looping
                 // timer.cancel();
                 // _secondTimer?.cancel();
@@ -218,21 +255,28 @@ class _UploadImageState extends State<UploadImage> {
     _animationValue = 0.0;
 
     // Use a faster update rate for smoother animations
-    const animationUpdateRate = 60; // ~60fps for smooth motion
+    const animationUpdateRate = 16; // ~60fps for smooth motion
 
     _animationTimer = Timer.periodic(
         const Duration(milliseconds: animationUpdateRate), (timer) {
       if (mounted) {
         setState(() {
           // Adjust speed based on animation type - slower speed means smoother animation
-          double speedFactor =
-              0.5; // Reduced from 1.0 to make all animations smoother
-
-          // Special handling for different animation types
-          if (_selectedAnimation == AnimationType.transition) {
-            speedFactor = 0.3; // Even slower for transitions
-          } else if (_selectedAnimation == AnimationType.thaw) {
-            speedFactor = 0.4; // Slightly faster than transition
+          double speedFactor;
+          // Reduced from 1.0 to make all animations smoother
+          switch (_selectedAnimation) {
+            case AnimationType.transition:
+              speedFactor = 0.25; // Slower for transitions
+              break;
+            case AnimationType.thaw:
+              speedFactor = 0.3; // Slow for thaw effect
+              break;
+            case AnimationType.leftRight:
+            case AnimationType.upDown:
+              speedFactor = 0.4; // Medium for movement
+              break;
+            default:
+              speedFactor = 0.35; // Default smooth speed
           }
 
           _animationValue += 0.01 * speedFactor;
@@ -246,6 +290,36 @@ class _UploadImageState extends State<UploadImage> {
               _animationValue = 0.0; // Reset for continuous animations
             }
           }
+
+          double _getEasedValue(double value) {
+            // Using cubic bezier curve for more natural animation
+            if (value < 0.5) {
+              // Ease in - slow start, faster middle
+              return 4 * value * value * value;
+            } else {
+              // Ease out - slower end for more natural feel
+              final double f = ((2 * value) - 2);
+              return 0.5 * f * f * f + 1;
+            }
+          }
+          // Special handling for different animation types
+          // if (_selectedAnimation == AnimationType.transition) {
+          //   speedFactor = 0.3; // Even slower for transitions
+          // } else if (_selectedAnimation == AnimationType.thaw) {
+          //   speedFactor = 0.4; // Slightly faster than transition
+          // }
+
+          // _animationValue += 0.01 * speedFactor;
+
+          // if (_animationValue >= 1.0) {
+          //   if (_selectedAnimation == AnimationType.transition ||
+          //       _selectedAnimation == AnimationType.thaw) {
+          //     _animationValue =
+          //         1.0; // Keep at full for completion-based animations
+          //   } else {
+          //     _animationValue = 0.0; // Reset for continuous animations
+          //   }
+          // }
         });
       }
     });
@@ -346,8 +420,6 @@ class _UploadImageState extends State<UploadImage> {
     // Process images in background
     List<File> newProcessedImages = [];
 
-
-
     // for (int i = 0; i < _images.length; i++) {
     //   File processedFile = await _applyFilterToImage(_images[i], _selectedFilter);
     //   newProcessedImages.add(processedFile);
@@ -365,7 +437,6 @@ class _UploadImageState extends State<UploadImage> {
       });
     }
   }
-  
 
   // Apply a filter to an individual image
 
@@ -453,6 +524,7 @@ class _UploadImageState extends State<UploadImage> {
       return Image.file(
         imageFile,
         fit: BoxFit.cover,
+        gaplessPlayback: true,
       );
     }
 
@@ -461,13 +533,14 @@ class _UploadImageState extends State<UploadImage> {
         return Image.file(
           imageFile,
           fit: BoxFit.cover,
+               gaplessPlayback: true,
         );
 
       case AnimationType.leftRight:
         // Smoother horizontal movement with easing
         final double maxOffset =
-            MediaQuery.of(context).size.width * 0.08; // Reduced from 0.15
-        final double offset = maxOffset * math.sin(_animationValue * math.pi);
+            MediaQuery.of(context).size.width * 0.05; // Reduced from 0.15
+        final double offset = maxOffset * math.sin(_animationValue * math.pi*2);
         return Transform.translate(
           offset: Offset(offset, 0),
           child: Image.file(
@@ -481,8 +554,8 @@ class _UploadImageState extends State<UploadImage> {
       case AnimationType.upDown:
         // Smoother vertical movement with easing
         final double maxOffset =
-            MediaQuery.of(context).size.height * 0.05; // Reduced from 0.1
-        final double offset = maxOffset * math.sin(_animationValue * math.pi);
+            MediaQuery.of(context).size.height * 0.03; // Reduced from 0.1
+        final double offset = maxOffset * math.sin(_animationValue * math.pi*2);
         return Transform.translate(
           offset: Offset(0, offset),
           child: Image.file(
@@ -516,7 +589,7 @@ class _UploadImageState extends State<UploadImage> {
             return LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [
+              colors:const [
                 Colors.white,
                 Colors.transparent,
               ],
@@ -582,12 +655,12 @@ class _UploadImageState extends State<UploadImage> {
             return LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
-              colors: [
+              colors:const [
                 Colors.white,
                 Colors.transparent,
               ],
               stops: [progress - 0.3, progress + 0.1],
-              transform: GradientRotation(math.pi / 4), // Diagonal direction
+              transform:const GradientRotation(math.pi / 4), // Diagonal direction
             ).createShader(bounds);
           },
           blendMode: BlendMode.dstIn,
@@ -878,322 +951,329 @@ class _UploadImageState extends State<UploadImage> {
           }
         },
         behavior: HitTestBehavior.translucent,
-        child: SafeArea(
-          child: SingleChildScrollView(
-            child: Column(
-              children: [
-             const   SizedBox(height: 30),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        icon: const Icon(Icons.arrow_back_ios),
-                      ),
-                      const Spacer(),
-                      Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: const Color.fromARGB(255, 51, 68, 196),
-                          borderRadius: BorderRadius.circular(10),
+        child: RepaintBoundary(
+          key: _posterKey,
+          child: SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  const SizedBox(height: 30),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            Navigator.of(context).pop();
+                          },
+                          icon: const Icon(Icons.arrow_back_ios),
                         ),
-                        child: const Icon(Icons.share, color: Colors.white),
-                      ),
-                      const SizedBox(width: 10),
-                      GestureDetector(
-                        onTap: _downloadVideo,
-                        child: Container(
+                        const Spacer(),
+                        Container(
                           width: 50,
                           height: 50,
                           decoration: BoxDecoration(
                             color: const Color.fromARGB(255, 51, 68, 196),
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          child: const Icon(Icons.download_sharp,
-                              color: Colors.white),
+                          child: GestureDetector(
+                            onTap: () {
+                              _shareVideo();
+                            },
+                            child: const Icon(Icons.share, color: Colors.white)),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 60),
-
-                if (_images.isNotEmpty)
-                  GestureDetector(
-                    onTap: _toggleControls,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        // Image display
-                        Container(
-                          height: 400,
-                          width: double.infinity,
-                          margin: const EdgeInsets.symmetric(horizontal: 16),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: _processingImages
-                                ? const Center(
-                                    child: CircularProgressIndicator(),
-                                  )
-                                : _buildAnimatedImage(_processedImages
-                                            .isNotEmpty &&
-                                        _currentIndex < _processedImages.length
-                                    ? _processedImages[_currentIndex]
-                                    : _images[_currentIndex]),
-                          ),
-                        ),
-
-                        // Play/pause button overlay (shown only when controls are visible)
-                        if (_showControls)
-                          Container(
-                            width: 60,
-                            height: 60,
+                        const SizedBox(width: 10),
+                        GestureDetector(
+                          onTap: _downloadVideo,
+                          child: Container(
+                            width: 50,
+                            height: 50,
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
-                              shape: BoxShape.circle,
+                              color: const Color.fromARGB(255, 51, 68, 196),
+                              borderRadius: BorderRadius.circular(10),
                             ),
-                            child: IconButton(
-                              icon: Icon(
-                                _isPlaying ? Icons.pause : Icons.play_arrow,
-                                color: Colors.white,
-                                size: 36,
-                              ),
-                              onPressed: _togglePlayback,
+                            child: const Icon(Icons.download_sharp,
+                                color: Colors.white),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 60),
+          
+                  if (_images.isNotEmpty)
+                    GestureDetector(
+                      onTap: _toggleControls,
+                      child: Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          // Image display
+                          Container(
+                            height: 400,
+                            width: double.infinity,
+                            margin: const EdgeInsets.symmetric(horizontal: 16),
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(12),
+                              child: _processingImages
+                                  ? const Center(
+                                      child: CircularProgressIndicator(),
+                                    )
+                                  : _buildAnimatedImage(_processedImages
+                                              .isNotEmpty &&
+                                          _currentIndex < _processedImages.length
+                                      ? _processedImages[_currentIndex]
+                                      : _images[_currentIndex]),
                             ),
                           ),
-
-                        // YouTube style bottom controls bar (shown only when controls are visible)
-                        if (_showControls)
-                          Positioned(
-                            bottom: 0,
-                            left: 16,
-                            right: 16,
-                            child: Container(
-                              height: 40,
+          
+                          // Play/pause button overlay (shown only when controls are visible)
+                          if (_showControls)
+                            Container(
+                              width: 60,
+                              height: 60,
                               decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
-                                  colors: [
-                                    Colors.black.withOpacity(0.7),
-                                    Colors.transparent,
+                                color: Colors.black.withOpacity(0.5),
+                                shape: BoxShape.circle,
+                              ),
+                              child: IconButton(
+                                icon: Icon(
+                                  _isPlaying ? Icons.pause : Icons.play_arrow,
+                                  color: Colors.white,
+                                  size: 36,
+                                ),
+                                onPressed: _togglePlayback,
+                              ),
+                            ),
+          
+                          // YouTube style bottom controls bar (shown only when controls are visible)
+                          if (_showControls)
+                            Positioned(
+                              bottom: 0,
+                              left: 16,
+                              right: 16,
+                              child: Container(
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.bottomCenter,
+                                    end: Alignment.topCenter,
+                                    colors: [
+                                      Colors.black.withOpacity(0.7),
+                                      Colors.transparent,
+                                    ],
+                                  ),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    // Progress bar with time on right
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 8),
+                                      child: Row(
+                                        children: [
+                                          // Play/pause button
+                                          SizedBox(
+                                            width: 24,
+                                            height: 24,
+                                            child: IconButton(
+                                              iconSize: 16,
+                                              padding: EdgeInsets.zero,
+                                              constraints: const BoxConstraints(),
+                                              icon: Icon(
+                                                _isPlaying
+                                                    ? Icons.pause
+                                                    : Icons.play_arrow,
+                                                color: Colors.white,
+                                              ),
+                                              onPressed: _togglePlayback,
+                                            ),
+                                          ),
+          
+                                          // Progress bar
+                                          Expanded(
+                                            child: SliderTheme(
+                                              data: SliderThemeData(
+                                                trackHeight: 2,
+                                                thumbShape:
+                                                    const RoundSliderThumbShape(
+                                                  enabledThumbRadius: 6,
+                                                ),
+                                                overlayShape:
+                                                    const RoundSliderOverlayShape(
+                                                  overlayRadius: 10,
+                                                ),
+                                                activeTrackColor: Colors.red,
+                                                inactiveTrackColor:
+                                                    Colors.grey.withOpacity(0.5),
+                                                thumbColor: Colors.red,
+                                              ),
+                                              child: Slider(
+                                                value: _currentIndex.toDouble(),
+                                                min: 0,
+                                                max: (_images.length - 1)
+                                                    .toDouble()
+                                                    .clamp(0, double.infinity),
+                                                onChanged: (value) {
+                                                  setState(() {
+                                                    _currentIndex = value.toInt();
+                                                    // Update time based on slider position
+                                                    _elapsedSeconds =
+                                                        (_currentIndex *
+                                                                _durationPerImageMs /
+                                                                1000)
+                                                            .round();
+          
+                                                    // Reset animation for transition effect
+                                                    if (_selectedAnimation ==
+                                                        AnimationType
+                                                            .transition) {
+                                                      _animationValue = 0.0;
+                                                    }
+                                                  });
+                                                },
+                                              ),
+                                            ),
+                                          ),
+          
+                                          // Time display on right
+                                          Text(
+                                            '${_formatDuration(_elapsedSeconds)} / ${_getTotalDuration()}',
+                                            style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ],
                                 ),
                               ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.end,
-                                children: [
-                                  // Progress bar with time on right
-                                  Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 8),
-                                    child: Row(
-                                      children: [
-                                        // Play/pause button
-                                        SizedBox(
-                                          width: 24,
-                                          height: 24,
-                                          child: IconButton(
-                                            iconSize: 16,
-                                            padding: EdgeInsets.zero,
-                                            constraints: const BoxConstraints(),
-                                            icon: Icon(
-                                              _isPlaying
-                                                  ? Icons.pause
-                                                  : Icons.play_arrow,
-                                              color: Colors.white,
-                                            ),
-                                            onPressed: _togglePlayback,
-                                          ),
-                                        ),
-
-                                        // Progress bar
-                                        Expanded(
-                                          child: SliderTheme(
-                                            data: SliderThemeData(
-                                              trackHeight: 2,
-                                              thumbShape:
-                                                  const RoundSliderThumbShape(
-                                                enabledThumbRadius: 6,
-                                              ),
-                                              overlayShape:
-                                                  const RoundSliderOverlayShape(
-                                                overlayRadius: 10,
-                                              ),
-                                              activeTrackColor: Colors.red,
-                                              inactiveTrackColor:
-                                                  Colors.grey.withOpacity(0.5),
-                                              thumbColor: Colors.red,
-                                            ),
-                                            child: Slider(
-                                              value: _currentIndex.toDouble(),
-                                              min: 0,
-                                              max: (_images.length - 1)
-                                                  .toDouble()
-                                                  .clamp(0, double.infinity),
-                                              onChanged: (value) {
-                                                setState(() {
-                                                  _currentIndex = value.toInt();
-                                                  // Update time based on slider position
-                                                  _elapsedSeconds =
-                                                      (_currentIndex *
-                                                              _durationPerImageMs /
-                                                              1000)
-                                                          .round();
-
-                                                  // Reset animation for transition effect
-                                                  if (_selectedAnimation ==
-                                                      AnimationType
-                                                          .transition) {
-                                                    _animationValue = 0.0;
-                                                  }
-                                                });
-                                              },
-                                            ),
-                                          ),
-                                        ),
-
-                                        // Time display on right
-                                        Text(
-                                          '${_formatDuration(_elapsedSeconds)} / ${_getTotalDuration()}',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 12,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
+                            ),
+                        ],
+                      ),
+                    )
+                  else
+                    Center(
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 150),
+                          Icon(Icons.movie, size: 80, color: Colors.grey[300]),
+                          const SizedBox(height: 20),
+                          const Text('No images selected'),
+                          const SizedBox(height: 20),
+                          ElevatedButton(
+                            onPressed: _pickInitialImages,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor:
+                                  const Color.fromARGB(255, 51, 68, 196),
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 20, vertical: 12),
+                            ),
+                            child: const Text('Select Images for Video'),
+                          ),
+                        ],
+                      ),
+                    ),
+          
+                  SizedBox(
+                    height: 85,
+                  ),
+          
+                  // Filter selection panel
+                  if (_showFilters)
+                    Container(
+                      height: 120,
+                      width: double.infinity,
+                      color: Colors.black,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(left: 16, top: 8),
+                            child: Text(
+                              'Filter',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
                           ),
-                      ],
-                    ),
-                  )
-                else
-                  Center(
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 150),
-                        Icon(Icons.movie, size: 80, color: Colors.grey[300]),
-                        const SizedBox(height: 20),
-                        const Text('No images selected'),
-                        const SizedBox(height: 20),
-                        ElevatedButton(
-                          onPressed: _pickInitialImages,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                const Color.fromARGB(255, 51, 68, 196),
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 12),
-                          ),
-                          child: const Text('Select Images for Video'),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                SizedBox(
-                  height: 85,
-                ),
-
-                // Filter selection panel
-                if (_showFilters)
-                  Container(
-                    height: 120,
-                    width: double.infinity,
-                    color: Colors.black,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.only(left: 16, top: 8),
-                          child: Text(
-                            'Filter',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                          const SizedBox(height: 8),
+                          Expanded(
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              children: [
+                                _buildFilterOption(FilterType.none, 'None'),
+                                _buildFilterOption(
+                                    FilterType.blackWhite, 'Black&White'),
+                                _buildFilterOption(
+                                    FilterType.watercolor, 'Watercolor'),
+                                _buildFilterOption(FilterType.snow, 'Snow'),
+                                _buildFilterOption(
+                                    FilterType.waterDrops, 'WaterDrops'),
+                              ],
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Expanded(
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            children: [
-                              _buildFilterOption(FilterType.none, 'None'),
-                              _buildFilterOption(
-                                  FilterType.blackWhite, 'Black&White'),
-                              _buildFilterOption(
-                                  FilterType.watercolor, 'Watercolor'),
-                              _buildFilterOption(FilterType.snow, 'Snow'),
-                              _buildFilterOption(
-                                  FilterType.waterDrops, 'WaterDrops'),
-                            ],
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-
-                // Animation selection panel
-                if (_showAnimations)
-                  Container(
-                    height: 120,
-                    width: double.infinity,
-                    color: Colors.black,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Padding(
-                          padding: EdgeInsets.only(left: 16, top: 8),
-                          child: Text(
-                            'Animation',
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+          
+                  // Animation selection panel
+                  if (_showAnimations)
+                    Container(
+                      height: 120,
+                      width: double.infinity,
+                      color: Colors.black,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.only(left: 16, top: 8),
+                            child: Text(
+                              'Animation',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        Expanded(
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            padding: const EdgeInsets.symmetric(horizontal: 12),
-                            children: [
-                              _buildAnimationOption(AnimationType.none, 'None'),
-                              _buildAnimationOption(
-                                  AnimationType.leftRight, 'LeftRight'),
-                              _buildAnimationOption(
-                                  AnimationType.upDown, 'UpDown'),
-                              _buildAnimationOption(
-                                  AnimationType.window, 'Window'),
-                              _buildAnimationOption(
-                                  AnimationType.gradient, 'Gradient'),
-                              _buildAnimationOption(
-                                  AnimationType.transition, 'Transition'),
-                              _buildAnimationOption(AnimationType.thaw, 'Thaw'),
-                              _buildAnimationOption(
-                                  AnimationType.scale, 'Scale'),
-                            ],
+                          const SizedBox(height: 8),
+                          Expanded(
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              children: [
+                                _buildAnimationOption(AnimationType.none, 'None'),
+                                _buildAnimationOption(
+                                    AnimationType.leftRight, 'LeftRight'),
+                                _buildAnimationOption(
+                                    AnimationType.upDown, 'UpDown'),
+                                _buildAnimationOption(
+                                    AnimationType.window, 'Window'),
+                                _buildAnimationOption(
+                                    AnimationType.gradient, 'Gradient'),
+                                _buildAnimationOption(
+                                    AnimationType.transition, 'Transition'),
+                                _buildAnimationOption(AnimationType.thaw, 'Thaw'),
+                                _buildAnimationOption(
+                                    AnimationType.scale, 'Scale'),
+                              ],
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
-
-                // Add space at bottom to prevent overflow
-                const SizedBox(height: 30),
-              ],
+          
+                  // Add space at bottom to prevent overflow
+                  const SizedBox(height: 30),
+                ],
+              ),
             ),
           ),
         ),
@@ -1226,7 +1306,7 @@ class _UploadImageState extends State<UploadImage> {
               break;
           }
         },
-        items:  <BottomNavigationBarItem>[
+        items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.add),
             label: 'Add image',
@@ -1622,7 +1702,7 @@ class _EditImagesScreenState extends State<EditImagesScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: _addMoreImages,
-        child:  Icon(Icons.add_photo_alternate),
+        child: Icon(Icons.add_photo_alternate),
         backgroundColor: const Color.fromARGB(255, 51, 68, 196),
       ),
     );
@@ -1776,6 +1856,4 @@ class FilterUtility {
         return image;
     }
   }
-
-  
 }

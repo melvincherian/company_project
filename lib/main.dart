@@ -10,10 +10,14 @@ import 'package:company_project/providers/date_time_provider.dart';
 import 'package:company_project/providers/festival_provider.dart';
 import 'package:company_project/providers/festivel_poster_provider.dart';
 import 'package:company_project/providers/get_all_plan_provider.dart';
+import 'package:company_project/providers/invoice_provider.dart';
 import 'package:company_project/providers/my_plan_provider.dart';
 import 'package:company_project/providers/poster_provider.dart';
+import 'package:company_project/providers/product_invoice_provider.dart';
+import 'package:company_project/providers/provider_main_category.dart';
 import 'package:company_project/providers/signup_provider.dart';
 import 'package:company_project/providers/story_provider.dart';
+import 'package:company_project/providers/theme_provider.dart';
 import 'package:company_project/providers/user_data_provider.dart';
 import 'package:company_project/views/presentation/pages/auth/splash_screen.dart';
 import 'package:company_project/views/presentation/widgets/navbar/bottom_navbar.dart';
@@ -48,14 +52,25 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_)=>BusinessPosterProvider()),
         ChangeNotifierProvider(create: (_)=>GetAllPlanProvider()),
         ChangeNotifierProvider(create: (_)=>MyPlanProvider()),
-        ChangeNotifierProvider(create: (_)=>UserDataProvider())
+        ChangeNotifierProvider(create: (_)=>UserDataProvider()),
+        ChangeNotifierProvider(create: (_)=>CategoryMainProvider()),
+        ChangeNotifierProvider(create: (_)=>InvoiceProvider()),
+        ChangeNotifierProvider(create: (_)=>ProductInvoiceProvider()),
+        ChangeNotifierProvider(create: (_)=>ThemeProvider())
         
       ],
-      child:const MaterialApp(
-        debugShowCheckedModeBanner: false,
-        // home: SampleScreen(),
-        home: SplashScreen(),
-      ),
+      child: Consumer<ThemeProvider>(
+  builder: (context, themeProvider, child) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData.light(),
+      darkTheme: ThemeData.dark(),
+      themeMode: themeProvider.themeMode, // ✅ This line enables switching
+      home: SplashScreen(),
+    );
+  },
+),
+
       );
     // return MaterialApp(
     //   debugShowCheckedModeBanner: false,

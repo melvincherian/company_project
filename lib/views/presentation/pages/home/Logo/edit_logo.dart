@@ -1,9 +1,14 @@
 import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 import 'package:company_project/views/presentation/pages/home/Logo/element_screen.dart';
 import 'package:company_project/views/presentation/pages/home/poster/edit_brand.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:math' as math;
+
+import 'package:photo_manager/photo_manager.dart';
 
 class EditLogo extends StatefulWidget {
   const EditLogo({super.key});
@@ -13,12 +18,90 @@ class EditLogo extends StatefulWidget {
 }
 
 class _EditLogoState extends State<EditLogo> {
+
   // Replace the single background image with a list of editable images
   final List<_EditableImage> _images = [];
   final List<_EditableText> _texts = [];
   final List<_EditableShape> _shapes = [];
   final List<_EditableElement> _elements = [];
 
+   final GlobalKey _canvasKey = GlobalKey();
+
+
+  
+    bool _isSaving = false;
+
+
+      Future<void> _saveLogoToGallery() async {
+    setState(() {
+      _isSaving = true;
+    });
+
+    try {
+      // Request permission
+      final PermissionState result = await PhotoManager.requestPermissionExtend();
+      if (result.isAuth) {
+        // Capture the canvas as an image
+        final Uint8List? logoImage = await _captureCanvasAsImage();
+        
+        if (logoImage != null) {
+          // Save to gallery
+          final AssetEntity? asset = await PhotoManager.editor.saveImage(
+            filename: '',
+            logoImage,
+            title: 'Logo_${DateTime.now().millisecondsSinceEpoch}.png',
+          );
+          
+          if (asset != null) {
+            // Show success message
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Logo saved to gallery successfully!'),
+                backgroundColor: Colors.green,
+              ),
+            );
+          } else {
+            throw Exception('Failed to save the image');
+          }
+        } else {
+          throw Exception('Failed to capture the canvas');
+        }
+      } else {
+        throw Exception('Permission denied');
+      }
+    } catch (e) {
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save: ${e.toString()}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isSaving = false;
+      });
+    }
+  }
+ Future<Uint8List?> _captureCanvasAsImage() async {
+    try {
+      // Find the render object from the key
+      final RenderRepaintBoundary boundary = _canvasKey.currentContext!
+          .findRenderObject() as RenderRepaintBoundary;
+      
+      // Capture as image
+      final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      
+      if (byteData != null) {
+        return byteData.buffer.asUint8List();
+      }
+      return null;
+    } catch (e) {
+      debugPrint('Error capturing canvas: $e');
+      return null;
+    }
+  }
   // Track selected items for deletion
   _EditableText? _selectedText;
   _EditableShape? _selectedShape;
@@ -600,7 +683,9 @@ class _EditLogoState extends State<EditLogo> {
                     ),
                   const Spacer(),
                   ElevatedButton(
-                    onPressed: () {},
+                    onPressed: () {
+                      _saveLogoToGallery();
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color.fromARGB(255, 84, 61, 231),
                       padding: const EdgeInsets.symmetric(

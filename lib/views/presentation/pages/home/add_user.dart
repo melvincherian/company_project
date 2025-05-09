@@ -101,12 +101,13 @@ class PlanDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:  Text("How to Use",style: TextStyle(fontWeight: FontWeight.bold),),
+        title:const  Text("How to Use",style: TextStyle(fontWeight: FontWeight.bold),),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios),
           onPressed: () => Navigator.pop(context),
         ),
       ),
+      
       body: const Padding(
         padding: EdgeInsets.all(16.0),
         child: SingleChildScrollView(

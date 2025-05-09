@@ -821,19 +821,71 @@ class _CategoryScreenState extends State<CategoryScreen> {
                   ),
                   Row(
                     children: [
-                      Container(
-                        padding: EdgeInsets.all(screenWidth * 0.02),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black),
-                          borderRadius: BorderRadius.circular(12),
+                      GestureDetector(
+                        onTap: () {
+                          showModalBottomSheet(
+                            context: context,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(20)),
+                            ),
+                            builder: (BuildContext context) {
+                              return Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 20),
+                                child: Column(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    ListTile(
+                                      title: const Text('Telugu'),
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        // TODO: Handle Telugu language change
+                                      },
+                                    ),
+                                    ListTile(
+                                      title: const Text('English'),
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        // TODO: Handle English language change
+                                      },
+                                    ),
+                                    ListTile(
+                                      title: const Text('Hindi'),
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        // TODO: Handle Hindi language change
+                                      },
+                                    ),
+                                    ListTile(
+                                      title: const Text('Tamil'),
+                                      onTap: () {
+                                        Navigator.pop(context);
+                                        // TODO: Handle Tamil language change
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          );
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(screenWidth * 0.02),
+                          decoration: BoxDecoration(
+                            border: Border.all(color: Colors.black),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(Icons.translate),
                         ),
-                        child: const Icon(Icons.translate),
                       ),
                       SizedBox(width: screenWidth * 0.03),
                       GestureDetector(
                         onTap: () {
-
-                          Navigator.push(context, MaterialPageRoute(builder: (context)=>SearchScreen()));
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => SearchScreen()));
                         },
                         child: CircleAvatar(
                           backgroundColor: Colors.grey[200],

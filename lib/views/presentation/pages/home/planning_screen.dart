@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'package:company_project/providers/auth_provider.dart';
 import 'package:company_project/views/birthday_greeting_screen.dart';
 import 'package:company_project/views/change_industry_screen.dart';
@@ -42,7 +44,8 @@ class PlaningDetailsScreen extends StatelessWidget {
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                              builder: (context) =>const BirthdayGreetingScreen()));
+                              builder: (context) =>
+                                  const BirthdayGreetingScreen()));
                     },
                     child: _iconTile(Icons.cake, "B'day\nGreetings")),
                 GestureDetector(
@@ -111,7 +114,8 @@ class PlaningDetailsScreen extends StatelessWidget {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => ChangeIndustryScreen()));
+                                builder: (context) =>
+                                    const ChangeIndustryScreen()));
                       },
                       child: _menuTile(Icons.business, "Change Industry")),
                   const Divider(),
@@ -203,7 +207,7 @@ class PlaningDetailsScreen extends StatelessWidget {
                         Navigator.push(
                             context,
                             MaterialPageRoute(
-                                builder: (context) => PrivacyPolicy()));
+                                builder: (context) =>const PrivacyPolicy()));
                       },
                       child: _menuTile(Icons.description, "Policies")),
                   const Divider(),

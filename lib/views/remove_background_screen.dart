@@ -1,5 +1,10 @@
-import 'package:company_project/views/remove_background_premium.dart';
+// ignore_for_file: use_super_parameters
+
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:company_project/views/remove_background_premium.dart';
 
 class RemoveBackgroundScreen extends StatefulWidget {
   const RemoveBackgroundScreen({Key? key}) : super(key: key);
@@ -9,15 +14,49 @@ class RemoveBackgroundScreen extends StatefulWidget {
 }
 
 class _RemoveBackgroundScreenState extends State<RemoveBackgroundScreen> {
-  int _selectedCredits = 10;
+  final List<File> _selectedImages = [];
 
-  final List<Map<String, dynamic>> creditPlans = [
-    {"credits": 1000, "price": 1500},
-    {"credits": 500, "price": 1000},
-    {"credits": 100, "price": 250},
-    {"credits": 25, "price": 100},
-    {"credits": 10, "price": 50},
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedImages(); // Load saved image paths on startup
+  }
+
+  // Load saved image paths from SharedPreferences
+  Future<void> _loadSavedImages() async {
+    final prefs = await SharedPreferences.getInstance();
+    final savedPaths = prefs.getStringList('selected_images') ?? [];
+    setState(() {
+      _selectedImages.clear();
+      _selectedImages.addAll(savedPaths.map((path) => File(path)));
+    });
+  }
+
+  // Save image paths to SharedPreferences
+  Future<void> _saveImagesToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final paths = _selectedImages.map((file) => file.path).toList();
+    await prefs.setStringList('selected_images', paths);
+  }
+
+  // Pick image from gallery and save
+  Future<void> _pickImage() async {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _selectedImages.add(File(pickedFile.path));
+      });
+      await _saveImagesToPrefs(); // Save updated list
+    }
+  }
+
+  // Remove an image and update storage
+  Future<void> _removeImage(int index) async {
+    setState(() {
+      _selectedImages.removeAt(index);
+    });
+    await _saveImagesToPrefs(); // Save updated list after deletion
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -40,14 +79,19 @@ class _RemoveBackgroundScreenState extends State<RemoveBackgroundScreen> {
           child: Center(
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
-              children:  [
-                Icon(Icons.shopping_cart),
-                SizedBox(width: 8),
+              children: [
+                const Icon(Icons.shopping_cart),
+                const SizedBox(width: 8),
                 GestureDetector(
                   onTap: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=>const RemoveBackgroundPremium()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RemoveBackgroundPremium(),
+                      ),
+                    );
                   },
-                  child: Text(
+                  child: const Text(
                     "Buy Now",
                     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
                   ),
@@ -69,21 +113,11 @@ class _RemoveBackgroundScreenState extends State<RemoveBackgroundScreen> {
                   color: Colors.orange[100],
                   borderRadius: BorderRadius.circular(12),
                   image: const DecorationImage(
-                    image: AssetImage('assets/assets/1641620950s-background-removing-landing-page-banner-design.jpg'), // Replace with your asset
+                    image: AssetImage(
+                      'assets/assets/1641620950s-background-removing-landing-page-banner-design.jpg',
+                    ),
                     fit: BoxFit.cover,
                   ),
-                ),
-              ),
-              Positioned(
-                right: 12,
-                top: 12,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: Colors.yellow[700],
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: const Text("Credit left: 2"),
                 ),
               ),
             ],
@@ -96,37 +130,72 @@ class _RemoveBackgroundScreenState extends State<RemoveBackgroundScreen> {
             ),
           ),
           const SizedBox(height: 20),
-
           const Text(
             "Background Removal Credits plans",
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
+          const SizedBox(height: 20),
+          const Text(
+            "Your Images",
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 10),
-
-          // Credit Plans
-          ...creditPlans.map((plan) {
-            return RadioListTile(
-              title: Text("${plan['credits']} Credits"),
-              value: plan['credits'],
-              groupValue: _selectedCredits,
-              onChanged: (value) {
-                setState(() {
-                  _selectedCredits = value as int;
-                });
-              },
-              secondary: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.blue[100],
-                  borderRadius: BorderRadius.circular(8),
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: _selectedImages.length,
+            itemBuilder: (context, index) {
+              return Card(
+                margin: const EdgeInsets.symmetric(vertical: 8),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 80,
+                      height: 80,
+                      margin: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(8),
+                        image: DecorationImage(
+                          image: FileImage(_selectedImages[index]),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.add_photo_alternate),
+                      onPressed: _pickImage,
+                    ),
+                    IconButton(
+                      icon: const Icon(Icons.delete, color: Colors.red),
+                      onPressed: () => _removeImage(index),
+                    ),
+                  ],
                 ),
-                child: Text(
-                  "₹ ${plan['price']}",
-                  style: const TextStyle(fontWeight: FontWeight.bold),
-                ),
+              );
+            },
+          ),
+          const SizedBox(height: 10),
+          Center(
+            child: ElevatedButton.icon(
+              onPressed: _pickImage,
+              icon: const Icon(Icons.add, color: Colors.white),
+              label: const Text(
+                "Add Image",
+                style: TextStyle(fontWeight: FontWeight.bold, color: Colors.white),
               ),
-            );
-          }).toList(),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal,
+                foregroundColor: Colors.white,
+                elevation: 5,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(30),
+                ),
+                textStyle: const TextStyle(fontSize: 16),
+              ),
+            ),
+          ),
         ],
       ),
     );

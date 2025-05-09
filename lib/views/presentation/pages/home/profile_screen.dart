@@ -182,7 +182,7 @@ class _VirtualBusinessScreenState extends State<VirtualBusinessScreen> {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (_) =>  BusinessDetailScreen(poster:poster)));
+                      builder: (_) => BusinessDetailScreen(poster: poster)));
             },
             child: poster.images.isNotEmpty
                 ? Image.network(poster.images.first,

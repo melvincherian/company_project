@@ -57,6 +57,7 @@
 //   }
 // }
 
+import 'package:company_project/models/category_main_model.dart';
 import 'package:flutter/material.dart';
 import 'package:company_project/models/category_modell.dart';
 import 'package:company_project/services/api/category_servicee.dart';
@@ -109,11 +110,28 @@ class CategoryProviderr extends ChangeNotifier {
     }
   }
 
+
+  //  Future<void> fetchCategories() async {
+  //   _isLoading = true;
+  //   _error = null;
+  //   notifyListeners();
+
+  //   try {
+  //     _categories = await fetchAllCategories(); // This calls your service function
+  //   } catch (e) {
+  //     _error = e.toString();
+  //   } finally {
+  //     _isLoading = false;
+  //     notifyListeners();
+  //   }
+  // }
+
   // Fetch multiple categories at once
   Future<void> fetchMultipleCategories(List<String> categories) async {
     final futures = categories.map((category) => fetchCategoryItems(category));
     await Future.wait(futures);
   }
+  
 
   // Search items across all categories
   List<CategoryModel> searchItems(String query) {

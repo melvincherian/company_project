@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:company_project/models/category_main_model.dart';
 import 'package:company_project/models/category_modell.dart';
 import 'package:http/http.dart' as http;
 
@@ -29,6 +30,23 @@ class CategoryService {
       return data.map((json) => CategoryModel.fromJson(json)).toList();
     } else {
       throw Exception('Failed to load $category data: ${response.statusCode}');
+    }
+  }
+
+
+
+   Future<List<MainCategoryModel>> fetchAllCategories() async {
+  
+    // final endpoint = _endpoints[category.toLowerCase()];
+    final response = await http.get(Uri.parse('$baseUrl/category/getall-categry'));
+      
+    if (response.statusCode == 200) {
+      final List data = jsonDecode(response.body);
+      
+      // Use the factory constructor instead of a static method
+      return data.map((json) => MainCategoryModel.fromJson(json)).toList();
+    } else {
+      throw Exception('Failed to load  data: ${response.statusCode}');
     }
   }
 

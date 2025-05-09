@@ -21,6 +21,8 @@ class GetAllPlanProvider extends ChangeNotifier {
     try {
       _plans = await _planService.fetchAllPlans();
     } catch (e) {
+      print('sfjsjfjsjjsdfjs$e');
+      print('planssssssssss$_plans');
       _error = e.toString();
     } finally {
       _isLoading = false;

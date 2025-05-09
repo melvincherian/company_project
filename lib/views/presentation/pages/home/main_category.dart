@@ -166,6 +166,9 @@
 
 // ignore_for_file: use_build_context_synchronously
 
+import 'package:company_project/providers/category_providerr.dart';
+import 'package:company_project/providers/provider_main_category.dart';
+import 'package:company_project/views/presentation/pages/home/details_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:company_project/providers/category_provider.dart';
@@ -207,9 +210,13 @@ class _ChangeIndustryScreenState extends State<BusinessIndustryScreen> {
   }
 
   Future<void> _fetchCategories() async {
-    await Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
+    await Provider.of<CategoryMainProvider>(context, listen: false).fetchCategories();
     setState(() {
-      _filteredCategories = Provider.of<CategoryProvider>(context, listen: false).categories;
+
+      _filteredCategories = Provider.of<CategoryMainProvider>(context, listen: false).categories;
+     for (var category in _filteredCategories) {
+    print('Category: ${category.categoryName}, ID: ${category.id}, Image: ${category.image}');
+  }
     });
   }
 
@@ -247,15 +254,16 @@ class _ChangeIndustryScreenState extends State<BusinessIndustryScreen> {
   }
 
   void _filterCategories() {
-    final categoryProvider = Provider.of<CategoryProvider>(context, listen: false);
+    final categoryProvider = Provider.of<CategoryMainProvider>(context, listen: false);
     if (_searchText.isEmpty) {
       setState(() {
         _filteredCategories = categoryProvider.categories;
+        print('KOIIIIIIIIII$_filteredCategories');
       });
     } else {
       setState(() {
         _filteredCategories = categoryProvider.categories
-            .where((category) => category.categoryname
+            .where((category) => category.categoryName
                 .toLowerCase()
                 .contains(_searchText.toLowerCase()))
             .toList();
@@ -265,7 +273,7 @@ class _ChangeIndustryScreenState extends State<BusinessIndustryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final categoryProvider = Provider.of<CategoryProvider>(context);
+    final categoryProvider = Provider.of<CategoryMainProvider>(context);
     if (_filteredCategories.isEmpty && categoryProvider.categories.isNotEmpty) {
       _filteredCategories = categoryProvider.categories;
     }
@@ -299,8 +307,15 @@ class _ChangeIndustryScreenState extends State<BusinessIndustryScreen> {
                           final category = _filteredCategories[index];
                           final isSelected = _selectedIndex == index;
 
+                          print('tttttttttttttt$category');
+
                           return GestureDetector(
                             onTap: () {
+                    //            Navigator.push(
+                    // context,
+                    // MaterialPageRoute(
+                    //     builder: (context) =>
+                    //         DetailsScreen(category: category.categoryName)));
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (context) => const NavbarScreen()),
@@ -310,7 +325,7 @@ class _ChangeIndustryScreenState extends State<BusinessIndustryScreen> {
                               });
                             },
                             child: _buildCategoryCard(
-                              category.categoryname,
+                              category.categoryName,
                               isSelected ? const Color(0xFF413B99) : const Color(0xFFF9F9F9),
                               category.image,
                               textColor: isSelected ? Colors.white : Colors.black,

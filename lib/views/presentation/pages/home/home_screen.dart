@@ -1,729 +1,12 @@
-// import 'dart:convert';
-
-// import 'package:company_project/providers/date_time_provider.dart';
-// import 'package:company_project/providers/poster_provider.dart';
-// import 'package:company_project/providers/story_provider.dart';
-// import 'package:company_project/views/presentation/pages/home/details_screen.dart';
-// import 'package:company_project/views/presentation/pages/home/poster/create_poster_template.dart';
-// import 'package:company_project/views/presentation/widgets/add_story.dart';
-// import 'package:company_project/views/presentation/widgets/date_selector_screen.dart';
-// import 'package:company_project/views/presentation/widgets/story_screen.dart';
-// import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';
-// import 'package:company_project/models/story_model.dart';
-// import 'package:http/http.dart' as http;
-
-// class HomeScreen extends StatefulWidget {
-//   const HomeScreen({super.key});
-
-//   @override
-//   State<HomeScreen> createState() => _HomeScreenState();
-// }
-
-// class _HomeScreenState extends State<HomeScreen> {
-//   final String currentUserId = '680634a4bb1d44fb0c93aae2';
-//    bool _isLoading = false;
-//   Map<String, List<Map<String, dynamic>>> _categorizedPosters = {};
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     print('HomeScreen init - about to fetch posters and stories');
-//     Future.microtask(() {
-//       print('Inside microtask - calling providers');
-//       final posterProvider =
-//           Provider.of<PosterProvider>(context, listen: false);
-//       final storyProvider = Provider.of<StoryProvider>(context, listen: false);
-
-//       posterProvider.fetchPosters().then((_) {
-//         print(
-//             'Fetch posters completed - poster count: ${posterProvider.posters.length}');
-//       });
-
-//       storyProvider.fetchStories().then((_) {
-//         print(
-//             'Fetch stories completed - story count: ${storyProvider.stories.length}');
-//       });
-//     });
-
-//         WidgetsBinding.instance.addPostFrameCallback((_) {
-//       _fetchFestivalPosters(context.read<DateTimeProvider>().selectedDate);
-//     });
-//   }
-
-//     String _formatDate(DateTime date) {
-//     return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
-//   }
-
-//   // Fetch festival posters from API based on selected date
-//   Future<void> _fetchFestivalPosters(DateTime date) async {
-//     setState(() {
-//       _isLoading = true;
-//       _categorizedPosters = {};
-//     });
-
-//     try {
-//       final response = await http.post(
-//         Uri.parse('https://posterbnaobackend.onrender.com/api/poster/festival'),
-//         headers: {'Content-Type': 'application/json'},
-//         body: jsonEncode({'festivalDate': _formatDate(date)}),
-//       );
-
-//       if (response.statusCode == 200) {
-//         final List<dynamic> posters = jsonDecode(response.body);
-
-//         // Group posters by category
-//         final Map<String, List<Map<String, dynamic>>> categorizedPosters = {};
-
-//         for (var poster in posters) {
-//           final category = poster['categoryName'];
-//           if (!categorizedPosters.containsKey(category)) {
-//             categorizedPosters[category] = [];
-//           }
-//           categorizedPosters[category]?.add(poster);
-//         }
-
-//         setState(() {
-//           _categorizedPosters = categorizedPosters;
-//           _isLoading = false;
-//         });
-//       } else {
-//         // Handle error
-//         setState(() {
-//           _isLoading = false;
-//         });
-//         ScaffoldMessenger.of(context).showSnackBar(
-//           const SnackBar(content: Text('Failed to load festival posters')),
-//         );
-//       }
-//     } catch (e) {
-//       setState(() {
-//         _isLoading = false;
-//       });
-//       ScaffoldMessenger.of(context).showSnackBar(
-//         SnackBar(content: Text('Error: ${e.toString()}')),
-//       );
-//     }
-//   }
-
-//   void _openAddStory() {
-//     Navigator.push(
-//       context,
-//       MaterialPageRoute(
-//         builder: (context) => AddStoryWidget(
-//           userId: currentUserId,
-//           onStoryAdded: () {
-//             // Refresh stories after adding
-//             Provider.of<StoryProvider>(context, listen: false).fetchStories();
-//           },
-//         ),
-//       ),
-//     );
-//   }
-
-//   void _openStoryViewer(int index) {
-//     final storyProvider = Provider.of<StoryProvider>(context, listen: false);
-
-//     Navigator.push(
-//       context,
-//       MaterialPageRoute(
-//         builder: (context) => StoryViewerScreen(
-//           stories: storyProvider.stories,
-//           initialIndex: index,
-//         ),
-//       ),
-//     );
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     final posterProvider = Provider.of<PosterProvider>(context);
-//     final storyProvider = Provider.of<StoryProvider>(context);
-
-//     print(
-//         'Building HomeScreen - PosterProvider isLoading: ${posterProvider.isLoading}');
-//     print(
-//         'Building HomeScreen - PosterProvider error: ${posterProvider.error}');
-//     print(
-//         'Building HomeScreen - Poster count: ${posterProvider.posters.length}');
-//     print('Building HomeScreen - Story count: ${storyProvider.stories.length}');
-
-//     final posters = posterProvider.posters;
-//     final stories = storyProvider.stories;
-
-//     final ugadiPosters = posters
-//         .where((poster) => poster.categoryName.toLowerCase() == 'ugadi')
-//         .toList();
-
-//     // Separate lists for clothing, beauty and chemical
-//     final clothingPosters = posters
-//         .where((poster) => poster.categoryName.toLowerCase() == 'clothing')
-//         .toList();
-
-//     final beautyPosters = posters
-//         .where((poster) => poster.categoryName.toLowerCase() == 'beauty')
-//         .toList();
-
-//     final chemicalPosters = posters
-//         .where((poster) => poster.categoryName.toLowerCase() == 'chemical')
-//         .toList();
-
-//     print('Ugadi poster count: ${ugadiPosters.length}');
-//     print('Clothing poster count: ${clothingPosters.length}');
-//     print('Beauty poster count: ${beautyPosters.length}');
-//     print('Chemical poster count: ${chemicalPosters.length}');
-//     print('Storieeeeeeeeeeeeeeeeeees: ${stories}');
-
-//     bool _currentUserHasStory() {
-//       final storyProvider = Provider.of<StoryProvider>(context, listen: false);
-//       return storyProvider.stories
-//           .any((story) => story.userId == currentUserId);
-//     }
-
-//     // Add this method to get current user's story
-//     Story? _getCurrentUserStory() {
-//       final storyProvider = Provider.of<StoryProvider>(context, listen: false);
-//       try {
-//         return storyProvider.stories
-//             .firstWhere((story) => story.userId == currentUserId);
-//       } catch (e) {
-//         return null;
-//       }
-//     }
-
-//     return Scaffold(
-//       body: SingleChildScrollView(
-//         child: SafeArea(
-//           child: Padding(
-//             padding: const EdgeInsets.all(20),
-//             child: Column(
-//               children: [
-//                 Row(
-//                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                   children: [
-//                     Row(
-//                       children: [
-//                         const CircleAvatar(
-//                           radius: 25,
-//                           backgroundImage: NetworkImage(
-//                             'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQBvqzyx_zoi6q2c0Gd1XnE7wysD9PGOLe3-A&s',
-//                           ),
-//                         ),
-//                         const SizedBox(width: 12),
-//                         Column(
-//                           crossAxisAlignment: CrossAxisAlignment.start,
-//                           children: [
-//                             const Text(
-//                               'PMS Software',
-//                               style: TextStyle(
-//                                   fontSize: 16, fontWeight: FontWeight.bold),
-//                             ),
-//                             Text(
-//                               'Hyderabad',
-//                               style: TextStyle(
-//                                 fontSize: 13,
-//                                 color: Colors.black.withOpacity(0.6),
-//                               ),
-//                             ),
-//                           ],
-//                         ),
-//                       ],
-//                     ),
-//                     Container(
-//                       padding: const EdgeInsets.all(8),
-//                       decoration: BoxDecoration(
-//                         borderRadius: BorderRadius.circular(12),
-//                         border: Border.all(color: Colors.black12),
-//                       ),
-//                       child: const Icon(Icons.translate, size: 24),
-//                     )
-//                   ],
-//                 ),
-//                 const SizedBox(height: 20),
-//                 Container(
-//                   padding: const EdgeInsets.symmetric(horizontal: 10),
-//                   decoration: BoxDecoration(
-//                     color: Colors.grey[100],
-//                     borderRadius: BorderRadius.circular(16),
-//                   ),
-//                   child: Row(
-//                     children: [
-//                       Icon(Icons.search, color: Colors.grey[600], size: 24),
-//                       const SizedBox(width: 10),
-//                       Expanded(
-//                         child: TextFormField(
-//                           decoration: InputDecoration(
-//                             border: InputBorder.none,
-//                             hintText: 'Search Poster by Topic',
-//                             hintStyle: TextStyle(color: Colors.grey[600]),
-//                           ),
-//                         ),
-//                       ),
-//                       const CircleAvatar(
-//                         radius: 23,
-//                         backgroundColor: Color(0xFF6C4EF9),
-//                         child: Icon(Icons.mic, color: Colors.white),
-//                       )
-//                     ],
-//                   ),
-//                 ),
-//                 const SizedBox(height: 15),
-//                 Container(
-//                   height: 140,
-//                   width: double.infinity,
-//                   decoration: BoxDecoration(
-//                       borderRadius: BorderRadius.circular(20),
-//                       image: const DecorationImage(
-//                           image: AssetImage(
-//                               'assets/assets/4db504a1da2c0272db46bf139b7be4d117bf4487.png'),
-//                           fit: BoxFit.cover)),
-//                   child: Stack(
-//                     children: [
-//                       Positioned(
-//                           top: 16,
-//                           left: 16,
-//                           child: Column(
-//                             crossAxisAlignment: CrossAxisAlignment.start,
-//                             children: [
-//                               const Text(
-//                                 'Ugadi Posters\nare Ready',
-//                                 style: TextStyle(
-//                                     fontSize: 20,
-//                                     fontWeight: FontWeight.bold,
-//                                     color: Colors.white),
-//                               ),
-//                               const SizedBox(height: 8),
-//                               ElevatedButton(
-//                                   onPressed: () {},
-//                                   style: ElevatedButton.styleFrom(
-//                                       backgroundColor: Colors.white,
-//                                       foregroundColor: Colors.black,
-//                                       shape: RoundedRectangleBorder(
-//                                           borderRadius:
-//                                               BorderRadius.circular(8))),
-//                                   child: const Text(
-//                                     'Explore Now',
-//                                     style: TextStyle(fontSize: 17),
-//                                   ))
-//                             ],
-//                           )),
-//                     ],
-//                   ),
-//                 ),
-
-//                 // Stories Section - UPDATED
-//                 SizedBox(
-//                   height: 120,
-//                   child: ListView.builder(
-//                     scrollDirection: Axis.horizontal,
-//                     itemCount: stories.length +
-//                         (!_currentUserHasStory()
-//                             ? 1
-//                             : 0), // Add 1 for "Add Story" if user has no story
-//                     itemBuilder: (context, index) {
-//                       // First position shows either "Add Story" or user's own story
-//                       if (index == 0) {
-//                         // If user has no story, show "Add Story" button
-//                         if (!_currentUserHasStory()) {
-//                           return Padding(
-//                             padding: const EdgeInsets.symmetric(horizontal: 14),
-//                             child: GestureDetector(
-//                               onTap: _openAddStory,
-//                               child: Column(
-//                                 children: [
-//                                   const SizedBox(height: 16),
-//                                   Stack(
-//                                     children: [
-//                                       CircleAvatar(
-//                                         radius: 30,
-//                                         backgroundColor: Colors.grey[300],
-//                                         child: const Icon(
-//                                           Icons.add,
-//                                           size: 32,
-//                                           color: Colors.black87,
-//                                         ),
-//                                       ),
-//                                     ],
-//                                   ),
-//                                   const SizedBox(height: 4),
-//                                   const Text(
-//                                     'Add Story',
-//                                     style: TextStyle(color: Colors.black),
-//                                   )
-//                                 ],
-//                               ),
-//                             ),
-//                           );
-//                         } else {
-//                           // Show user's own story first
-//                           final userStory = _getCurrentUserStory()!;
-//                           return Padding(
-//                             padding: const EdgeInsets.symmetric(horizontal: 14),
-//                             child: GestureDetector(
-//                               onTap: () {
-//                                 // Find the index of this story in the overall stories list
-//                                 final storyIndex = stories
-//                                     .indexWhere((s) => s.id == userStory.id);
-//                                 _openStoryViewer(storyIndex);
-//                               },
-//                               child: Column(
-//                                 children: [
-//                                   const SizedBox(height: 16),
-//                                   Container(
-//                                     decoration: BoxDecoration(
-//                                       shape: BoxShape.circle,
-//                                       border: Border.all(
-//                                         color: const Color(0xFF6C4EF9),
-//                                         width: 2,
-//                                       ),
-//                                     ),
-//                                     child: CircleAvatar(
-//                                       radius: 30,
-//                                       backgroundImage: NetworkImage(
-//                                         'https://posterbnaobackend.onrender.com/${userStory.image}',
-//                                       ),
-//                                       onBackgroundImageError:
-//                                           (exception, stackTrace) {
-//                                         print(
-//                                             'Error loading story image: $exception');
-//                                       },
-//                                     ),
-//                                   ),
-//                                   const SizedBox(height: 4),
-//                                   const Text(
-//                                     'Your Story',
-//                                     style: TextStyle(color: Colors.black),
-//                                   )
-//                                 ],
-//                               ),
-//                             ),
-//                           );
-//                         }
-//                       } else {
-//                         // For other users' stories
-//                         // Adjust index based on whether user has story
-//                         final adjustedIndex =
-//                             _currentUserHasStory() ? index : index - 1;
-
-//                         // Filter out current user's story from the list shown here
-//                         final filteredStories = stories.toList();
-//                         // .where((s) => s.userId == currentUserId)
-//                         // .toList();
-
-//                         if (adjustedIndex < filteredStories.length) {
-//                           final story = filteredStories[adjustedIndex];
-
-//                           // Find the index of this story in the overall stories list for viewer
-//                           final viewerIndex =
-//                               stories.indexWhere((s) => s.id == story.id);
-
-//                           return Padding(
-//                             padding: const EdgeInsets.symmetric(horizontal: 14),
-//                             child: GestureDetector(
-//                               onTap: () => _openStoryViewer(viewerIndex),
-//                               child: Column(
-//                                 children: [
-//                                   const SizedBox(height: 16),
-//                                   Container(
-//                                     decoration: BoxDecoration(
-//                                       shape: BoxShape.circle,
-//                                       border: Border.all(
-//                                         color: const Color(0xFF6C4EF9),
-//                                         width: 2,
-//                                       ),
-//                                     ),
-//                                     child: CircleAvatar(
-//                                       radius: 30,
-//                                       backgroundImage: NetworkImage(
-//                                         'https://posterbnaobackend.onrender.com/${story.image}',
-//                                       ),
-//                                       onBackgroundImageError:
-//                                           (exception, stackTrace) {
-//                                         print(
-//                                             'Error loading story image: $exception');
-//                                       },
-//                                     ),
-//                                   ),
-//                                   const SizedBox(height: 4),
-//                                   const Text(
-//                                     'Story',
-//                                     style: TextStyle(color: Colors.black),
-//                                   )
-//                                 ],
-//                               ),
-//                             ),
-//                           );
-//                         }
-//                         return const SizedBox
-//                             .shrink(); // Fallback for any out-of-bounds indices
-//                       }
-//                     },
-//                   ),
-//                 ),
-//                 const SizedBox(height: 15),
-//                 const Row(
-//                   mainAxisAlignment: MainAxisAlignment.start,
-//                   children: [
-//                     Text(
-//                       'Upcoming Festivals',
-//                       style:
-//                           TextStyle(fontWeight: FontWeight.bold, fontSize: 19),
-//                     ),
-//                   ],
-//                 ),
-//                 const SizedBox(height: 15),
-//                 Consumer<DateTimeProvider>(
-//                     builder: (context, dateTimeProvider, _) {
-//                   return DateSelectorRow(
-//                     selectedDate: dateTimeProvider.selectedDate,
-//                     onDateSelected: (date) {
-//                       dateTimeProvider.setStartDate(date);
-//                     },
-//                   );
-//                 }),
-
-//                 // Ugadi Posters Section
-//                 Row(
-//                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                   children: [
-//                     const Text(
-//                       'Ugadi',
-//                       style:
-//                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-//                     ),
-//                     TextButton(
-//                         onPressed: () {
-//                           Navigator.push(
-//                               context,
-//                               MaterialPageRoute(
-//                                   builder: (context) => const DetailsScreen(
-//                                       category: 'ugadiposter')));
-//                         },
-//                         child: Row(
-//                           children: [
-//                             const Text(
-//                               'View All',
-//                               style: TextStyle(color: Colors.black),
-//                             ),
-//                             Icon(
-//                               Icons.arrow_forward_ios,
-//                               size: 19,
-//                               color: Colors.black,
-//                             )
-//                           ],
-//                         ))
-//                   ],
-//                 ),
-//                 _buildPosterList(ugadiPosters),
-
-//                 // Clothing Posters Section
-//                 Row(
-//                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                   children: [
-//                     const Text(
-//                       'Clothing',
-//                       style:
-//                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-//                     ),
-//                     TextButton(
-//                       onPressed: () {
-//                         Navigator.push(
-//                             context,
-//                             MaterialPageRoute(
-//                                 builder: (context) => const DetailsScreen(
-//                                       category: 'clothingposter',
-//                                     )));
-//                       },
-//                       child: Row(
-//                         children: [
-//                           const Text(
-//                             'View All',
-//                             style: TextStyle(color: Colors.black),
-//                           ),
-//                           Icon(
-//                             Icons.arrow_forward_ios,
-//                             size: 19,
-//                             color: Colors.black,
-//                           )
-//                         ],
-//                       ),
-//                     )
-//                   ],
-//                 ),
-//                 _buildPosterList(clothingPosters),
-
-//                 // Beauty Posters Section
-//                 Row(
-//                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                   children: [
-//                     const Text(
-//                       'Beauty',
-//                       style:
-//                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-//                     ),
-//                     TextButton(
-//                       onPressed: () {
-//                         Navigator.push(
-//                             context,
-//                             MaterialPageRoute(
-//                                 builder: (context) => const DetailsScreen(
-//                                       category: 'beautyposter',
-//                                     )));
-//                       },
-//                       child: Row(
-//                         children: [
-//                           const Text(
-//                             'View All',
-//                             style: TextStyle(color: Colors.black),
-//                           ),
-//                           Icon(
-//                             Icons.arrow_forward_ios,
-//                             size: 19,
-//                             color: Colors.black,
-//                           )
-//                         ],
-//                       ),
-//                     )
-//                   ],
-//                 ),
-//                 _buildPosterList(beautyPosters),
-
-//                 // Chemical Posters Section
-//                 Row(
-//                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                   children: [
-//                     const Text(
-//                       'Chemical',
-//                       style:
-//                           TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-//                     ),
-//                     TextButton(
-//                       onPressed: () {
-//                         Navigator.push(
-//                             context,
-//                             MaterialPageRoute(
-//                                 builder: (context) => const DetailsScreen(
-//                                     category: 'chemicalposter')));
-//                       },
-//                       child: Row(
-//                         children: [
-//                           const Text(
-//                             'View All',
-//                             style: TextStyle(color: Colors.black),
-//                           ),
-//                           Icon(
-//                             Icons.arrow_forward_ios,
-//                             size: 19,
-//                             color: Colors.black,
-//                           )
-//                         ],
-//                       ),
-//                     )
-//                   ],
-//                 ),
-//                 _buildPosterList(chemicalPosters),
-//               ],
-//             ),
-//           ),
-//         ),
-//       ),
-//     );
-//   }
-
-//   // Extracted method to build poster list to avoid code duplication
-//   Widget _buildPosterList(List posters) {
-//     return SizedBox(
-//       height: 150,
-//       child: posters.isEmpty
-//           ? const Center(
-//               child: Text(
-//                 'No posters available',
-//                 style: TextStyle(color: Colors.grey),
-//               ),
-//             )
-//           : ListView.builder(
-//               scrollDirection: Axis.horizontal,
-//               itemCount: posters.length,
-//               itemBuilder: (context, index) {
-//                 final poster = posters[index];
-//                 return Container(
-//                   width: 120,
-//                   margin: const EdgeInsets.only(right: 12),
-//                   decoration: BoxDecoration(
-//                     borderRadius: BorderRadius.circular(12),
-//                     color: const Color.fromARGB(255, 169, 137, 126),
-//                     boxShadow: const [
-//                       BoxShadow(color: Colors.black12, blurRadius: 4)
-//                     ],
-//                   ),
-//                   child: Column(
-//                     crossAxisAlignment: CrossAxisAlignment.start,
-//                     children: [
-//                       ClipRRect(
-//                         borderRadius: const BorderRadius.vertical(
-//                             top: Radius.circular(12)),
-//                         child: GestureDetector(
-//                           onTap: () {
-//                             Navigator.push(
-//                               context,
-//                               MaterialPageRoute(
-//                                 builder: (context) => PosterTemplate(
-//                                   poster: poster,
-//                                   isCustom: false,
-//                                 ),
-//                               ),
-//                             );
-//                           },
-//                           child: Image.network(
-//                             poster.images[0],
-//                             height: 100,
-//                             width: 120,
-//                             fit: BoxFit.cover,
-//                             errorBuilder: (context, error, stackTrace) {
-//                               return Container(
-//                                 height: 100,
-//                                 width: 120,
-//                                 color: Colors.grey[300],
-//                                 child: const Icon(Icons.image_not_supported),
-//                               );
-//                             },
-//                           ),
-//                         ),
-//                       ),
-//                       Padding(
-//                         padding: const EdgeInsets.all(6.0),
-//                         child: Padding(
-//                           padding: const EdgeInsets.all(10.0),
-//                           child: Row(
-//                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                             children: [
-//                               Text(
-//                                 poster.price == 0
-//                                     ? 'Free'
-//                                     : '₹ ${poster.price}',
-//                                 style: const TextStyle(
-//                                     fontSize: 12, color: Colors.white),
-//                               ),
-//                             ],
-//                           ),
-//                         ),
-//                       ),
-//                     ],
-//                   ),
-//                 );
-//               },
-//             ),
-//     );
-//   }
-// }
-
 import 'dart:convert';
 
 import 'package:company_project/helper/storage_helper.dart';
 import 'package:company_project/models/category_modell.dart';
+import 'package:company_project/models/get_all_plan_model.dart';
 import 'package:company_project/providers/category_provider.dart';
 import 'package:company_project/providers/category_providerr.dart';
 import 'package:company_project/providers/date_time_provider.dart';
+import 'package:company_project/providers/get_all_plan_provider.dart';
 import 'package:company_project/providers/poster_provider.dart';
 import 'package:company_project/providers/story_provider.dart';
 import 'package:company_project/views/presentation/pages/home/details_screen.dart';
@@ -782,11 +65,8 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _isListening = false;
   String _searchText = '';
 
-    late stt.SpeechToText _speech;
-     List<dynamic> _filteredCategories = [];
-
-    
-
+  late stt.SpeechToText _speech;
+  List<dynamic> _filteredCategories = [];
 
   late final CategoryProviderr categoryprovider;
   Map<String, List<Map<String, dynamic>>> _categorizedPosters = {};
@@ -794,7 +74,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-     _speech = stt.SpeechToText();
+    _speech = stt.SpeechToText();
     _initializeSpeech();
     _loadUserId();
     print('HomeScreen init - about to fetch posters and stories');
@@ -825,15 +105,16 @@ class _HomeScreenState extends State<HomeScreen> {
       _fetchFestivalPosters(context.read<DateTimeProvider>().selectedDate);
     });
   }
-   
-     Future<void> _fetchCategories() async {
-    await Provider.of<CategoryProvider>(context, listen: false).fetchCategories();
+
+  Future<void> _fetchCategories() async {
+    await Provider.of<CategoryProvider>(context, listen: false)
+        .fetchCategories();
     setState(() {
-      _filteredCategories = Provider.of<CategoryProvider>(context, listen: false).categories;
+      _filteredCategories =
+          Provider.of<CategoryProvider>(context, listen: false).categories;
     });
   }
 
-  
   @override
   void dispose() {
     _searchController.dispose();
@@ -841,9 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-
-
-   Future<void> _initializeSpeech() async {
+  Future<void> _initializeSpeech() async {
     bool available = await _speech.initialize(
       onStatus: (status) => debugPrint('Speech status: $status'),
       onError: (error) => debugPrint('Speech error: $error'),
@@ -853,9 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-
-
-   void _startListening() async {
+  void _startListening() async {
     if (!_isListening) {
       bool available = await _speech.initialize(
         onStatus: (status) => debugPrint('Speech status: $status'),
@@ -881,8 +158,9 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-   void _filterCategories() {
-    final categoryProvider = Provider.of<CategoryProvider>(context, listen: false);
+  void _filterCategories() {
+    final categoryProvider =
+        Provider.of<CategoryProvider>(context, listen: false);
     if (_searchText.isEmpty) {
       setState(() {
         _filteredCategories = categoryProvider.categories;
@@ -905,9 +183,11 @@ class _HomeScreenState extends State<HomeScreen> {
         currentUserId = userData
             .user.id; // Adjust this based on your LoginResponse structure
       });
-      print('User ID: $currentUserId');
+      print('User IDddddddddddddddddddddddddddddddddddddddddd: $currentUserId');
     }
   }
+
+  List<dynamic> _searchResults = [];
 
   void handleSearch(String query) {
     final trimmedQuery = query.trim();
@@ -1092,19 +372,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-
-     final categoryProvider = Provider.of<CategoryProvider>(context);
+    final categoryProvider = Provider.of<CategoryProvider>(context);
     if (_filteredCategories.isEmpty && categoryProvider.categories.isNotEmpty) {
       _filteredCategories = categoryProvider.categories;
     }
-
 
     //  bool serchValue=false;
     final searchController = TextEditingController();
     final posterProvider = Provider.of<PosterProvider>(context);
     final storyProvider = Provider.of<StoryProvider>(context);
     final categoryprovider = Provider.of<CategoryProviderr>(context);
-    
+
     print(
         'Building HomeScreen - PosterProvider isLoading: ${posterProvider.isLoading}');
     print(
@@ -1115,6 +393,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final posters = posterProvider.posters;
     final stories = storyProvider.stories;
+
+    final filteredStories = stories
+    .where((story) => story.userId != currentUserId)
+    .toList();
+
 
     final ugadiPosters = posters
         .where((poster) => poster.categoryName.toLowerCase() == 'ugadi')
@@ -1132,7 +415,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final chemicalPosters = posters
         .where((poster) => poster.categoryName.toLowerCase() == 'chemical')
         .toList();
-    
 
     print('Ugadi poster count: ${ugadiPosters.length}');
     print('Clothing poster count: ${clothingPosters.length}');
@@ -1274,17 +556,32 @@ class _HomeScreenState extends State<HomeScreen> {
                               handleSearch(query);
                             }),
                       ),
-                      // const CircleAvatar(
-                      //   radius: 23,
-                      //   backgroundColor: Color(0xFF6C4EF9),
-                      //   child: Icon(Icons.mic, color: Colors.white),
-                      // )
+                      CircleAvatar(
+                        radius: 23,
+                        backgroundColor: const Color(0xFF6C4EF9),
+                        child: GestureDetector(
+                          onTap: _startListening,
+                          child: Container(
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: _isListening
+                                  ? Colors.red
+                                  : const Color.fromARGB(255, 97, 74, 160),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Icon(
+                              _isListening ? Icons.mic : Icons.mic_none,
+                              color: Colors.white,
+                              size: 25,
+                            ),
+                          ),
+                        ),
+                      )
                     ],
                   ),
                 ),
                 const SizedBox(height: 15),
-                if(serchValue==false)
-                //  (serchValue == false)?CategoryGridView(categoryList: items):
+                if (serchValue == false)
                   Column(
                     children: [
                       Container(
@@ -1331,157 +628,81 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
 
                       // Stories Section - UPDATED
-                      SizedBox(
-                        height: 120,
-                        child: ListView.builder(
-                          scrollDirection: Axis.horizontal,
-                          itemCount: stories.length +
-                              (!_currentUserHasStory()
-                                  ? 1
-                                  : 0), // Add 1 for "Add Story" if user has no story
-                          itemBuilder: (context, index) {
-                            // First position shows either "Add Story" or user's own story
-                            if (index == 0) {
-                              // If user has no story, show "Add Story" button
-                              if (!_currentUserHasStory()) {
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 14),
-                                  child: GestureDetector(
-                                    onTap: _openAddStory,
-                                    child: Column(
-                                      children: [
-                                        const SizedBox(height: 16),
-                                        Stack(
-                                          children: [
-                                            CircleAvatar(
-                                              radius: 30,
-                                              backgroundColor: Colors.grey[300],
-                                              child: const Icon(
-                                                Icons.add,
-                                                size: 32,
-                                                color: Colors.black87,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                        const Text(
-                                          'Add Story',
-                                          style: TextStyle(color: Colors.black),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              } else {
-                                // Show user's own story first
-                                final userStory = _getCurrentUserStory()!;
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 14),
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      // Find the index of this story in the overall stories list
-                                      final storyIndex = stories.indexWhere(
-                                          (s) => s.id == userStory.id);
-                                      _openStoryViewer(storyIndex);
-                                    },
-                                    child: Column(
-                                      children: [
-                                        const SizedBox(height: 16),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: const Color(0xFF6C4EF9),
-                                              width: 2,
-                                            ),
-                                          ),
-                                          child: CircleAvatar(
-                                            radius: 30,
-                                            backgroundImage: NetworkImage(
-                                              'https://posterbnaobackend.onrender.com/${userStory.images[0]}',
-                                            ),
-                                            onBackgroundImageError:
-                                                (exception, stackTrace) {
-                                              print(
-                                                  'Error loading story image: $exception');
-                                            },
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        const Text(
-                                          'Your Story',
-                                          style: TextStyle(color: Colors.black),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              }
-                            } else {
-                              // For other users' stories
-                              // Adjust index based on whether user has story
-                              final adjustedIndex =
-                                  _currentUserHasStory() ? index : index - 1;
+               SizedBox(
+  height: 120,
+  child: ListView.builder(
+    scrollDirection: Axis.horizontal,
+    itemCount: filteredStories.length + 
+        (!_currentUserHasStory() ? 1 : 0), // Add Story button if no user story
+    itemBuilder: (context, index) {
+      if (index == 0 && !_currentUserHasStory()) {
+        // Show Add Story Button
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: GestureDetector(
+            onTap: _openAddStory,
+            child: Column(
+              children: [
+                const SizedBox(height: 16),
+                Stack(
+                  children: [
+                    CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.grey[300],
+                      child: const Icon(Icons.add, size: 32, color: Colors.black87),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 4),
+                const Text('Add Story', style: TextStyle(color: Colors.black)),
+              ],
+            ),
+          ),
+        );
+      }
 
-                              // Filter out current user's story from the list shown here
-                              final filteredStories = stories.toList();
-                              // .where((s) => s.userId == currentUserId)
-                              // .toList();
+      // Adjust index if "Add Story" is shown
+      final adjustedIndex = _currentUserHasStory() ? index : index - 1;
 
-                              if (adjustedIndex < filteredStories.length) {
-                                final story = filteredStories[adjustedIndex];
+      if (adjustedIndex < filteredStories.length) {
+        final story = filteredStories[adjustedIndex];
+        final viewerIndex = stories.indexWhere((s) => s.id == story.id);
 
-                                // Find the index of this story in the overall stories list for viewer
-                                final viewerIndex =
-                                    stories.indexWhere((s) => s.id == story.id);
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          child: GestureDetector(
+            onTap: () => _openStoryViewer(viewerIndex),
+            child: Column(
+              children: [
+                const SizedBox(height: 16),
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFF6C4EF9), width: 2),
+                  ),
+                  child: CircleAvatar(
+                    radius: 30,
+                    backgroundImage: NetworkImage(
+                      'https://posterbnaobackend.onrender.com/${story.images[0]}',
+                    ),
+                    onBackgroundImageError: (exception, stackTrace) {
+                      print('Error loading story image: $exception');
+                    },
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(story.caption, style: const TextStyle(color: Colors.black)),
+              ],
+            ),
+          ),
+        );
+      }
 
-                                return Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 14),
-                                  child: GestureDetector(
-                                    onTap: () => _openStoryViewer(viewerIndex),
-                                    child: Column(
-                                      children: [
-                                        const SizedBox(height: 16),
-                                        Container(
-                                          decoration: BoxDecoration(
-                                            shape: BoxShape.circle,
-                                            border: Border.all(
-                                              color: const Color(0xFF6C4EF9),
-                                              width: 2,
-                                            ),
-                                          ),
-                                          child: CircleAvatar(
-                                            radius: 30,
-                                            backgroundImage: NetworkImage(
-                                              'https://posterbnaobackend.onrender.com/${story.images[0]}',
-                                            ),
-                                            onBackgroundImageError:
-                                                (exception, stackTrace) {
-                                              print(
-                                                  'Error loading story image: $exception');
-                                            },
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          story.caption,
-                                          style: TextStyle(color: Colors.black),
-                                        )
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              }
-                              return const SizedBox
-                                  .shrink(); // Fallback for any out-of-bounds indices
-                            }
-                          },
-                        ),
-                      ),
+      return const SizedBox.shrink();
+    },
+  ),
+),
+
 
                       // StoriesWidget(currentUserId: currentUserId),
 
@@ -1569,21 +790,21 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                           ],
                                         ),
-                                        child:const Row(
+                                        child: const Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Icon(
                                               Icons.calendar_today,
                                               size: 18,
-                                              color:  Color(0xFF6C4EF9),
+                                              color: Color(0xFF6C4EF9),
                                             ),
-                                             SizedBox(width: 8),
+                                            SizedBox(width: 8),
                                             Text(
                                               'Check Other Dates',
                                               style: TextStyle(
                                                 fontSize: 14,
                                                 fontWeight: FontWeight.w500,
-                                                color:  Color(0xFF6C4EF9),
+                                                color: Color(0xFF6C4EF9),
                                               ),
                                             ),
                                           ],
@@ -1795,8 +1016,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       // _buildPosterList(chemicalPosters),
                     ],
                   ),
-                  
-                  
               ],
             ),
           ),
@@ -1892,8 +1111,17 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void showSubscriptionModal(BuildContext context) {
+    // Get the provider instance
+    final planProvider =
+        Provider.of<GetAllPlanProvider>(context, listen: false);
+
+    // Fetch plans if not already loaded
+    if (planProvider.plans.isEmpty && !planProvider.isLoading) {
+      planProvider.fetchAllPlans();
+    }
+
     // Track the selected plan
-    String? selectedPlan;
+    String? selectedPlanId;
     bool showPaymentOptions = false;
 
     showModalBottomSheet(
@@ -1923,7 +1151,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       left: 16, right: 16, top: 8, bottom: 8),
                   child: Row(
                     children: [
-                    const  Expanded(
+                      const Expanded(
                         child: Text(
                           'Subscriptions Plans',
                           style: TextStyle(
@@ -1943,75 +1171,139 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // Subscription plans (scrollable if needed)
                 Flexible(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 12),
-                        _buildSubscriptionCard(
-                          context: context,
-                          planTitle: 'BRASS HOUSE (FREE PLAN)',
-                          price: '₹Free',
-                          priceColor: Colors.green,
-                          cardColor: Colors.teal.shade50,
-                          icon: Icons.verified_user,
-                          features: [
-                            'Create Posters - 30',
-                            'Cash Book Entries - 300',
-                            'Upload Limit - 10 (disappear in 24 hours)',
-                            'Product Listing - (Display for 30 days)',
-                            'Business Listing - 0 (convert to business)',
-                            'Refer And Earn 300 Coins = 3 ₹',
-                          ],
-                          isSelected: selectedPlan == 'BRASS HOUSE',
-                          onTap: () {
-                            setState(() {
-                              selectedPlan = 'BRASS HOUSE';
-                              showPaymentOptions = true;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        _buildSubscriptionCard(
-                          context: context,
-                          planTitle: 'COPPER HOUSE',
-                          price: '₹100',
-                          priceColor: Colors.orange,
-                          cardColor: Colors.orange.shade50,
-                          icon: Icons.workspace_premium,
-                          features: [
-                            'Create Posters - 100',
-                            'Cash Book Entries - 1000',
-                            'Uploads Limit - 10 (disappear in 24 hours)',
-                            'Product Listing - (Display for 30 days)',
-                            'Business Listing - 0 (convert to business)',
-                            'Refer And Earn 300 Coins = 3 ₹',
-                          ],
-                          isSelected: selectedPlan == 'COPPER HOUSE',
-                          onTap: () {
-                            setState(() {
-                              selectedPlan = 'COPPER HOUSE';
-                              showPaymentOptions = true;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                      ],
-                    ),
+                  child: Consumer<GetAllPlanProvider>(
+                    builder: (context, provider, child) {
+                      // Show loading indicator while fetching data
+                      if (provider.isLoading) {
+                        return const Center(
+                          child: CircularProgressIndicator(),
+                        );
+                      }
+
+                      // Show error message if any
+                      if (provider.error != null) {
+                        return Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                'Failed to load plans',
+                                style: TextStyle(color: Colors.red),
+                              ),
+                              const SizedBox(height: 8),
+                              ElevatedButton(
+                                onPressed: () => provider.fetchAllPlans(),
+                                child: Text('Retry'),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+
+                      // Show plans if available
+                      if (provider.plans.isNotEmpty) {
+                        return SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Column(
+                            children: [
+                              const SizedBox(height: 12),
+                              ...provider.plans.map((plan) {
+                                // Determine card color based on plan name
+                                Color cardColor = Colors.teal.shade50;
+                                Color priceColor = Colors.green;
+                                IconData planIcon = Icons.verified_user;
+
+                                if (plan.name
+                                    .toUpperCase()
+                                    .contains('COPPER')) {
+                                  cardColor = Colors.orange.shade50;
+                                  priceColor = Colors.orange;
+                                  planIcon = Icons.workspace_premium;
+                                } else if (plan.name
+                                    .toUpperCase()
+                                    .contains('SILVER')) {
+                                  cardColor = Colors.blueGrey.shade50;
+                                  priceColor = Colors.blueGrey;
+                                  planIcon = Icons.star;
+                                } else if (plan.name
+                                    .toUpperCase()
+                                    .contains('GOLD')) {
+                                  cardColor = Colors.amber.shade50;
+                                  priceColor = Colors.amber.shade700;
+                                  planIcon = Icons.auto_awesome;
+                                }
+
+                                return Column(
+                                  children: [
+                                    _buildSubscriptionCard(
+                                      context: context,
+                                      planTitle: plan.name.toUpperCase(),
+                                      price: plan.offerPrice == 0
+                                          ? '₹Free'
+                                          : '₹${plan.offerPrice}',
+                                      priceColor: priceColor,
+                                      cardColor: cardColor,
+                                      icon: planIcon,
+                                      features: plan.features,
+                                      isSelected: selectedPlanId == plan.id,
+                                      onTap: () {
+                                        setState(() {
+                                          selectedPlanId = plan.id;
+                                          showPaymentOptions = true;
+                                        });
+                                      },
+                                    ),
+                                    const SizedBox(height: 16),
+                                  ],
+                                );
+                              }).toList(),
+                            ],
+                          ),
+                        );
+                      }
+
+                      // No plans available
+                      return const Center(
+                        child: Text('No subscription plans available'),
+                      );
+                    },
                   ),
                 ),
 
                 // Payment options container - shows when a plan is selected
                 if (showPaymentOptions)
-                  _buildPaymentOptionsContainer(
-                    context: context,
-                    selectedPlan: selectedPlan ?? '',
-                    price: selectedPlan == 'COPPER HOUSE' ? '₹100' : '₹Free',
-                    onClose: () {
-                      setState(() {
-                        showPaymentOptions = false;
-                        selectedPlan = null;
-                      });
+                  Consumer<GetAllPlanProvider>(
+                    builder: (context, provider, child) {
+                      final selectedPlan = provider.plans.firstWhere(
+                        (plan) => plan.id == selectedPlanId,
+                        orElse: () => GetAllPlanModel(
+                          id: '',
+                          name: 'Unknown',
+                          originalPrice: 0,
+                          offerPrice: 0,
+                          duration: '',
+                          discountPercentage: 0,
+                          features: [],
+                          createdAt: DateTime.now(),
+                          updatedAt: DateTime.now(),
+                        ),
+                      );
+
+                      final price = selectedPlan.offerPrice == 0
+                          ? '₹Free'
+                          : '₹${selectedPlan.offerPrice}';
+
+                      return _buildPaymentOptionsContainer(
+                        context: context,
+                        selectedPlan: selectedPlan.name,
+                        price: price,
+                        onClose: () {
+                          setState(() {
+                            showPaymentOptions = false;
+                            selectedPlanId = null;
+                          });
+                        },
+                      );
                     },
                   ),
               ],
@@ -2048,7 +1340,7 @@ class _HomeScreenState extends State<HomeScreen> {
               color: Colors.grey.withOpacity(0.2),
               spreadRadius: 1,
               blurRadius: 4,
-              offset: Offset(0, 2),
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -2079,12 +1371,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   padding: const EdgeInsets.only(bottom: 8),
                   child: Row(
                     children: [
-                    const  Icon(Icons.check_circle, size: 16, color: Colors.green),
+                      const Icon(Icons.check_circle,
+                          size: 16, color: Colors.green),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           feature,
-                          style:const TextStyle(fontSize: 14),
+                          style: const TextStyle(fontSize: 14),
                         ),
                       ),
                     ],
@@ -2096,7 +1389,8 @@ class _HomeScreenState extends State<HomeScreen> {
             Align(
               alignment: Alignment.bottomRight,
               child: Container(
-                padding:const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(20),
@@ -2105,7 +1399,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       color: Colors.grey.withOpacity(0.15),
                       spreadRadius: 1,
                       blurRadius: 2,
-                      offset:const Offset(0, 1),
+                      offset: const Offset(0, 1),
                     ),
                   ],
                 ),
@@ -2143,7 +1437,7 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.grey.shade100,
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),
         ),
@@ -2152,7 +1446,7 @@ class _HomeScreenState extends State<HomeScreen> {
             color: Colors.grey.withOpacity(0.3),
             spreadRadius: 1,
             blurRadius: 3,
-            offset: Offset(0, -2),
+            offset: const Offset(0, -2),
           ),
         ],
       ),
@@ -2162,7 +1456,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           Row(
             children: [
-              Expanded(
+              const Expanded(
                 child: Text(
                   'Payment Options',
                   style: TextStyle(
@@ -2175,7 +1469,7 @@ class _HomeScreenState extends State<HomeScreen> {
               IconButton(
                 icon: Icon(Icons.close, size: 20, color: Colors.grey.shade700),
                 padding: EdgeInsets.zero,
-                constraints: BoxConstraints(),
+                constraints: const BoxConstraints(),
                 onPressed: onClose,
               ),
             ],
@@ -2183,7 +1477,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 8),
           Text(
             'Selected Plan: $selectedPlan - $price',
-            style: TextStyle(
+            style: const TextStyle(
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -2206,7 +1500,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('Selected ${method['name']} for payment'),
-                      duration: Duration(seconds: 2),
+                      duration: const Duration(seconds: 2),
                     ),
                   );
                 },
@@ -2229,14 +1523,14 @@ class _HomeScreenState extends State<HomeScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.deepPurple,
                 foregroundColor: Colors.white,
-                padding: EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
               child: Text(
                 price == '₹Free' ? 'ACTIVATE PLAN' : 'PAY NOW',
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -2269,7 +1563,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(width: 12),
             Text(
               name,
-              style: TextStyle(
+              style:const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),
