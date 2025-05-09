@@ -13,6 +13,7 @@ import 'package:company_project/views/presentation/pages/home/details_screen.dar
 import 'package:company_project/views/presentation/pages/home/poster/create_poster_template.dart';
 import 'package:company_project/views/presentation/pages/home/poster/poster_maker_screen.dart';
 import 'package:company_project/views/presentation/pages/home/search_screen.dart';
+import 'package:company_project/views/presentation/widgets/home_carousel.dart';
 import 'package:company_project/views/presentation/widgets/story/add_story.dart';
 import 'package:company_project/views/presentation/widgets/category_widget.dart';
 import 'package:company_project/views/presentation/widgets/date_selector_screen.dart';
@@ -609,48 +610,49 @@ class _HomeScreenState extends State<HomeScreen> {
                 if (serchValue == false)
                   Column(
                     children: [
-                      Container(
-                        height: 140,
-                        width: double.infinity,
-                        decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(20),
-                            image: const DecorationImage(
-                                image: AssetImage(
-                                    'assets/assets/4db504a1da2c0272db46bf139b7be4d117bf4487.png'),
-                                fit: BoxFit.cover)),
-                        child: Stack(
-                          children: [
-                            Positioned(
-                                top: 16,
-                                left: 16,
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Ugadi Posters\nare Ready',
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    ElevatedButton(
-                                        onPressed: () {},
-                                        style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.white,
-                                            foregroundColor: Colors.black,
-                                            shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(8))),
-                                        child: const Text(
-                                          'Explore Now',
-                                          style: TextStyle(fontSize: 17),
-                                        ))
-                                  ],
-                                )),
-                          ],
-                        ),
-                      ),
+                      HomeCarousel(),
+                      // Container(
+                      //   height: 140,
+                      //   width: double.infinity,
+                      //   decoration: BoxDecoration(
+                      //       borderRadius: BorderRadius.circular(20),
+                      //       image: const DecorationImage(
+                      //           image: AssetImage(
+                      //               'assets/assets/4db504a1da2c0272db46bf139b7be4d117bf4487.png'),
+                      //           fit: BoxFit.cover)),
+                      //   child: Stack(
+                      //     children: [
+                      //       Positioned(
+                      //           top: 16,
+                      //           left: 16,
+                      //           child: Column(
+                      //             crossAxisAlignment: CrossAxisAlignment.start,
+                      //             children: [
+                      //               const Text(
+                      //                 'Ugadi Posters\nare Ready',
+                      //                 style: TextStyle(
+                      //                     fontSize: 20,
+                      //                     fontWeight: FontWeight.bold,
+                      //                     color: Colors.white),
+                      //               ),
+                      //               const SizedBox(height: 8),
+                      //               ElevatedButton(
+                      //                   onPressed: () {},
+                      //                   style: ElevatedButton.styleFrom(
+                      //                       backgroundColor: Colors.white,
+                      //                       foregroundColor: Colors.black,
+                      //                       shape: RoundedRectangleBorder(
+                      //                           borderRadius:
+                      //                               BorderRadius.circular(8))),
+                      //                   child: const Text(
+                      //                     'Explore Now',
+                      //                     style: TextStyle(fontSize: 17),
+                      //                   ))
+                      //             ],
+                      //           )),
+                      //     ],
+                      //   ),
+                      // ),
 
                       SizedBox(
                         height: 30,

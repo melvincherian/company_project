@@ -75,6 +75,7 @@ dependencies:
   carousel_slider: ^5.0.0
   path: ^1.9.0
   http_parser: ^4.0.2
+  smooth_page_indicator: ^1.2.1
   # google_fonts: ^5.1.0
   # image_cropper: ^9.1.0
   # image_gallery_saver_plus: ^4.0.1
@@ -114,6 +115,10 @@ flutter:
     - assets/assets/4e71f25b9da2a00e2c56e397c0aab306442e3108.png
     - assets/assets/749a63d69697825d9370d3aa37338c6f45d73082.png
     - assets/assets/1641620950s-background-removing-landing-page-banner-design.jpg
+    - assets/assets/beauty.jpg
+    - assets/assets/chemical.jpg
+    - assets/assets/clothing.jpg
+
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see
