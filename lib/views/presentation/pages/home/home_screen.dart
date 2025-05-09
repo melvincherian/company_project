@@ -13,11 +13,11 @@ import 'package:company_project/views/presentation/pages/home/details_screen.dar
 import 'package:company_project/views/presentation/pages/home/poster/create_poster_template.dart';
 import 'package:company_project/views/presentation/pages/home/poster/poster_maker_screen.dart';
 import 'package:company_project/views/presentation/pages/home/search_screen.dart';
-import 'package:company_project/views/presentation/widgets/add_story.dart';
+import 'package:company_project/views/presentation/widgets/story/add_story.dart';
 import 'package:company_project/views/presentation/widgets/category_widget.dart';
 import 'package:company_project/views/presentation/widgets/date_selector_screen.dart';
-import 'package:company_project/views/presentation/widgets/stories_widget.dart';
-import 'package:company_project/views/presentation/widgets/story_screen.dart';
+import 'package:company_project/views/presentation/widgets/story/stories_widget.dart';
+import 'package:company_project/views/presentation/widgets/story/story_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:company_project/models/story_model.dart';
@@ -33,6 +33,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   List<CategoryModel> items = [];
+  final String imageUrl =
+      "https://fntarizona.com/wp-content/uploads/2017/05/shutterstock_624472886.jpg";
 
   bool serchValue = false;
 
@@ -104,6 +106,12 @@ class _HomeScreenState extends State<HomeScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _fetchFestivalPosters(context.read<DateTimeProvider>().selectedDate);
     });
+
+        Provider.of<StoryProvider>(context, listen: false).setCurrentUser(
+      userId: currentUserId,
+      userImage: 'https://example.com/avatar.jpg',
+      username: 'Your Story',
+    );
   }
 
   Future<void> _fetchCategories() async {
@@ -341,34 +349,35 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void _openAddStory() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => AddStoryWidget(
-          userId: currentUserId,
-          onStoryAdded: () {
-            // Refresh stories after adding
-            Provider.of<StoryProvider>(context, listen: false).fetchStories();
-          },
-        ),
-      ),
-    );
-  }
+  // void _openAddStory() {
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (context) => AddStoryWidget(
+  //         userId: currentUserId,
+  //         onStoryAdded: () {
+  //           // Refresh stories after adding
+  //           Provider.of<StoryProvider>(context, listen: false).fetchStories();
+  //         },
+  //       ),
+  //     ),
+  //   );
+  // }
 
-  void _openStoryViewer(int index) {
-    final storyProvider = Provider.of<StoryProvider>(context, listen: false);
+  // void _openStoryViewer(int index) {
+  //   final storyProvider = Provider.of<StoryProvider>(context, listen: false);
+  //   print('ooooooooooooooooooooooooooooooooooooooooooooo${storyProvider.stories}');
 
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => StoryViewerScreen(
-          stories: storyProvider.stories,
-          initialIndex: index,
-        ),
-      ),
-    );
-  }
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       builder: (context) => StoryViewerScreen(
+  //         stories: storyProvider.stories,
+  //         viewIndex: index,
+  //       ),
+  //     ),
+  //   );
+  // }
 
   @override
   Widget build(BuildContext context) {
@@ -394,10 +403,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final posters = posterProvider.posters;
     final stories = storyProvider.stories;
 
-    final filteredStories = stories
-    .where((story) => story.userId != currentUserId)
-    .toList();
-
+    final filteredStories =
+        stories.where((story) => story.userId != currentUserId).toList();
 
     final ugadiPosters = posters
         .where((poster) => poster.categoryName.toLowerCase() == 'ugadi')
@@ -627,82 +634,12 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
 
+                      SizedBox(
+                        height: 30,
+                      ),
+
                       // Stories Section - UPDATED
-               SizedBox(
-  height: 120,
-  child: ListView.builder(
-    scrollDirection: Axis.horizontal,
-    itemCount: filteredStories.length + 
-        (!_currentUserHasStory() ? 1 : 0), // Add Story button if no user story
-    itemBuilder: (context, index) {
-      if (index == 0 && !_currentUserHasStory()) {
-        // Show Add Story Button
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: GestureDetector(
-            onTap: _openAddStory,
-            child: Column(
-              children: [
-                const SizedBox(height: 16),
-                Stack(
-                  children: [
-                    CircleAvatar(
-                      radius: 30,
-                      backgroundColor: Colors.grey[300],
-                      child: const Icon(Icons.add, size: 32, color: Colors.black87),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                const Text('Add Story', style: TextStyle(color: Colors.black)),
-              ],
-            ),
-          ),
-        );
-      }
-
-      // Adjust index if "Add Story" is shown
-      final adjustedIndex = _currentUserHasStory() ? index : index - 1;
-
-      if (adjustedIndex < filteredStories.length) {
-        final story = filteredStories[adjustedIndex];
-        final viewerIndex = stories.indexWhere((s) => s.id == story.id);
-
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: GestureDetector(
-            onTap: () => _openStoryViewer(viewerIndex),
-            child: Column(
-              children: [
-                const SizedBox(height: 16),
-                Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFF6C4EF9), width: 2),
-                  ),
-                  child: CircleAvatar(
-                    radius: 30,
-                    backgroundImage: NetworkImage(
-                      'https://posterbnaobackend.onrender.com/${story.images[0]}',
-                    ),
-                    onBackgroundImageError: (exception, stackTrace) {
-                      print('Error loading story image: $exception');
-                    },
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(story.caption, style: const TextStyle(color: Colors.black)),
-              ],
-            ),
-          ),
-        );
-      }
-
-      return const SizedBox.shrink();
-    },
-  ),
-),
-
+                      const StoriesWidget(),
 
                       // StoriesWidget(currentUserId: currentUserId),
 
@@ -1563,7 +1500,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(width: 12),
             Text(
               name,
-              style:const TextStyle(
+              style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w500,
               ),

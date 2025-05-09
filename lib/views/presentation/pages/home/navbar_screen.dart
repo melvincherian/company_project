@@ -1,7 +1,7 @@
 import 'package:company_project/views/presentation/pages/home/category_screen.dart';
 import 'package:company_project/views/presentation/pages/home/home_screen.dart';
 import 'package:company_project/views/presentation/pages/home/planning_screen.dart';
-import 'package:company_project/views/presentation/pages/home/poster_create.dart';
+import 'package:company_project/views/presentation/pages/home/poster/poster_create.dart';
 import 'package:company_project/views/presentation/pages/home/profile_screen.dart';
 import 'package:company_project/views/presentation/widgets/navbar/bottom_navbar.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';

@@ -1,7 +1,7 @@
 // ignore_for_file: prefer_const_constructors_in_immutables, avoid_unnecessary_containers
 
 import 'package:company_project/views/presentation/pages/home/Logo/logo_making_screen.dart';
-import 'package:company_project/views/presentation/pages/home/create_post.dart';
+import 'package:company_project/views/presentation/pages/home/poster/create_post.dart';
 import 'package:company_project/views/presentation/pages/home/poster/create_poster_template.dart';
 import 'package:company_project/views/presentation/pages/home/video/add_image.dart';
 import 'package:flutter/material.dart';
