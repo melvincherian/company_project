@@ -4,6 +4,8 @@ import 'package:company_project/providers/category_providerr.dart';
 import 'package:company_project/views/presentation/pages/home/poster/poster_maker_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:permission_handler/permission_handler.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -17,6 +19,8 @@ class _SearchScreenState extends State<SearchScreen> {
   List<CategoryModel> items = [];
   List<dynamic> _filteredCategories = [];
   bool serchValue = false;
+  bool _isListening = false;
+  final stt.SpeechToText _speech = stt.SpeechToText();
 
   late final CategoryProviderr categoryprovider;
 
@@ -24,6 +28,78 @@ class _SearchScreenState extends State<SearchScreen> {
   void initState() {
     super.initState();
     categoryprovider = Provider.of<CategoryProviderr>(context, listen: false);
+    _initSpeech();
+  }
+
+  @override
+  void dispose() {
+    searchController.dispose();
+    super.dispose();
+  }
+
+  // Initialize speech recognition
+  Future<void> _initSpeech() async {
+    await _speech.initialize(
+      onStatus: (status) {
+        if (status == 'notListening') {
+          setState(() => _isListening = false);
+        }
+      },
+      onError: (error) {
+        setState(() => _isListening = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $error')),
+        );
+      },
+    );
+  }
+
+  // Request microphone permission
+  Future<bool> _requestMicPermission() async {
+    PermissionStatus status = await Permission.microphone.request();
+    return status.isGranted;
+  }
+
+  // Start listening to voice input
+  Future<void> _startListening() async {
+    bool hasPermission = await _requestMicPermission();
+    
+    if (!hasPermission) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Microphone permission is required')),
+      );
+      return;
+    }
+
+    if (!_isListening) {
+      bool available = await _speech.initialize();
+      if (available) {
+        setState(() => _isListening = true);
+        _speech.listen(
+          onResult: (result) {
+            if (result.finalResult) {
+              setState(() {
+                searchController.text = result.recognizedWords;
+                _isListening = false;
+              });
+              handleSearch(result.recognizedWords);
+            }
+          },
+          listenFor: const Duration(seconds: 30),
+          pauseFor: const Duration(seconds: 5),
+          partialResults: false,
+          cancelOnError: true,
+          listenMode: stt.ListenMode.confirmation,
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Speech recognition not available')),
+        );
+      }
+    } else {
+      setState(() => _isListening = false);
+      _speech.stop();
+    }
   }
 
   Future<void> _fetchCategories() async {
@@ -84,6 +160,14 @@ class _SearchScreenState extends State<SearchScreen> {
               decoration: InputDecoration(
                 hintText: 'Search for items...',
                 prefixIcon: const Icon(Icons.search),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _isListening ? Icons.mic : Icons.mic_none,
+                    color: _isListening ? Colors.red : Colors.grey,
+                  ),
+                  onPressed: _startListening,
+                  tooltip: 'Voice Search',
+                ),
                 filled: true,
                 fillColor: Colors.grey[200],
                 contentPadding:
@@ -97,6 +181,23 @@ class _SearchScreenState extends State<SearchScreen> {
               onChanged: handleSearch,
             ),
           ),
+          if (_isListening)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                children: [
+                  const Icon(Icons.mic, color: Colors.red, size: 16),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Listening...',
+                    style: TextStyle(
+                      color: Colors.red,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
           const SizedBox(height: 8),
           Expanded(
             child: serchValue

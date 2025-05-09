@@ -107,7 +107,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _fetchFestivalPosters(context.read<DateTimeProvider>().selectedDate);
     });
 
-        Provider.of<StoryProvider>(context, listen: false).setCurrentUser(
+    Provider.of<StoryProvider>(context, listen: false).setCurrentUser(
       userId: currentUserId,
       userImage: 'https://example.com/avatar.jpg',
       username: 'Your Story',
@@ -197,18 +197,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<dynamic> _searchResults = [];
 
-  void handleSearch(String query) {
-    final trimmedQuery = query.trim();
+  // void handleSearch(String query) {
+  //   final trimmedQuery = query.trim();
 
-    if (trimmedQuery.isEmpty) {
-      serchValue = false;
-    } else {
-      final items = categoryprovider.searchItems(trimmedQuery);
-      print('melvin$items');
+  //   if (trimmedQuery.isEmpty) {
+  //     serchValue = false;
+  //   } else {
+  //     final items = categoryprovider.searchItems(trimmedQuery);
+  //     print('melvin$items');
 
-      serchValue = true;
-    }
-  }
+  //     setState(() {
+  //       serchValue = true;
+  //     });
+  //   }
+  // }
 
   // Format date for API request
   String _formatDate(DateTime date) {
@@ -553,21 +555,37 @@ class _HomeScreenState extends State<HomeScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: TextFormField(
-                            decoration: InputDecoration(
-                              border: InputBorder.none,
-                              hintText: 'Search Poster by Topic',
-                              hintStyle: TextStyle(color: Colors.grey[600]),
-                            ),
-                            controller: searchController,
-                            onChanged: (query) {
-                              handleSearch(query);
-                            }),
+                          decoration: InputDecoration(
+                            border: InputBorder.none,
+                            hintText: 'Search Poster by Topic',
+                            hintStyle: TextStyle(color: Colors.grey[600]),
+                          ),
+                          controller: searchController,
+                          // onChanged: (query) {
+                          //   handleSearch(query);
+                          // },
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SearchScreen(),
+                              ),
+                            );
+                          },
+                        ),
                       ),
                       CircleAvatar(
                         radius: 23,
                         backgroundColor: const Color(0xFF6C4EF9),
                         child: GestureDetector(
-                          onTap: _startListening,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => SearchScreen(),
+                              ),
+                            );
+                          },
                           child: Container(
                             padding: const EdgeInsets.all(10),
                             decoration: BoxDecoration(
