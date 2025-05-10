@@ -742,12 +742,326 @@
 //   }
 // }
 
+// import 'package:company_project/providers/category_providerr.dart';
+// import 'package:company_project/views/presentation/pages/home/details_screen.dart';
+// import 'package:company_project/views/presentation/pages/home/poster/poster_maker_screen.dart';
+// import 'package:company_project/views/presentation/pages/home/search_screen.dart';
+// import 'package:flutter/material.dart';
+// import 'package:provider/provider.dart';
+
+// class CategoryScreen extends StatefulWidget {
+//   const CategoryScreen({super.key});
+
+//   @override
+//   State<CategoryScreen> createState() => _CategoryScreenState();
+// }
+
+// class _CategoryScreenState extends State<CategoryScreen> {
+//   final List<String> categories = [
+//     'Business Ads',
+//     'Education',
+//     'Ugadi',
+//     'Beauty',
+//     'Chemical',
+//     'Clothing'
+//   ];
+
+//   // Categories to display in the screen sections
+//   final List<String> displayCategories = [
+//     'ugadi',
+//     'chemical',
+//     'clothing',
+//     'beauty'
+//   ];
+
+//   @override
+//   void initState() {
+//     super.initState();
+//     // Fetch all categories data at once
+//     Future.microtask(() =>
+//         Provider.of<CategoryProviderr>(context, listen: false)
+//             .fetchMultipleCategories(displayCategories));
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     // Get the screen size using MediaQuery
+//     final MediaQueryData mediaQuery = MediaQuery.of(context);
+//     final screenWidth = mediaQuery.size.width;
+//     final screenHeight = mediaQuery.size.height;
+
+//     // Define responsive sizes based on screen width
+//     final double paddingSize = screenWidth * 0.04; // 4% of screen width
+//     final double itemWidth =
+//         screenWidth < 600 ? 120 : 150; // Increase item width on larger screens
+//     final double itemHeight =
+//         screenWidth < 600 ? 100 : 120; // Increase item height on larger screens
+//     final double titleFontSize =
+//         screenWidth < 600 ? 26 : 32; // Larger title font on bigger screens
+//     final double sectionTitleSize =
+//         screenWidth < 600 ? 18 : 22; // Larger section titles on bigger screens
+
+//     return Scaffold(
+//       body: SafeArea(
+//         child: SingleChildScrollView(
+//           padding: EdgeInsets.all(paddingSize),
+//           child: Column(
+//             crossAxisAlignment: CrossAxisAlignment.start,
+//             children: [
+//               // Header with title and action buttons
+//               Row(
+//                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                 children: [
+//                   Text(
+//                     'Categories',
+//                     style: TextStyle(
+//                       fontSize: titleFontSize,
+//                       fontWeight: FontWeight.bold,
+//                     ),
+//                   ),
+//                   Row(
+//                     children: [
+//                       GestureDetector(
+//                         onTap: () {
+//                           showModalBottomSheet(
+//                             context: context,
+//                             shape: RoundedRectangleBorder(
+//                               borderRadius: BorderRadius.vertical(
+//                                   top: Radius.circular(20)),
+//                             ),
+//                             builder: (BuildContext context) {
+//                               return Padding(
+//                                 padding:
+//                                     const EdgeInsets.symmetric(vertical: 20),
+//                                 child: Column(
+//                                   mainAxisSize: MainAxisSize.min,
+//                                   children: [
+//                                     ListTile(
+//                                       title: const Text('Telugu'),
+//                                       onTap: () {
+//                                         Navigator.pop(context);
+//                                         // TODO: Handle Telugu language change
+//                                       },
+//                                     ),
+//                                     ListTile(
+//                                       title: const Text('English'),
+//                                       onTap: () {
+//                                         Navigator.pop(context);
+//                                         // TODO: Handle English language change
+//                                       },
+//                                     ),
+//                                     ListTile(
+//                                       title: const Text('Hindi'),
+//                                       onTap: () {
+//                                         Navigator.pop(context);
+//                                         // TODO: Handle Hindi language change
+//                                       },
+//                                     ),
+//                                     ListTile(
+//                                       title: const Text('Tamil'),
+//                                       onTap: () {
+//                                         Navigator.pop(context);
+//                                         // TODO: Handle Tamil language change
+//                                       },
+//                                     ),
+//                                   ],
+//                                 ),
+//                               );
+//                             },
+//                           );
+//                         },
+//                         child: Container(
+//                           padding: EdgeInsets.all(screenWidth * 0.02),
+//                           decoration: BoxDecoration(
+//                             border: Border.all(color: Colors.black),
+//                             borderRadius: BorderRadius.circular(12),
+//                           ),
+//                           child: const Icon(Icons.translate),
+//                         ),
+//                       ),
+//                       SizedBox(width: screenWidth * 0.03),
+//                       GestureDetector(
+//                         onTap: () {
+//                           Navigator.push(
+//                               context,
+//                               MaterialPageRoute(
+//                                   builder: (context) => SearchScreen()));
+//                         },
+//                         child: CircleAvatar(
+//                           backgroundColor: Colors.grey[200],
+//                           child: const Icon(Icons.search),
+//                         ),
+//                       )
+//                     ],
+//                   )
+//                 ],
+//               ),
+//               SizedBox(height: screenHeight * 0.025),
+
+//               // Category chips
+//               // SingleChildScrollView(
+//               //   scrollDirection: Axis.horizontal,
+//               //   child: Row(
+//               //     children: categories.map((cat) {
+//               //       return Padding(
+//               //         padding: EdgeInsets.only(right: screenWidth * 0.02),
+//               //         child: Chip(
+//               //           label: Text(cat),
+//               //           backgroundColor: cat == 'Business Ads'
+//               //               ? const Color.fromARGB(255, 107, 22, 255)
+//               //               : const Color.fromARGB(255, 250, 250, 250),
+//               //           labelStyle: TextStyle(
+//               //               color: cat == 'Business Ads'
+//               //                   ? Colors.white
+//               //                   : Colors.grey),
+//               //         ),
+//               //       );
+//               //     }).toList(),
+//               //   ),
+//               // ),
+//               SizedBox(height: screenHeight * 0.011),
+
+//               // Category sections - dynamically created from displayCategories list
+//               for (final category in displayCategories)
+//                 Column(
+//                   children: [
+//                     _buildSectionHeader(_capitalizeFirstLetter(category),
+//                         context, sectionTitleSize, screenWidth, category),
+//                     SizedBox(
+//                       height: itemHeight + 10,
+//                       child: _buildCategoryItemsList(context, category,
+//                           itemWidth, itemHeight, screenWidth),
+//                     ),
+//                     SizedBox(height: screenHeight * 0.02),
+//                   ],
+//                 ),
+//             ],
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+
+//   // Helper method to build the category items list
+//   Widget _buildCategoryItemsList(BuildContext context, String category,
+//       double itemWidth, double itemHeight, double screenWidth) {
+//     return Consumer<CategoryProviderr>(
+//       builder: (context, provider, child) {
+//         if (provider.isLoadingCategory(category)) {
+//           return const Center(child: CircularProgressIndicator());
+//         } else if (provider.getErrorForCategory(category) != null) {
+//           return Center(
+//               child: Text("Error: ${provider.getErrorForCategory(category)}"));
+//         } else {
+//           final items = provider.getItemsByCategory(category);
+//           return ListView.builder(
+//             scrollDirection: Axis.horizontal,
+//             itemCount: items.length,
+//             itemBuilder: (context, index) {
+//               final item = items[index];
+//               return _buildItemCard(item, itemWidth, itemHeight, screenWidth);
+//             },
+//           );
+//         }
+//       },
+//     );
+//   }
+
+//   // Helper method to build a consistent section header with responsive spacing
+//   Widget _buildSectionHeader(String title, BuildContext context,
+//       double fontSize, double screenWidth, String category) {
+//     return Row(
+//       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//       children: [
+//         Text(
+//           title,
+//           style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
+//         ),
+//         Row(
+//           children: [
+//             TextButton(
+//               onPressed: () {
+//                 Navigator.push(
+//                     context,
+//                     MaterialPageRoute(
+//                         builder: (context) =>
+//                             DetailsScreen(category: category)));
+//               },
+//               child: const Text(
+//                 'View All',
+//                 style: TextStyle(color: Colors.black),
+//               ),
+//             ),
+//             const Icon(Icons.arrow_forward_ios, size: 18)
+//           ],
+//         ),
+//       ],
+//     );
+//   }
+
+//   // Helper method to build item cards with responsive dimensions
+//   Widget _buildItemCard(
+//       dynamic item, double width, double height, double screenWidth) {
+//     return Container(
+//       width: width,
+//       margin: EdgeInsets.only(right: screenWidth * 0.03),
+//       decoration: BoxDecoration(
+//         borderRadius: BorderRadius.circular(12),
+//         color: const Color.fromARGB(255, 247, 158, 106),
+//         boxShadow: const [BoxShadow(color: Colors.black12)],
+//       ),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           ClipRRect(
+//             borderRadius: const BorderRadius.vertical(
+//               top: Radius.circular(12),
+//             ),
+//             child: GestureDetector(
+//               onTap: () {
+//                 Navigator.push(
+//                   context,
+//                   MaterialPageRoute(
+//                     builder: (context) => PosterMakerApp(
+//                       poster: item,
+//                       isCustom: false,
+//                     ),
+//                   ),
+//                 );
+//               },
+//               child: Image.network(
+//                 item.images.isNotEmpty
+//                     ? item.images[0]
+//                     : 'https://via.placeholder.com/120x100',
+//                 height: height,
+//                 width: width,
+//                 fit: BoxFit.cover,
+//               ),
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   // Helper method to capitalize first letter of a string
+//   String _capitalizeFirstLetter(String text) {
+//     if (text.isEmpty) return '';
+//     return text[0].toUpperCase() + text.substring(1);
+//   }
+// }
+
+
+
+
+
 import 'package:company_project/providers/category_providerr.dart';
 import 'package:company_project/views/presentation/pages/home/details_screen.dart';
 import 'package:company_project/views/presentation/pages/home/poster/poster_maker_screen.dart';
 import 'package:company_project/views/presentation/pages/home/search_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 
 class CategoryScreen extends StatefulWidget {
   const CategoryScreen({super.key});
@@ -898,27 +1212,6 @@ class _CategoryScreenState extends State<CategoryScreen> {
               ),
               SizedBox(height: screenHeight * 0.025),
 
-              // Category chips
-              // SingleChildScrollView(
-              //   scrollDirection: Axis.horizontal,
-              //   child: Row(
-              //     children: categories.map((cat) {
-              //       return Padding(
-              //         padding: EdgeInsets.only(right: screenWidth * 0.02),
-              //         child: Chip(
-              //           label: Text(cat),
-              //           backgroundColor: cat == 'Business Ads'
-              //               ? const Color.fromARGB(255, 107, 22, 255)
-              //               : const Color.fromARGB(255, 250, 250, 250),
-              //           labelStyle: TextStyle(
-              //               color: cat == 'Business Ads'
-              //                   ? Colors.white
-              //                   : Colors.grey),
-              //         ),
-              //       );
-              //     }).toList(),
-              //   ),
-              // ),
               SizedBox(height: screenHeight * 0.011),
 
               // Category sections - dynamically created from displayCategories list
@@ -948,7 +1241,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
     return Consumer<CategoryProviderr>(
       builder: (context, provider, child) {
         if (provider.isLoadingCategory(category)) {
-          return const Center(child: CircularProgressIndicator());
+          return _buildShimmerLoading(itemWidth, itemHeight, screenWidth);
         } else if (provider.getErrorForCategory(category) != null) {
           return Center(
               child: Text("Error: ${provider.getErrorForCategory(category)}"));
@@ -964,6 +1257,29 @@ class _CategoryScreenState extends State<CategoryScreen> {
           );
         }
       },
+    );
+  }
+
+  // Shimmer loading effect for category items
+  Widget _buildShimmerLoading(double itemWidth, double itemHeight, double screenWidth) {
+    return Shimmer.fromColors(
+      baseColor: Colors.grey[300]!,
+      highlightColor: Colors.grey[100]!,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        itemCount: 5, // Show 5 shimmer items
+        itemBuilder: (context, index) {
+          return Container(
+            width: itemWidth,
+            height: itemHeight,
+            margin: EdgeInsets.only(right: screenWidth * 0.03),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+            ),
+          );
+        },
+      ),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:company_project/helper/storage_helper.dart';
 import 'package:company_project/models/category_modell.dart';
@@ -19,6 +20,8 @@ import 'package:company_project/views/presentation/widgets/category_widget.dart'
 import 'package:company_project/views/presentation/widgets/date_selector_screen.dart';
 import 'package:company_project/views/presentation/widgets/story/stories_widget.dart';
 import 'package:company_project/views/presentation/widgets/story/story_screen.dart';
+import 'package:company_project/views/subscriptions/animated_plan_list_screen.dart';
+import 'package:company_project/views/subscriptions/plan_detail_payment_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:company_project/models/story_model.dart';
@@ -450,10 +453,11 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 247, 178, 29),
       body: SingleChildScrollView(
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(16),
             child: Column(
               children: [
                 Row(
@@ -575,32 +579,19 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         ),
                       ),
-                      CircleAvatar(
-                        radius: 23,
-                        backgroundColor: const Color(0xFF6C4EF9),
-                        child: GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => SearchScreen(),
-                              ),
-                            );
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.all(10),
-                            decoration: BoxDecoration(
-                              color: _isListening
-                                  ? Colors.red
-                                  : const Color.fromARGB(255, 97, 74, 160),
-                              borderRadius: BorderRadius.circular(20),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => SearchScreen(),
                             ),
-                            child: Icon(
-                              _isListening ? Icons.mic : Icons.mic_none,
-                              color: Colors.white,
-                              size: 25,
-                            ),
-                          ),
+                          );
+                        },
+                        child: Icon(
+                          _isListening ? Icons.mic : Icons.mic_none,
+                          color: const Color.fromARGB(255, 60, 1, 110),
+                          size: 25,
                         ),
                       )
                     ],
@@ -1067,209 +1058,487 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  void showSubscriptionModal(BuildContext context) {
-    // Get the provider instance
-    final planProvider =
-        Provider.of<GetAllPlanProvider>(context, listen: false);
+void showSubscriptionModal(BuildContext context) {
+  final planProvider = Provider.of<GetAllPlanProvider>(context, listen: false);
+  if (planProvider.plans.isEmpty && !planProvider.isLoading) {
+    planProvider.fetchAllPlans();
+  }
 
-    // Fetch plans if not already loaded
-    if (planProvider.plans.isEmpty && !planProvider.isLoading) {
-      planProvider.fetchAllPlans();
-    }
+  showGeneralDialog(
+    context: context,
+    barrierDismissible: true,
+    barrierLabel: 'Subscription Modal',
+    barrierColor: Colors.black.withOpacity(0.6),
+    transitionDuration: const Duration(milliseconds: 600),
+    pageBuilder: (context, animation, secondaryAnimation) {
+      return const SizedBox.shrink();
+    },
+    transitionBuilder: (context, animation, secondaryAnimation, child) {
+      // Create beautiful animation curves
+      final curvedAnimation = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutBack,
+      );
 
-    // Track the selected plan
-    String? selectedPlanId;
-    bool showPaymentOptions = false;
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors
-          .transparent, // Make the background transparent to apply our own padding
-      builder: (_) => StatefulBuilder(
-        builder: (context, setState) {
-          return Container(
-            // Add padding around the entire modal
-            margin: const EdgeInsets.all(2),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            // Make it take up to 90% of the screen height
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.of(context).size.height * 0.9,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header with padding
-                Padding(
-                  padding: const EdgeInsets.only(
-                      left: 16, right: 16, top: 8, bottom: 8),
-                  child: Row(
-                    children: [
-                      const Expanded(
-                        child: Text(
-                          'Subscriptions Plans',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.deepPurple,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: Icon(Icons.close, color: Colors.grey.shade700),
-                        onPressed: () => Navigator.pop(context),
+      return BackdropFilter(
+        filter: ImageFilter.blur(
+          sigmaX: 4 * animation.value,
+          sigmaY: 4 * animation.value,
+        ),
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0, 0.2),
+            end: Offset.zero,
+          ).animate(curvedAnimation),
+          child: ScaleTransition(
+            scale: Tween<double>(
+              begin: 0.8,
+              end: 1.0,
+            ).animate(curvedAnimation),
+            child: FadeTransition(
+              opacity: Tween<double>(
+                begin: 0.0,
+                end: 1.0,
+              ).animate(curvedAnimation),
+              child: Center(
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
                       ),
                     ],
                   ),
-                ),
-
-                // Subscription plans (scrollable if needed)
-                Flexible(
-                  child: Consumer<GetAllPlanProvider>(
-                    builder: (context, provider, child) {
-                      // Show loading indicator while fetching data
-                      if (provider.isLoading) {
-                        return const Center(
-                          child: CircularProgressIndicator(),
-                        );
-                      }
-
-                      // Show error message if any
-                      if (provider.error != null) {
-                        return Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Text(
-                                'Failed to load plans',
-                                style: TextStyle(color: Colors.red),
-                              ),
-                              const SizedBox(height: 8),
-                              ElevatedButton(
-                                onPressed: () => provider.fetchAllPlans(),
-                                child: Text('Retry'),
-                              ),
-                            ],
+                  constraints: BoxConstraints(
+                    maxHeight: MediaQuery.of(context).size.height * 0.85,
+                    maxWidth: 500,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Header with gradient
+                        Container(
+                          decoration: const BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                Color(0xFF8E2DE2),
+                                Color(0xFF4A00E0),
+                              ],
+                            ),
                           ),
-                        );
-                      }
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 16.0,
+                              horizontal: 20.0,
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.workspace_premium,
+                                  color: Colors.white,
+                                  size: 28,
+                                ),
+                                const SizedBox(width: 12),
+                                const Expanded(
+                                  child: Text(
+                                    'Choose Your Plan',
+                                    style: TextStyle(
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                                Material(
+                                  color: Colors.transparent,
+                                  child: InkWell(
+                                    borderRadius: BorderRadius.circular(30),
+                                    onTap: () => Navigator.pop(context),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withOpacity(0.2),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(
+                                        Icons.close,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        Flexible(
+                          child: Consumer<GetAllPlanProvider>(
+                            builder: (context, provider, child) {
+                              if (provider.isLoading) {
+                                return Center(
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const SizedBox(
+                                        width: 40,
+                                        height: 40,
+                                        child: CircularProgressIndicator(
+                                          valueColor: AlwaysStoppedAnimation<Color>(
+                                            Color(0xFF8E2DE2),
+                                          ),
+                                          strokeWidth: 3,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      Text(
+                                        'Loading plans...',
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              }
 
-                      // Show plans if available
-                      if (provider.plans.isNotEmpty) {
-                        return SingleChildScrollView(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
-                          child: Column(
-                            children: [
-                              const SizedBox(height: 12),
-                              ...provider.plans.map((plan) {
-                                // Determine card color based on plan name
-                                Color cardColor = Colors.teal.shade50;
-                                Color priceColor = Colors.green;
-                                IconData planIcon = Icons.verified_user;
+                              if (provider.error != null) {
+                                return Center(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(20.0),
+                                    child: Column(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.error_outline,
+                                          color: Colors.red.shade400,
+                                          size: 60,
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Text(
+                                          'Failed to load plans',
+                                          style: TextStyle(
+                                            fontSize: 18,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.red.shade400,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 8),
+                                        Text(
+                                          'Please try again later',
+                                          style: TextStyle(
+                                            color: Colors.grey.shade600,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        ElevatedButton.icon(
+                                          onPressed: () => provider.fetchAllPlans(),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(0xFF8E2DE2),
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 20,
+                                              vertical: 12,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius: BorderRadius.circular(30),
+                                            ),
+                                          ),
+                                          icon: const Icon(Icons.refresh),
+                                          label: const Text('Try Again'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
+                              }
 
-                                if (plan.name
-                                    .toUpperCase()
-                                    .contains('COPPER')) {
-                                  cardColor = Colors.orange.shade50;
-                                  priceColor = Colors.orange;
-                                  planIcon = Icons.workspace_premium;
-                                } else if (plan.name
-                                    .toUpperCase()
-                                    .contains('SILVER')) {
-                                  cardColor = Colors.blueGrey.shade50;
-                                  priceColor = Colors.blueGrey;
-                                  planIcon = Icons.star;
-                                } else if (plan.name
-                                    .toUpperCase()
-                                    .contains('GOLD')) {
-                                  cardColor = Colors.amber.shade50;
-                                  priceColor = Colors.amber.shade700;
-                                  planIcon = Icons.auto_awesome;
-                                }
+                              if (provider.plans.isNotEmpty) {
+                                // Use staggered animation list for plans
+                                return AnimatedPlanList(
+                                  plans: provider.plans,
+                                  onPlanSelected: (plan) {
+                                    // Close the modal dialog with fade out animation
+                                    Navigator.of(context).pop();
+                                    
+                                    // Navigate to the plan details with hero animation
+                                    Navigator.push(
+                                      context,
+                                      PageRouteBuilder(
+                                        pageBuilder: (context, animation, secondaryAnimation) => 
+                                          PlanDetailsAndPaymentScreen(plan: plan),
+                                        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                                          const begin = Offset(1.0, 0.0);
+                                          const end = Offset.zero;
+                                          const curve = Curves.easeOutCubic;
+                                          
+                                          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+                                          var offsetAnimation = animation.drive(tween);
+                                          
+                                          return SlideTransition(
+                                            position: offsetAnimation,
+                                            child: FadeTransition(
+                                              opacity: animation,
+                                              child: child,
+                                            ),
+                                          );
+                                        },
+                                        transitionDuration: const Duration(milliseconds: 500),
+                                      ),
+                                    );
+                                  },
+                                );
+                              }
 
-                                return Column(
+                              return Center(
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    _buildSubscriptionCard(
-                                      context: context,
-                                      planTitle: plan.name.toUpperCase(),
-                                      price: plan.offerPrice == 0
-                                          ? '₹Free'
-                                          : '₹${plan.offerPrice}',
-                                      priceColor: priceColor,
-                                      cardColor: cardColor,
-                                      icon: planIcon,
-                                      features: plan.features,
-                                      isSelected: selectedPlanId == plan.id,
-                                      onTap: () {
-                                        setState(() {
-                                          selectedPlanId = plan.id;
-                                          showPaymentOptions = true;
-                                        });
-                                      },
+                                    Icon(
+                                      Icons.subscriptions,
+                                      size: 60,
+                                      color: Colors.grey.shade400,
                                     ),
                                     const SizedBox(height: 16),
+                                    Text(
+                                      'No subscription plans available',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
                                   ],
-                                );
-                              }).toList(),
-                            ],
+                                ),
+                              );
+                            },
                           ),
-                        );
-                      }
-
-                      // No plans available
-                      return const Center(
-                        child: Text('No subscription plans available'),
-                      );
-                    },
+                        ),
+                      ],
+                    ),
                   ),
                 ),
-
-                // Payment options container - shows when a plan is selected
-                if (showPaymentOptions)
-                  Consumer<GetAllPlanProvider>(
-                    builder: (context, provider, child) {
-                      final selectedPlan = provider.plans.firstWhere(
-                        (plan) => plan.id == selectedPlanId,
-                        orElse: () => GetAllPlanModel(
-                          id: '',
-                          name: 'Unknown',
-                          originalPrice: 0,
-                          offerPrice: 0,
-                          duration: '',
-                          discountPercentage: 0,
-                          features: [],
-                          createdAt: DateTime.now(),
-                          updatedAt: DateTime.now(),
-                        ),
-                      );
-
-                      final price = selectedPlan.offerPrice == 0
-                          ? '₹Free'
-                          : '₹${selectedPlan.offerPrice}';
-
-                      return _buildPaymentOptionsContainer(
-                        context: context,
-                        selectedPlan: selectedPlan.name,
-                        price: price,
-                        onClose: () {
-                          setState(() {
-                            showPaymentOptions = false;
-                            selectedPlanId = null;
-                          });
-                        },
-                      );
-                    },
-                  ),
-              ],
+              ),
             ),
-          );
-        },
-      ),
-    );
-  }
+          ),
+        ),
+      );
+    },
+  );
+}
+
+  // void showSubscriptionModal(BuildContext context) {
+  //   // Get the provider instance
+  //   final planProvider =
+  //       Provider.of<GetAllPlanProvider>(context, listen: false);
+
+  //   // Fetch plans if not already loaded
+  //   if (planProvider.plans.isEmpty && !planProvider.isLoading) {
+  //     planProvider.fetchAllPlans();
+  //   }
+
+  //   // Track the selected plan
+  //   String? selectedPlanId;
+  //   bool showPaymentOptions = false;
+
+  //   showModalBottomSheet(
+  //     context: context,
+  //     isScrollControlled: true,
+  //     backgroundColor: Colors
+  //         .transparent, // Make the background transparent to apply our own padding
+  //     builder: (_) => StatefulBuilder(
+  //       builder: (context, setState) {
+  //         return Container(
+  //           // Add padding around the entire modal
+  //           margin: const EdgeInsets.all(2),
+  //           decoration: BoxDecoration(
+  //             color: Colors.white,
+  //             borderRadius: BorderRadius.circular(12),
+  //           ),
+  //           // Make it take up to 90% of the screen height
+  //           constraints: BoxConstraints(
+  //             maxHeight: MediaQuery.of(context).size.height * 0.9,
+  //           ),
+  //           child: Column(
+  //             mainAxisSize: MainAxisSize.min,
+  //             children: [
+  //               // Header with padding
+  //               Padding(
+  //                 padding: const EdgeInsets.only(
+  //                     left: 16, right: 16, top: 8, bottom: 8),
+  //                 child: Row(
+  //                   children: [
+  //                     const Expanded(
+  //                       child: Text(
+  //                         'Subscriptions Plans',
+  //                         style: TextStyle(
+  //                           fontSize: 20,
+  //                           fontWeight: FontWeight.bold,
+  //                           color: Colors.deepPurple,
+  //                         ),
+  //                       ),
+  //                     ),
+  //                     IconButton(
+  //                       icon: Icon(Icons.close, color: Colors.grey.shade700),
+  //                       onPressed: () => Navigator.pop(context),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               ),
+
+  //               // Subscription plans (scrollable if needed)
+  //               Flexible(
+  //                 child: Consumer<GetAllPlanProvider>(
+  //                   builder: (context, provider, child) {
+  //                     // Show loading indicator while fetching data
+  //                     if (provider.isLoading) {
+  //                       return const Center(
+  //                         child: CircularProgressIndicator(),
+  //                       );
+  //                     }
+
+  //                     // Show error message if any
+  //                     if (provider.error != null) {
+  //                       return Center(
+  //                         child: Column(
+  //                           mainAxisAlignment: MainAxisAlignment.center,
+  //                           children: [
+  //                             Text(
+  //                               'Failed to load plans',
+  //                               style: TextStyle(color: Colors.red),
+  //                             ),
+  //                             const SizedBox(height: 8),
+  //                             ElevatedButton(
+  //                               onPressed: () => provider.fetchAllPlans(),
+  //                               child: Text('Retry'),
+  //                             ),
+  //                           ],
+  //                         ),
+  //                       );
+  //                     }
+
+  //                     // Show plans if available
+  //                     if (provider.plans.isNotEmpty) {
+  //                       return SingleChildScrollView(
+  //                         padding: const EdgeInsets.symmetric(horizontal: 16),
+  //                         child: Column(
+  //                           children: [
+  //                             const SizedBox(height: 12),
+  //                             ...provider.plans.map((plan) {
+  //                               // Determine card color based on plan name
+  //                               Color cardColor = Colors.teal.shade50;
+  //                               Color priceColor = Colors.green;
+  //                               IconData planIcon = Icons.verified_user;
+
+  //                               if (plan.name
+  //                                   .toUpperCase()
+  //                                   .contains('COPPER')) {
+  //                                 cardColor = Colors.orange.shade50;
+  //                                 priceColor = Colors.orange;
+  //                                 planIcon = Icons.workspace_premium;
+  //                               } else if (plan.name
+  //                                   .toUpperCase()
+  //                                   .contains('SILVER')) {
+  //                                 cardColor = Colors.blueGrey.shade50;
+  //                                 priceColor = Colors.blueGrey;
+  //                                 planIcon = Icons.star;
+  //                               } else if (plan.name
+  //                                   .toUpperCase()
+  //                                   .contains('GOLD')) {
+  //                                 cardColor = Colors.amber.shade50;
+  //                                 priceColor = Colors.amber.shade700;
+  //                                 planIcon = Icons.auto_awesome;
+  //                               }
+
+  //                               return Column(
+  //                                 children: [
+  //                                   _buildSubscriptionCard(
+  //                                     context: context,
+  //                                     planTitle: plan.name.toUpperCase(),
+  //                                     price: plan.offerPrice == 0
+  //                                         ? '₹Free'
+  //                                         : '₹${plan.offerPrice}',
+  //                                     priceColor: priceColor,
+  //                                     cardColor: cardColor,
+  //                                     icon: planIcon,
+  //                                     features: plan.features,
+  //                                     isSelected: selectedPlanId == plan.id,
+  //                                     onTap: () {
+  //                                       setState(() {
+  //                                         selectedPlanId = plan.id;
+  //                                         showPaymentOptions = true;
+  //                                       });
+  //                                     },
+  //                                   ),
+  //                                   const SizedBox(height: 16),
+  //                                 ],
+  //                               );
+  //                             }).toList(),
+  //                           ],
+  //                         ),
+  //                       );
+  //                     }
+
+  //                     // No plans available
+  //                     return const Center(
+  //                       child: Text('No subscription plans available'),
+  //                     );
+  //                   },
+  //                 ),
+  //               ),
+
+  //               // Payment options container - shows when a plan is selected
+  //               if (showPaymentOptions)
+  //                 Consumer<GetAllPlanProvider>(
+  //                   builder: (context, provider, child) {
+  //                     final selectedPlan = provider.plans.firstWhere(
+  //                       (plan) => plan.id == selectedPlanId,
+  //                       orElse: () => GetAllPlanModel(
+  //                         id: '',
+  //                         name: 'Unknown',
+  //                         originalPrice: 0,
+  //                         offerPrice: 0,
+  //                         duration: '',
+  //                         discountPercentage: 0,
+  //                         features: [],
+  //                         createdAt: DateTime.now(),
+  //                         updatedAt: DateTime.now(),
+  //                       ),
+  //                     );
+
+  //                     final price = selectedPlan.offerPrice == 0
+  //                         ? '₹Free'
+  //                         : '₹${selectedPlan.offerPrice}';
+
+  //                     return _buildPaymentOptionsContainer(
+  //                       context: context,
+  //                       selectedPlan: selectedPlan.name,
+  //                       price: price,
+  //                       onClose: () {
+  //                         setState(() {
+  //                           showPaymentOptions = false;
+  //                           selectedPlanId = null;
+  //                         });
+  //                       },
+  //                     );
+  //                   },
+  //                 ),
+  //             ],
+  //           ),
+  //         );
+  //       },
+  //     ),
+  //   );
+  // }
 
   Widget _buildSubscriptionCard({
     required BuildContext context,

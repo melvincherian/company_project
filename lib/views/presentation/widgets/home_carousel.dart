@@ -98,7 +98,7 @@ class _HomeCarouselState extends State<HomeCarousel>
     return Column(
       children: [
         SizedBox(
-          height: 140,
+          height: 160,
           child: PageView.builder(
             controller: _pageController,
             itemCount: _carouselItems.length,
@@ -177,7 +177,7 @@ class CarouselItemWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      height: 140,
+      height: 160,
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
@@ -192,7 +192,7 @@ class CarouselItemWidget extends StatelessWidget {
             : [],
         image: DecorationImage(
           image: AssetImage(carouselItem.imagePath),
-          fit: BoxFit.cover,
+          fit: BoxFit.fill,
         ),
       ),
       child: Stack(

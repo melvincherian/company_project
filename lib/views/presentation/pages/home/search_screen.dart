@@ -163,7 +163,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 suffixIcon: IconButton(
                   icon: Icon(
                     _isListening ? Icons.mic : Icons.mic_none,
-                    color: _isListening ? Colors.red : Colors.grey,
+                    color: _isListening ? Colors.red : const Color.fromARGB(255, 36, 0, 74),size: 25,
                   ),
                   onPressed: _startListening,
                   tooltip: 'Voice Search',

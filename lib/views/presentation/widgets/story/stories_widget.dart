@@ -196,12 +196,232 @@
 
 
 
+// import 'package:company_project/models/story_model.dart';
+// import 'package:company_project/providers/story_provider.dart';
+// import 'package:company_project/views/presentation/widgets/story/add_story.dart';
+// import 'package:company_project/views/presentation/widgets/story/story_screen.dart';
+// import 'package:flutter/material.dart';
+// import 'package:provider/provider.dart';
+// import 'package:shimmer/shimmer.dart';
+
+
+// class StoriesWidget extends StatelessWidget {
+//   const StoriesWidget({Key? key}) : super(key: key);
+
+//   void _openAddStory(BuildContext context) {
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (context) => AddStoryScreen(
+//           onStoryAdded: () {
+//             // Refresh stories after adding
+//             Provider.of<StoryProvider>(context, listen: false).fetchStories();
+//           },
+//         ),
+//       ),
+//     );
+//   }
+
+//   void _openStoryViewer(BuildContext context, List<UserStories> userStoriesList, int initialUserIndex) {
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (context) => StoryViewerScreen(
+//           userStoriesList: userStoriesList,
+//           initialUserIndex: initialUserIndex,
+//         ),
+//       ),
+//     );
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Consumer<StoryProvider>(
+//       builder: (context, storyProvider, child) {
+//         if (storyProvider.isLoading) {
+//           return const SizedBox(
+//             height: 110,
+//             child: Center(child: CircularProgressIndicator()),
+//           );
+//         }
+
+//         final userStoriesList = storyProvider.getStoriesForDisplay();
+//         final bool currentUserHasStory = storyProvider.currentUserHasStory();
+//         final String? currentUserImage = storyProvider.currentUserImage;
+
+//         return Container(
+//           height: 110,
+//           decoration: BoxDecoration(
+//             boxShadow: [
+//               BoxShadow(
+//                 blurRadius: 6,
+//                 offset: const Offset(2, 0),
+//               ),
+//             ],
+//           ),
+//           child: ListView.builder(
+//             scrollDirection: Axis.horizontal,
+//             padding: const EdgeInsets.symmetric(horizontal: 8),
+//             itemCount: userStoriesList.length + (currentUserHasStory ? 0 : 1),
+//             itemBuilder: (context, index) {
+//               // First position shows "Add Story" if user has no story
+//               if (!currentUserHasStory && index == 0) {
+//                 return _buildAddStoryItem(context, currentUserImage);
+//               }
+              
+//               // Adjust index for user stories list if "Add Story" is shown
+//               final int adjustedIndex = currentUserHasStory ? index : index - 1;
+//               final UserStories userStories = userStoriesList[adjustedIndex];
+//               final bool isCurrentUser = userStories.userId == storyProvider.currentUserId;
+              
+//               return _buildStoryItem(
+//                 context, 
+//                 userStories, 
+//                 isCurrentUser,
+//                 () => _openStoryViewer(context, userStoriesList, adjustedIndex),
+//                 userStories.hasUnviewedStories,
+//               );
+//             },
+//           ),
+//         );
+//       },
+//     );
+//   }
+
+//   Widget _buildAddStoryItem(BuildContext context, String? userProfileImage) {
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+//       child: GestureDetector(
+//         onTap: () => _openAddStory(context),
+//         child: Column(
+//           children: [
+//             Stack(
+//               children: [
+//                 // User profile image
+//                 Container(
+//                   width: 65,
+//                   height: 65,
+//                   decoration: BoxDecoration(
+//                     shape: BoxShape.circle,
+//                     color: Colors.grey[300],
+//                     image: userProfileImage != null
+//                         ? DecorationImage(
+//                             image: NetworkImage(userProfileImage),
+//                             fit: BoxFit.cover,
+//                           )
+//                         : null,
+//                   ),
+//                   child: userProfileImage == null
+//                       ? const Icon(Icons.person, size: 35, color: Colors.white)
+//                       : null,
+//                 ),
+//                 // Plus icon overlay
+//                 Positioned(
+//                   bottom: 0,
+//                   right: 0,
+//                   child: Container(
+//                     width: 24,
+//                     height: 24,
+//                     decoration: BoxDecoration(
+//                       color: Colors.blue,
+//                       shape: BoxShape.circle,
+//                       border: Border.all(color: Colors.white, width: 2),
+//                     ),
+//                     child: const Icon(
+//                       Icons.add,
+//                       color: Colors.white,
+//                       size: 14,
+//                     ),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//             const SizedBox(height: 4),
+//             const Text(
+//               'Your Story',
+//               style: TextStyle(fontSize: 12,color: Colors.white),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+
+//   Widget _buildStoryItem(
+//     BuildContext context, 
+//     UserStories userStories, 
+//     bool isCurrentUser,
+//     VoidCallback onTap,
+//     bool hasUnviewedStories,
+//   ) {
+//     // Get first story image for thumbnail
+//     final String thumbnailUrl = userStories.stories.isNotEmpty && userStories.stories.first.images.isNotEmpty
+//         ? 'https://posterbnaobackend.onrender.com/${userStories.stories.first.images[0]}'
+//         : '';
+
+//     return Padding(
+//       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+//       child: GestureDetector(
+//         onTap: onTap,
+//         child: Column(
+//           children: [
+//             Container(
+//               width: 68,
+//               height: 68,
+//               decoration: BoxDecoration(
+//                 shape: BoxShape.circle,
+//                 gradient: hasUnviewedStories 
+//                     ? const LinearGradient(
+//                         colors: [Colors.purple, Colors.orange, Colors.pink],
+//                         begin: Alignment.topLeft,
+//                         end: Alignment.bottomRight,
+//                       )
+//                     : null,
+//                 border: !hasUnviewedStories 
+//                     ? Border.all(color: Colors.grey, width: 2) 
+//                     : null,
+//               ),
+//               padding: const EdgeInsets.all(2), // Border width
+//               child: Container(
+//                 decoration: BoxDecoration(
+//                   shape: BoxShape.circle,
+//                   color: Colors.grey[300],
+//                   border: Border.all(color: Colors.white, width: 2),
+//                   image: thumbnailUrl.isNotEmpty
+//                       ? DecorationImage(
+//                           image: NetworkImage(thumbnailUrl),
+//                           fit: BoxFit.cover,
+//                         )
+//                       : null,
+//                 ),
+//               ),
+//             ),
+//             const SizedBox(height: 4),
+//             Text(
+//               isCurrentUser ? 'Your Story' : userStories.username.isNotEmpty ? userStories.username : 'Story',
+//               style: TextStyle(
+//                 color: Colors.white,
+//                 fontSize: 12,
+//                 fontWeight: hasUnviewedStories ? FontWeight.bold : FontWeight.normal,
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+
+
+
 import 'package:company_project/models/story_model.dart';
 import 'package:company_project/providers/story_provider.dart';
 import 'package:company_project/views/presentation/widgets/story/add_story.dart';
 import 'package:company_project/views/presentation/widgets/story/story_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shimmer/shimmer.dart';
 
 class StoriesWidget extends StatelessWidget {
   const StoriesWidget({Key? key}) : super(key: key);
@@ -237,10 +457,7 @@ class StoriesWidget extends StatelessWidget {
     return Consumer<StoryProvider>(
       builder: (context, storyProvider, child) {
         if (storyProvider.isLoading) {
-          return const SizedBox(
-            height: 110,
-            child: Center(child: CircularProgressIndicator()),
-          );
+          return _buildSkeletonLoading();
         }
 
         final userStoriesList = storyProvider.getStoriesForDisplay();
@@ -250,12 +467,10 @@ class StoriesWidget extends StatelessWidget {
         return Container(
           height: 110,
           decoration: BoxDecoration(
-            color: Colors.white,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 3,
-                offset: const Offset(0, 2),
+                blurRadius: 6,
+                offset: const Offset(2, 0),
               ),
             ],
           ),
@@ -285,6 +500,49 @@ class StoriesWidget extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  Widget _buildSkeletonLoading() {
+    return SizedBox(
+      height: 110,
+      child: Shimmer.fromColors(
+        baseColor: Colors.grey[300]!,
+        highlightColor: Colors.grey[100]!,
+        child: ListView.builder(
+          scrollDirection: Axis.horizontal,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          itemCount: 5, // Show 5 skeleton items
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+              child: Column(
+                children: [
+                  // Skeleton circle for avatar
+                  Container(
+                    width: 65,
+                    height: 65,
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  // Skeleton rectangle for text
+                  Container(
+                    width: 50,
+                    height: 12,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        ),
+      ),
     );
   }
 
@@ -339,7 +597,7 @@ class StoriesWidget extends StatelessWidget {
             const SizedBox(height: 4),
             const Text(
               'Your Story',
-              style: TextStyle(fontSize: 12),
+              style: TextStyle(fontSize: 12, color: Colors.white),
             ),
           ],
         ),
@@ -400,6 +658,7 @@ class StoriesWidget extends StatelessWidget {
             Text(
               isCurrentUser ? 'Your Story' : userStories.username.isNotEmpty ? userStories.username : 'Story',
               style: TextStyle(
+                color: Colors.white,
                 fontSize: 12,
                 fontWeight: hasUnviewedStories ? FontWeight.bold : FontWeight.normal,
               ),
