@@ -1312,7 +1312,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
   ) {
     final List<CategoryModel> categoryPosters =
         _getPostersByCategory(category, allPosters);
-
+    print('meeeeeeeeeeeeeeeeeeeeeeeee${categoryPosters[0].images[0]}');
     if (categoryPosters.isEmpty) {
       return Center(child: Text("No items available in this category"));
     }
@@ -1414,9 +1414,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
                 );
               },
               child: Image.network(
-                item.images.isNotEmpty
-                    ? "https://posterbnaobackend.onrender.com/uploads/${item.images[0]}"
-                    : 'https://via.placeholder.com/120x100',
+                "https://posterbnaobackend.onrender.com/${item.images[0]}",
                 //  "https://posterbnaobackend.onrender.com/uploads/${['images'][0]}",
 
                 // item.images.isNotEmpty

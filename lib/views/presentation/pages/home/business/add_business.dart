@@ -2871,7 +2871,7 @@ class _BusinessCardMakerState extends State<BusinessCardMaker> with SingleTicker
                     child: CircularProgressIndicator(
                       value: _downloadProgress > 0 ? _downloadProgress : null,
                       strokeWidth: 3,
-                      valueColor: AlwaysStoppedAnimation<Color>(
+                      valueColor:const AlwaysStoppedAnimation<Color>(
                         Colors.blueAccent,
                       ),
                     ),
@@ -3313,9 +3313,11 @@ class _BusinessCardMakerState extends State<BusinessCardMaker> with SingleTicker
                 ),
               ],
             ),
+            
           ),
         ],
       ),
+      
     );
   }
 

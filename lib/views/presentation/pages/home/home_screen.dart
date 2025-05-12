@@ -9,12 +9,14 @@ import 'package:company_project/providers/category_provider.dart';
 import 'package:company_project/providers/category_providerr.dart';
 import 'package:company_project/providers/date_time_provider.dart';
 import 'package:company_project/providers/get_all_plan_provider.dart';
+import 'package:company_project/providers/home_provider.dart';
 import 'package:company_project/providers/poster_provider.dart';
 import 'package:company_project/providers/story_provider.dart';
 import 'package:company_project/views/presentation/pages/home/details_screen.dart';
 import 'package:company_project/views/presentation/pages/home/poster/create_poster_template.dart';
 import 'package:company_project/views/presentation/pages/home/poster/poster_maker_screen.dart';
 import 'package:company_project/views/presentation/pages/home/search_screen.dart';
+import 'package:company_project/views/presentation/widgets/category_custom_widget.dart';
 import 'package:company_project/views/presentation/widgets/home_carousel.dart';
 import 'package:company_project/views/presentation/widgets/story/add_story.dart';
 import 'package:company_project/views/presentation/widgets/category_widget.dart';
@@ -58,10 +60,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   late final CategoryProviderr categoryprovider;
   Map<String, List<Map<String, dynamic>>> _categorizedPosters = {};
+  
+ late final HomeProvider homeProvider;
+
 
   @override
   void initState() {
+
     super.initState();
+     _homepagefilter();
     _speech = stt.SpeechToText();
     _initializeSpeech();
     _loadUserId();
@@ -76,6 +83,8 @@ class _HomeScreenState extends State<HomeScreen> {
         print(
             'Fetch posters completed - poster count: ${posterProvider.posters.length}');
       });
+
+
 
       storyProvider.fetchStories().then((_) {
         print(
@@ -153,21 +162,39 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _filterCategories() {
+
     final categoryProvider =
         Provider.of<CategoryProvider>(context, listen: false);
+        //  print('dataaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa${categoryProvider.categories}');
+
     if (_searchText.isEmpty) {
+      
       setState(() {
-        _filteredCategories = categoryProvider.categories;
+        _filteredCategories = [...categoryProvider.categories];
       });
     } else {
       setState(() {
-        _filteredCategories = categoryProvider.categories
+        _filteredCategories = [...categoryProvider.categories
             .where((category) => category.categoryname
                 .toLowerCase()
                 .contains(_searchText.toLowerCase()))
-            .toList();
+            .toList()];
       });
     }
+  }
+
+
+  void _homepagefilter() {
+    print('dataaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa');
+    final categoryProvider =
+
+        Provider.of<HomeProvider>(context, listen: false);
+        print('mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm${categoryProvider.homeposters[0]}');
+   
+      setState(() {
+        _filteredCategories = [...categoryProvider.homeposters];
+      });
+    
   }
 
   Future<void> _loadUserId() async {
@@ -825,6 +852,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                     );
                                   }).toList(),
                                 ),
+                                // PosterGroupedListView(posters: posters)
+
+
 
                       // Regular category sections
                       // Only show these if we want to display regular categories alongside festival categories

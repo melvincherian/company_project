@@ -5,6 +5,7 @@ import 'package:company_project/controller/auth_controller.dart';
 import 'package:company_project/helper/storage_helper.dart';
 import 'package:company_project/views/presentation/pages/auth/otp_screen.dart';
 import 'package:company_project/views/presentation/pages/auth/signup_screen.dart';
+import 'package:company_project/views/presentation/pages/home/main_category.dart';
 import 'package:company_project/views/presentation/pages/home/navbar_screen.dart';
 import 'package:flutter/material.dart';
 
@@ -153,7 +154,7 @@ class RegisterScreen extends StatelessWidget {
                                    
                                         Navigator.pushAndRemoveUntil(
                                           context,
-                                          MaterialPageRoute(builder: (context) =>const NavbarScreen()),
+                                          MaterialPageRoute(builder: (context) =>const BusinessIndustryScreen()),
                                           (route) => false,
                                         );
                                       } else {

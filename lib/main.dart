@@ -10,6 +10,7 @@ import 'package:company_project/providers/date_time_provider.dart';
 import 'package:company_project/providers/festival_provider.dart';
 import 'package:company_project/providers/festivel_poster_provider.dart';
 import 'package:company_project/providers/get_all_plan_provider.dart';
+import 'package:company_project/providers/home_provider.dart';
 import 'package:company_project/providers/invoice_provider.dart';
 import 'package:company_project/providers/my_plan_provider.dart';
 import 'package:company_project/providers/new_category_provider.dart';
@@ -58,6 +59,7 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_)=>InvoiceProvider()),
         ChangeNotifierProvider(create: (_)=>ProductInvoiceProvider()),
         ChangeNotifierProvider(create: (_)=>ThemeProvider()),
+        ChangeNotifierProvider(create: (_)=>HomeProvider())
 
         
       ],

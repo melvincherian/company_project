@@ -1,5 +1,6 @@
 import 'package:company_project/helper/storage_helper.dart';
 import 'package:company_project/views/presentation/pages/auth/register_screen.dart';
+import 'package:company_project/views/presentation/pages/home/main_category.dart';
 import 'package:company_project/views/presentation/pages/home/navbar_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -37,7 +38,7 @@ class _SplashScreenState extends State<SplashScreen> {
     // Navigate to appropriate screen
     if (isLoggedIn) {
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) =>  NavbarScreen()),
+        MaterialPageRoute(builder: (context) =>  BusinessIndustryScreen()),
       );
     } else {
       Navigator.of(context).pushReplacement(

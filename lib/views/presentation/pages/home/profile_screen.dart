@@ -58,10 +58,10 @@ class _VirtualBusinessScreenState extends State<VirtualBusinessScreen> {
                           _buildCategoryCircleAvatars(categoryProvider),
                           SizedBox(height: 20,),
                           // _sectionTitle("Bakery & Clothing Cards", context),
-                          _cardList(posterProvider.posters),
+                          // _cardList(posterProvider.posters),
                            SizedBox(height: 20,),
                           // _sectionTitle("Trending Cards", context),
-                          _cardList(posterProvider.posters),
+                          // _cardList(posterProvider.posters),
                         ],
                       ),
                     ),
@@ -153,114 +153,114 @@ class _VirtualBusinessScreenState extends State<VirtualBusinessScreen> {
   // }
 
 
-  Widget _sectionTitle(String title, BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(title,
-              style:
-                  const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => AllBusinessCardsScreen(title: title),
-                ),
-              );
-            },
-            child: const Row(
-              children: [
-                Text('View All', style: TextStyle(color: Colors.black)),
-                Icon(Icons.arrow_forward_ios, size: 19),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _sectionTitle(String title, BuildContext context) {
+  //   return Padding(
+  //     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  //     child: Row(
+  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //       children: [
+  //         Text(title,
+  //             style:
+  //                 const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+  //         GestureDetector(
+  //           onTap: () {
+  //             Navigator.push(
+  //               context,
+  //               MaterialPageRoute(
+  //                 builder: (_) => AllBusinessCardsScreen(title: title),
+  //               ),
+  //             );
+  //           },
+  //           child: const Row(
+  //             children: [
+  //               Text('View All', style: TextStyle(color: Colors.black)),
+  //               Icon(Icons.arrow_forward_ios, size: 19),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
-  Widget _cardList(List<BusinessPosterModel> posters) {
-    return SizedBox(
-      height: 260,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: posters.length,
-        padding: const EdgeInsets.only(left: 12),
-        itemBuilder: (context, index) {
-          return _businessCard(context, posters[index]);
-        },
-      ),
-    );
-  }
+  // Widget _cardList(List<BusinessPosterModel> posters) {
+  //   return SizedBox(
+  //     height: 260,
+  //     child: ListView.builder(
+  //       scrollDirection: Axis.horizontal,
+  //       itemCount: posters.length,
+  //       padding: const EdgeInsets.only(left: 12),
+  //       itemBuilder: (context, index) {
+  //         return _businessCard(context, posters[index]);
+  //       },
+  //     ),
+  //   );
+  // }
 
-  Widget _businessCard(BuildContext context, BusinessPosterModel poster) {
-    return Container(
-      width: 200,
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border.all(color: Colors.grey.shade300),
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            blurRadius: 4,
-            offset: const Offset(2, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GestureDetector(
-            onTap: () {
-              Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                      builder: (_) => BusinessDetailScreen(poster: poster)));
-            },
-            child: poster.images.isNotEmpty
-                ? Image.network(poster.images.first,
-                    height: 125, width: 300, fit: BoxFit.cover)
-                : const Placeholder(fallbackHeight: 125),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            poster.name,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-          ),
-          Text(poster.categoryName,
-              style: const TextStyle(color: Colors.blue, fontSize: 10)),
-          Text(poster.description,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 12)),
-          const SizedBox(height: 4),
-          // Text(poster.createdAt.toString().split('T').first,
-          //     style: const TextStyle(fontSize: 12)),
-          const SizedBox(height: 6),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text('₹${poster.price}',
-                  style: const TextStyle(fontWeight: FontWeight.bold)),
-              Text('₹${poster.offerPrice}',
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    decoration: TextDecoration.lineThrough,
-                  )),
-              Text(
-                  '${((1 - (poster.price / poster.offerPrice)) * 100).round()}% Off',
-                  style: const TextStyle(color: Colors.green)),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _businessCard(BuildContext context, BusinessPosterModel poster) {
+  //   return Container(
+  //     width: 200,
+  //     margin: const EdgeInsets.only(right: 12),
+  //     padding: const EdgeInsets.all(10),
+  //     decoration: BoxDecoration(
+  //       color: Colors.white,
+  //       border: Border.all(color: Colors.grey.shade300),
+  //       borderRadius: BorderRadius.circular(12),
+  //       boxShadow: [
+  //         BoxShadow(
+  //           color: Colors.grey.withOpacity(0.2),
+  //           blurRadius: 4,
+  //           offset: const Offset(2, 4),
+  //         ),
+  //       ],
+  //     ),
+  //     child: Column(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         GestureDetector(
+  //           onTap: () {
+  //             Navigator.push(
+  //                 context,
+  //                 MaterialPageRoute(
+  //                     builder: (_) => BusinessDetailScreen(poster: poster)));
+  //           },
+  //           child: poster.images.isNotEmpty
+  //               ? Image.network(poster.images.first,
+  //                   height: 125, width: 300, fit: BoxFit.cover)
+  //               : const Placeholder(fallbackHeight: 125),
+  //         ),
+  //         const SizedBox(height: 8),
+  //         Text(
+  //           poster.name,
+  //           style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+  //         ),
+  //         Text(poster.categoryName,
+  //             style: const TextStyle(color: Colors.blue, fontSize: 10)),
+  //         Text(poster.description,
+  //             maxLines: 1,
+  //             overflow: TextOverflow.ellipsis,
+  //             style: const TextStyle(fontSize: 12)),
+  //         const SizedBox(height: 4),
+  //         // Text(poster.createdAt.toString().split('T').first,
+  //         //     style: const TextStyle(fontSize: 12)),
+  //         const SizedBox(height: 6),
+  //         Row(
+  //           mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //           children: [
+  //             Text('₹${poster.price}',
+  //                 style: const TextStyle(fontWeight: FontWeight.bold)),
+  //             Text('₹${poster.offerPrice}',
+  //                 style: const TextStyle(
+  //                   color: Colors.grey,
+  //                   decoration: TextDecoration.lineThrough,
+  //                 )),
+  //             Text(
+  //                 '${((1 - (poster.price / poster.offerPrice)) * 100).round()}% Off',
+  //                 style: const TextStyle(color: Colors.green)),
+  //           ],
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 }

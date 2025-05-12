@@ -132,7 +132,7 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
     super.initState();
     _loadDefaultSocialIcons();
     _initializeFilters();
-
+    
     // Initialize contact info text item
     contactInfoItem = DraggableTextItem(
       id: 'contact_info',
@@ -166,11 +166,13 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
   }
 
   void _loadPassedPoster() {
+    
     if (widget.poster != null) {
       // Handle different types of poster objects
       if (widget.poster is File) {
         setState(() {
           _posterImage = widget.poster.images[0];
+          
         });
       } else if (widget.poster is String &&
           widget.poster.toString().startsWith('http')) {
@@ -2709,7 +2711,7 @@ class _PosterMakerScreenState extends State<PosterMakerScreen>
                         : null,
                     image: widget.poster.images.isNotEmpty
                         ? DecorationImage(
-                            image: NetworkImage(widget.poster.images[0]),
+                            image: NetworkImage('https://posterbnaobackend.onrender.com${widget.poster.images[0]}'),
                             fit: BoxFit.cover,
                           )
                         : null,

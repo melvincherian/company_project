@@ -117,7 +117,7 @@ class _DetailsScreenState extends State<DetailsScreen> {
                                     ),
                                     child: poster.images.isNotEmpty
                                       ? Image.network(
-                                          poster.images[0],
+                                         "https://posterbnaobackend.onrender.com/${poster.images[0]}",
                                           fit: BoxFit.cover,
                                           width: double.infinity,
                                           loadingBuilder: (context, child, loadingProgress) {

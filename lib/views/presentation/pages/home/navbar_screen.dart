@@ -8,8 +8,19 @@ import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-class NavbarScreen extends StatelessWidget {
-  const NavbarScreen({super.key});
+class NavbarScreen extends StatefulWidget {
+  final List<dynamic> selectedCategories;
+  const NavbarScreen({super.key,required this.selectedCategories});
+
+  
+
+  @override
+  State<NavbarScreen> createState() => _NavbarScreenState();
+}
+
+class _NavbarScreenState extends State<NavbarScreen> {
+  
+
 
   @override
   Widget build(BuildContext context) {

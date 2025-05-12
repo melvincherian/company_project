@@ -1,5 +1,6 @@
 import 'package:company_project/providers/signup_provider.dart';
 import 'package:company_project/models/signup_model.dart';
+import 'package:company_project/views/presentation/pages/home/main_category.dart';
 import 'package:company_project/views/presentation/pages/home/navbar_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -45,7 +46,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     if (success) {
       Navigator.push(
-          context, MaterialPageRoute(builder: (_) => const NavbarScreen()));
+          context, MaterialPageRoute(builder: (_) => const BusinessIndustryScreen()));
     } else {
       final error = signupProvider.errorMessage ?? "Something went wrong.";
       ScaffoldMessenger.of(context)

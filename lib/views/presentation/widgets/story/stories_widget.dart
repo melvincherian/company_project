@@ -466,14 +466,14 @@ class StoriesWidget extends StatelessWidget {
 
         return Container(
           height: 110,
-          decoration: BoxDecoration(
-            boxShadow: [
-              BoxShadow(
-                blurRadius: 6,
-                offset: const Offset(2, 0),
-              ),
-            ],
-          ),
+          // decoration: BoxDecoration(
+          //   boxShadow: [
+          //     BoxShadow(
+          //       blurRadius: 6,
+          //       offset: const Offset(2, 0),
+          //     ),
+          //   ],
+          // ),
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             padding: const EdgeInsets.symmetric(horizontal: 8),

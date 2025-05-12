@@ -265,10 +265,10 @@ class _ChangeIndustryScreenState extends State<ChangeIndustryScreen> {
                     // MaterialPageRoute(
                     //     builder: (context) =>
                     //         DetailsScreen(category: category.categoryName)));
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const NavbarScreen()),
-                              );
+                              // Navigator.push(
+                              //   context,
+                              //   MaterialPageRoute(builder: (context) => const NavbarScreen()),
+                              // );
                               setState(() {
                                 _selectedIndex = index;
                               });
