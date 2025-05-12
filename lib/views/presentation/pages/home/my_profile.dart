@@ -240,10 +240,230 @@
 //   }
 // }
 
-import 'package:flutter/material.dart';
+// import 'package:flutter/material.dart';
 
-class MyProfile extends StatelessWidget {
+// class MyProfile extends StatelessWidget {
+//   const MyProfile({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return DefaultTabController(
+//       length: 2,
+//       child: Scaffold(
+//         appBar: AppBar(
+//           leading: IconButton(
+//               onPressed: () {
+//                 Navigator.of(context).pop();
+//               },
+//               icon:const Icon(Icons.arrow_back_ios)),
+//           backgroundColor: Colors.white,
+//           elevation: 1,
+//           title:const Text("MY PROFILE",
+//               style:
+//                   TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+//           // actions: [
+//           //   TextButton(
+//           //     onPressed: () {
+//           //       // TODO: Update City logic
+//           //     },
+//           //     child: const Text("Update City", style: TextStyle(color: Colors.black)),
+//           //   )
+//           // ],
+//         ),
+//         body: Column(
+//           children: [
+//             Container(
+//               margin: const EdgeInsets.all(12),
+//               padding: const EdgeInsets.all(12),
+//               decoration: BoxDecoration(
+//                 color: Colors.white,
+//                 borderRadius: BorderRadius.circular(10),
+//                 boxShadow: const [
+//                   BoxShadow(color: Colors.grey, blurRadius: 2),
+//                 ],
+//               ),
+//               child: Column(
+//                 crossAxisAlignment: CrossAxisAlignment.start,
+//                 children: [
+//                   const Text("Login Mobile Number: +8051281283",
+//                       style: TextStyle(color: Colors.black)),
+//                   const SizedBox(height: 4),
+//                   const Text("Current Plan: Trial Plan",
+//                       style: TextStyle(color: Colors.orange)),
+//                   const SizedBox(height: 4),
+//                   const Text("Media Credits: 5",
+//                       style: TextStyle(color: Colors.orange)),
+//                   const SizedBox(height: 4),
+//                   const Text("Expires on: LifeTime",
+//                       style: TextStyle(color: Colors.orange)),
+//                   const SizedBox(height: 4),
+//                   const Text("Allowed Accounts: 1",
+//                       style: TextStyle(color: Colors.black)),
+//                   const SizedBox(height: 4),
+//                   // const Text("City:", style: TextStyle(color: Colors.black)),
+//                   const SizedBox(height: 8),
+//                   Row(
+//                     children: [
+//                       ElevatedButton(
+//                         style: ElevatedButton.styleFrom(
+//                             backgroundColor: Colors.black),
+//                         onPressed: () {},
+//                         child: const Text("Update GST details",
+//                             style: TextStyle(color: Colors.white)),
+//                       ),
+//                       const SizedBox(width: 8),
+//                       ElevatedButton(
+//                         style: ElevatedButton.styleFrom(
+//                             backgroundColor: Colors.amber),
+//                         onPressed: () {},
+//                         child: const Text("Business interest",
+//                             style: TextStyle(color: Colors.black)),
+//                       ),
+//                     ],
+//                   ),
+//                 ],
+//               ),
+//             ),
+//             const TabBar(
+//               labelColor: Colors.black,
+//               indicatorColor: Colors.amber,
+//               tabs: [
+//                 Tab(text: "PURCHASE HISTORY"),
+//                 Tab(text: "CREDIT LOGS"),
+//               ],
+//             ),
+//             const Expanded(
+//               child: TabBarView(
+//                 children: [
+//                   Center(child: Text("No Purchase history found")),
+//                   Center(child: Text("No Credit logs found")),
+//                 ],
+//               ),
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
+
+
+
+
+
+// 
+
+
+
+import 'dart:convert';
+import 'dart:io';
+import 'package:company_project/helper/storage_helper.dart';
+import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+class MyProfile extends StatefulWidget {
   const MyProfile({super.key});
+
+  @override
+  State<MyProfile> createState() => _MyProfileState();
+}
+
+class _MyProfileState extends State<MyProfile> {
+  String phoneNumber = "+8051281283"; // Default value
+  bool isLoading = true;
+  File? _imageFile;
+  String? _imageBase64;
+  final ImagePicker _picker = ImagePicker();
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+    _loadProfileImage();
+  }
+
+  Future<void> _loadUserData() async {
+    final userData = await AuthPreferences.getUserData();
+    if (userData != null && userData.user != null && userData.user.mobile != null) {
+      setState(() {
+        phoneNumber = "+${userData.user.mobile}";
+        isLoading = false;
+      });
+    } else {
+      setState(() {
+        isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _loadProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    final imageString = prefs.getString('profile_image');
+    if (imageString != null && imageString.isNotEmpty) {
+      setState(() {
+        _imageBase64 = imageString;
+      });
+    }
+  }
+
+  Future<void> _saveProfileImage(String base64Image) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('profile_image', base64Image);
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? pickedFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 800,
+        maxHeight: 800,
+        imageQuality: 85,
+      );
+
+      if (pickedFile != null) {
+        final File imageFile = File(pickedFile.path);
+        final List<int> imageBytes = await imageFile.readAsBytes();
+        final String base64Image = base64Encode(imageBytes);
+
+        setState(() {
+          _imageFile = imageFile;
+          _imageBase64 = base64Image;
+        });
+
+        await _saveProfileImage(base64Image);
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error selecting image: $e')),
+      );
+    }
+  }
+
+  Widget _buildProfileImage() {
+    if (_imageBase64 != null) {
+      // If we have a base64 image, display it
+      return ClipOval(
+        child: Image.memory(
+          base64Decode(_imageBase64!),
+          width: 100,
+          height: 100,
+          fit: BoxFit.cover,
+        ),
+      );
+    } else {
+      // Otherwise show a placeholder
+      return const CircleAvatar(
+        radius: 50,
+        backgroundColor: Colors.grey,
+        child: Icon(
+          Icons.person,
+          size: 50,
+          color: Colors.white,
+        ),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -255,20 +475,12 @@ class MyProfile extends StatelessWidget {
               onPressed: () {
                 Navigator.of(context).pop();
               },
-              icon:const Icon(Icons.arrow_back_ios)),
+              icon: const Icon(Icons.arrow_back_ios)),
           backgroundColor: Colors.white,
           elevation: 1,
-          title:const Text("MY PROFILE",
+          title: const Text("MY PROFILE",
               style:
                   TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-          // actions: [
-          //   TextButton(
-          //     onPressed: () {
-          //       // TODO: Update City logic
-          //     },
-          //     child: const Text("Update City", style: TextStyle(color: Colors.black)),
-          //   )
-          // ],
         ),
         body: Column(
           children: [
@@ -283,43 +495,83 @@ class MyProfile extends StatelessWidget {
                 ],
               ),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  const Text("Login Mobile Number: +8051281283",
-                      style: TextStyle(color: Colors.black)),
-                  const SizedBox(height: 4),
-                  const Text("Current Plan: Trial Plan",
-                      style: TextStyle(color: Colors.orange)),
-                  const SizedBox(height: 4),
-                  const Text("Media Credits: 5",
-                      style: TextStyle(color: Colors.orange)),
-                  const SizedBox(height: 4),
-                  const Text("Expires on: LifeTime",
-                      style: TextStyle(color: Colors.orange)),
-                  const SizedBox(height: 4),
-                  const Text("Allowed Accounts: 1",
-                      style: TextStyle(color: Colors.black)),
-                  const SizedBox(height: 4),
-                  // const Text("City:", style: TextStyle(color: Colors.black)),
-                  const SizedBox(height: 8),
-                  Row(
+                  // Profile Image Section
+                  Stack(
+                    alignment: Alignment.bottomRight,
                     children: [
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.black),
-                        onPressed: () {},
-                        child: const Text("Update GST details",
-                            style: TextStyle(color: Colors.white)),
-                      ),
-                      const SizedBox(width: 8),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.amber),
-                        onPressed: () {},
-                        child: const Text("Business interest",
-                            style: TextStyle(color: Colors.black)),
+                      _buildProfileImage(),
+                      GestureDetector(
+                        onTap: _pickImage,
+                        child: Container(
+                          padding: const EdgeInsets.all(5),
+                          decoration: const BoxDecoration(
+                            color: Colors.amber,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            color: Colors.black,
+                            size: 20,
+                          ),
+                        ),
                       ),
                     ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    "Tap to change profile picture",
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  // User Details Section
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        isLoading
+                            ? const CircularProgressIndicator()
+                            : Text("Login Mobile Number: $phoneNumber",
+                                style: const TextStyle(color: Colors.black)),
+                        const SizedBox(height: 4),
+                        const Text("Current Plan: Trial Plan",
+                            style: TextStyle(color: Colors.orange)),
+                        const SizedBox(height: 4),
+                        const Text("Media Credits: 5",
+                            style: TextStyle(color: Colors.orange)),
+                        const SizedBox(height: 4),
+                        const Text("Expires on: LifeTime",
+                            style: TextStyle(color: Colors.orange)),
+                        const SizedBox(height: 4),
+                        const Text("Allowed Accounts: 1",
+                            style: TextStyle(color: Colors.black)),
+                        const SizedBox(height: 8),
+                        // Row(
+                        //   children: [
+                        //     ElevatedButton(
+                        //       style: ElevatedButton.styleFrom(
+                        //           backgroundColor: Colors.black),
+                        //       onPressed: () {},
+                        //       child: const Text("Update GST details",
+                        //           style: TextStyle(color: Colors.white)),
+                        //     ),
+                        //     const SizedBox(width: 8),
+                        //     ElevatedButton(
+                        //       style: ElevatedButton.styleFrom(
+                        //           backgroundColor: Colors.amber),
+                        //       onPressed: () {},
+                        //       child: const Text("Business interest",
+                        //           style: TextStyle(color: Colors.black)),
+                        //     ),
+                        //   ],
+                        // ),
+                      ],
+                    ),
                   ),
                 ],
               ),

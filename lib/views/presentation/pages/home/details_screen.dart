@@ -17,11 +17,11 @@ class _DetailsScreenState extends State<DetailsScreen> {
   @override
   void initState() {
     super.initState();
-    // Fetch the posters for this specific category when screen loads
+
     print('Fetching posters for category: ${widget.category}');
     Future.microtask(() {
       final provider = Provider.of<CategoryPosterProvider>(context, listen: false);
-      provider.fetchPostersByCategory("${widget.category}poster");
+      provider.fetchPostersByCategory("${widget.category}");
     });
   }
 

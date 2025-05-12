@@ -12,6 +12,7 @@ import 'package:company_project/providers/festivel_poster_provider.dart';
 import 'package:company_project/providers/get_all_plan_provider.dart';
 import 'package:company_project/providers/invoice_provider.dart';
 import 'package:company_project/providers/my_plan_provider.dart';
+import 'package:company_project/providers/new_category_provider.dart';
 import 'package:company_project/providers/poster_provider.dart';
 import 'package:company_project/providers/product_invoice_provider.dart';
 import 'package:company_project/providers/provider_main_category.dart';
@@ -56,7 +57,8 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_)=>CategoryMainProvider()),
         ChangeNotifierProvider(create: (_)=>InvoiceProvider()),
         ChangeNotifierProvider(create: (_)=>ProductInvoiceProvider()),
-        ChangeNotifierProvider(create: (_)=>ThemeProvider())
+        ChangeNotifierProvider(create: (_)=>ThemeProvider()),
+
         
       ],
       child: Consumer<ThemeProvider>(

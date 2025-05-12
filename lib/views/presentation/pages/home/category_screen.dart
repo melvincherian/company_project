@@ -1051,11 +1051,8 @@
 //   }
 // }
 
-
-
-
-
-import 'package:company_project/providers/category_providerr.dart';
+import 'package:company_project/models/category_modell.dart';
+import 'package:company_project/providers/poster_provider.dart'; // Added import for PosterProvider
 import 'package:company_project/views/presentation/pages/home/details_screen.dart';
 import 'package:company_project/views/presentation/pages/home/poster/poster_maker_screen.dart';
 import 'package:company_project/views/presentation/pages/home/search_screen.dart';
@@ -1080,21 +1077,12 @@ class _CategoryScreenState extends State<CategoryScreen> {
     'Clothing'
   ];
 
-  // Categories to display in the screen sections
-  final List<String> displayCategories = [
-    'ugadi',
-    'chemical',
-    'clothing',
-    'beauty'
-  ];
-
   @override
   void initState() {
     super.initState();
-    // Fetch all categories data at once
+    // Fetch all posters data at once instead of by category
     Future.microtask(() =>
-        Provider.of<CategoryProviderr>(context, listen: false)
-            .fetchMultipleCategories(displayCategories));
+        Provider.of<PosterProvider>(context, listen: false).fetchPosters());
   }
 
   @override
@@ -1117,151 +1105,231 @@ class _CategoryScreenState extends State<CategoryScreen> {
 
     return Scaffold(
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.all(paddingSize),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header with title and action buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Categories',
-                    style: TextStyle(
-                      fontSize: titleFontSize,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          showModalBottomSheet(
-                            context: context,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.vertical(
-                                  top: Radius.circular(20)),
-                            ),
-                            builder: (BuildContext context) {
-                              return Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(vertical: 20),
-                                child: Column(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    ListTile(
-                                      title: const Text('Telugu'),
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                        // TODO: Handle Telugu language change
-                                      },
-                                    ),
-                                    ListTile(
-                                      title: const Text('English'),
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                        // TODO: Handle English language change
-                                      },
-                                    ),
-                                    ListTile(
-                                      title: const Text('Hindi'),
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                        // TODO: Handle Hindi language change
-                                      },
-                                    ),
-                                    ListTile(
-                                      title: const Text('Tamil'),
-                                      onTap: () {
-                                        Navigator.pop(context);
-                                        // TODO: Handle Tamil language change
-                                      },
-                                    ),
-                                  ],
-                                ),
-                              );
-                            },
-                          );
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(screenWidth * 0.02),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: const Icon(Icons.translate),
-                        ),
-                      ),
-                      SizedBox(width: screenWidth * 0.03),
-                      GestureDetector(
-                        onTap: () {
-                          Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => SearchScreen()));
-                        },
-                        child: CircleAvatar(
-                          backgroundColor: Colors.grey[200],
-                          child: const Icon(Icons.search),
-                        ),
-                      )
-                    ],
-                  )
-                ],
-              ),
-              SizedBox(height: screenHeight * 0.025),
+        child: Consumer<PosterProvider>(
+          builder: (context, posterProvider, child) {
+            // Check if data is loading
+            if (posterProvider.isLoading) {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
 
-              SizedBox(height: screenHeight * 0.011),
-
-              // Category sections - dynamically created from displayCategories list
-              for (final category in displayCategories)
-                Column(
+            // Check if there was an error
+            if (posterProvider.error != null) {
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildSectionHeader(_capitalizeFirstLetter(category),
-                        context, sectionTitleSize, screenWidth, category),
-                    SizedBox(
-                      height: itemHeight + 10,
-                      child: _buildCategoryItemsList(context, category,
-                          itemWidth, itemHeight, screenWidth),
+                    Text('Error: ${posterProvider.error}'),
+                    ElevatedButton(
+                      onPressed: () {
+                        Provider.of<PosterProvider>(context, listen: false)
+                            .fetchPosters();
+                      },
+                      child: Text('Retry'),
                     ),
-                    SizedBox(height: screenHeight * 0.02),
                   ],
                 ),
-            ],
-          ),
+              );
+            }
+
+            // Extract unique categories from posters
+            final List<String> uniqueCategories =
+                _extractUniqueCategories(posterProvider.posters);
+
+            // If no categories found
+            if (uniqueCategories.isEmpty) {
+              return Center(
+                child: Text('No categories available'),
+              );
+            }
+
+            return SingleChildScrollView(
+              padding: EdgeInsets.all(paddingSize),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header with title and action buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Categories',
+                        style: TextStyle(
+                          fontSize: titleFontSize,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      Row(
+                        children: [
+                          GestureDetector(
+                            onTap: () {
+                              showModalBottomSheet(
+                                context: context,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.vertical(
+                                      top: Radius.circular(20)),
+                                ),
+                                builder: (BuildContext context) {
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: 20),
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        ListTile(
+                                          title: const Text('Telugu'),
+                                          onTap: () {
+                                            Navigator.pop(context);
+                                            // TODO: Handle Telugu language change
+                                          },
+                                        ),
+                                        ListTile(
+                                          title: const Text('English'),
+                                          onTap: () {
+                                            Navigator.pop(context);
+                                            // TODO: Handle English language change
+                                          },
+                                        ),
+                                        ListTile(
+                                          title: const Text('Hindi'),
+                                          onTap: () {
+                                            Navigator.pop(context);
+                                            // TODO: Handle Hindi language change
+                                          },
+                                        ),
+                                        ListTile(
+                                          title: const Text('Tamil'),
+                                          onTap: () {
+                                            Navigator.pop(context);
+                                            // TODO: Handle Tamil language change
+                                          },
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                },
+                              );
+                            },
+                            child: Container(
+                              padding: EdgeInsets.all(screenWidth * 0.02),
+                              decoration: BoxDecoration(
+                                border: Border.all(color: Colors.black),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.translate),
+                            ),
+                          ),
+                          SizedBox(width: screenWidth * 0.03),
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) =>
+                                          const SearchScreen()));
+                            },
+                            child: CircleAvatar(
+                              backgroundColor: Colors.grey[200],
+                              child: const Icon(Icons.search),
+                            ),
+                          )
+                        ],
+                      )
+                    ],
+                  ),
+                  SizedBox(height: screenHeight * 0.025),
+
+                  SizedBox(height: screenHeight * 0.011),
+
+                  // Category sections - dynamically created from actual available categories
+                  for (final category in uniqueCategories)
+                    Column(
+                      children: [
+                        _buildSectionHeader(
+                          _capitalizeFirstLetter(category),
+                          context,
+                          sectionTitleSize,
+                          screenWidth,
+                          category,
+                        ),
+                        SizedBox(
+                          height: itemHeight + 10,
+                          child: _buildCategoryItemsList(
+                            context,
+                            category,
+                            itemWidth,
+                            itemHeight,
+                            screenWidth,
+                            posterProvider.posters,
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.02),
+                      ],
+                    ),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
+  // Extract unique categories from the posters list
+  List<String> _extractUniqueCategories(List<dynamic> posters) {
+    final Set<String> categories = {};
+
+    for (var poster in posters) {
+      if (poster is CategoryModel && poster.categoryName.isNotEmpty) {
+        categories.add(poster.categoryName);
+      }
+    }
+
+    return categories.toList();
+  }
+
+  // Get posters for a specific category
+  List<CategoryModel> _getPostersByCategory(
+      String category, List<dynamic> allPosters) {
+    return allPosters
+        .where((poster) {
+          return poster is CategoryModel &&
+              poster.categoryName.toLowerCase() == category.toLowerCase();
+        })
+        .cast<CategoryModel>()
+        .toList();
+  }
+
   // Helper method to build the category items list
-  Widget _buildCategoryItemsList(BuildContext context, String category,
-      double itemWidth, double itemHeight, double screenWidth) {
-    return Consumer<CategoryProviderr>(
-      builder: (context, provider, child) {
-        if (provider.isLoadingCategory(category)) {
-          return _buildShimmerLoading(itemWidth, itemHeight, screenWidth);
-        } else if (provider.getErrorForCategory(category) != null) {
-          return Center(
-              child: Text("Error: ${provider.getErrorForCategory(category)}"));
-        } else {
-          final items = provider.getItemsByCategory(category);
-          return ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: items.length,
-            itemBuilder: (context, index) {
-              final item = items[index];
-              return _buildItemCard(item, itemWidth, itemHeight, screenWidth);
-            },
-          );
-        }
+  Widget _buildCategoryItemsList(
+    BuildContext context,
+    String category,
+    double itemWidth,
+    double itemHeight,
+    double screenWidth,
+    List<dynamic> allPosters,
+  ) {
+    final List<CategoryModel> categoryPosters =
+        _getPostersByCategory(category, allPosters);
+
+    if (categoryPosters.isEmpty) {
+      return Center(child: Text("No items available in this category"));
+    }
+
+    return ListView.builder(
+      scrollDirection: Axis.horizontal,
+      itemCount: categoryPosters.length,
+      itemBuilder: (context, index) {
+        final item = categoryPosters[index];
+        return _buildItemCard(item, itemWidth, itemHeight, screenWidth);
       },
     );
   }
 
   // Shimmer loading effect for category items
-  Widget _buildShimmerLoading(double itemWidth, double itemHeight, double screenWidth) {
+  Widget _buildShimmerLoading(
+      double itemWidth, double itemHeight, double screenWidth) {
     return Shimmer.fromColors(
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
@@ -1317,7 +1385,7 @@ class _CategoryScreenState extends State<CategoryScreen> {
 
   // Helper method to build item cards with responsive dimensions
   Widget _buildItemCard(
-      dynamic item, double width, double height, double screenWidth) {
+      CategoryModel item, double width, double height, double screenWidth) {
     return Container(
       width: width,
       margin: EdgeInsets.only(right: screenWidth * 0.03),
@@ -1347,11 +1415,42 @@ class _CategoryScreenState extends State<CategoryScreen> {
               },
               child: Image.network(
                 item.images.isNotEmpty
-                    ? item.images[0]
+                    ? "https://posterbnaobackend.onrender.com/uploads/${item.images[0]}"
                     : 'https://via.placeholder.com/120x100',
+                //  "https://posterbnaobackend.onrender.com/uploads/${['images'][0]}",
+
+                // item.images.isNotEmpty
+                //     ? item.images[0].toString()
+                //     : 'https://via.placeholder.com/120x100',
+
                 height: height,
                 width: width,
                 fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: height,
+                    width: width,
+                    color: Colors.grey[300],
+                    child: Icon(Icons.image_not_supported,
+                        color: Colors.grey[600]),
+                  );
+                },
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Container(
+                    height: height,
+                    width: width,
+                    color: Colors.grey[200],
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
+                      ),
+                    ),
+                  );
+                },
               ),
             ),
           ),

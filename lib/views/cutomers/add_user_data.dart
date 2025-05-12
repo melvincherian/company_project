@@ -20,6 +20,7 @@ class _AddUserDataState extends State<AddUserData> {
   final TextEditingController businessNameController = TextEditingController();
   final TextEditingController mobileController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
+  final TextEditingController gstController=TextEditingController();
 
   @override
   void initState() {
@@ -46,6 +47,7 @@ class _AddUserDataState extends State<AddUserData> {
     await prefs.setString('businessName', businessNameController.text);
     await prefs.setString('mobile', mobileController.text);
     await prefs.setString('email', emailController.text);
+    await prefs.setString('gst', gstController.text);
     if (_imageFile != null) {
       await prefs.setString('imagePath', _imageFile!.path);
     }
@@ -56,6 +58,7 @@ class _AddUserDataState extends State<AddUserData> {
     businessNameController.text = prefs.getString('businessName') ?? '';
     mobileController.text = prefs.getString('mobile') ?? '';
     emailController.text = prefs.getString('email') ?? '';
+    gstController.text=prefs.getString('gst')??'';
     final imagePath = prefs.getString('imagePath');
     if (imagePath != null && File(imagePath).existsSync()) {
       setState(() {
@@ -129,6 +132,14 @@ class _AddUserDataState extends State<AddUserData> {
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) =>
                     value!.isEmpty ? 'Please enter email ID' : null,
+              ),
+              const SizedBox(height: 15),
+               TextFormField(
+                controller: gstController,
+                decoration: _inputDecoration('GST'),
+                keyboardType: TextInputType.emailAddress,
+                validator: (value) =>
+                    value!.isEmpty ? 'Please enter GST' : null,
               ),
               const SizedBox(height: 30),
               SizedBox(

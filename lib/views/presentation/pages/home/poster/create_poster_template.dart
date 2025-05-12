@@ -1,5 +1,4 @@
 import 'dart:math';
-
 import 'package:company_project/models/category_modell.dart';
 import 'package:company_project/models/poster_size_model.dart';
 import 'package:flutter/material.dart';
@@ -142,7 +141,7 @@ class _PosterMakerAppScreenState extends State<PosterMakerAppScreen>
         });
       },
     );
-
+    
     // Load the passed poster if available
   }
 
@@ -530,7 +529,7 @@ class _PosterMakerAppScreenState extends State<PosterMakerAppScreen>
   Future<void> _pickLogoImage() async {
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-
+    
     if (image != null) {
       final File logoFile = File(image.path);
 
@@ -673,8 +672,10 @@ class _PosterMakerAppScreenState extends State<PosterMakerAppScreen>
                         });
                       },
                     ),
+                    
                   ],
                 ),
+                
                 Row(
                   children: [
                     const Text('Text Color: '),

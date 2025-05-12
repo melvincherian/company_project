@@ -57,6 +57,7 @@ class CategoryPosterProvider extends ChangeNotifier {
   String get error => _error;
 
   Future<void> fetchPostersByCategory(String category) async {
+    print('heeeeeeeelooo$category');
     _isLoading = true;
     _error = '';
     notifyListeners();

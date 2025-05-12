@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'dart:ui';
 
 import 'package:company_project/helper/storage_helper.dart';
@@ -44,25 +45,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   int _currentIndex = 0;
   final CarouselController _carouselController = CarouselController();
-
-  // final List<Map<String, dynamic>> _bannerData = [
-  //   {
-  //     'image': 'assets/assets/4db504a1da2c0272db46bf139b7be4d117bf4487.png',
-  //     'title': 'Ugadi Posters\nare Ready',
-  //     'buttonText': 'Explore Now',
-  //   },
-  //   {
-  //     'image': 'assets/assets/banner2.png', // Add your other banner images
-  //     'title': 'Festival\nCollection',
-  //     'buttonText': 'Shop Now',
-  //   },
-  //   {
-  //     'image': 'assets/assets/banner3.png', // Add your other banner images
-  //     'title': 'Special\nOffers',
-  //     'buttonText': 'View Deals',
-  //   },
-  // ];
-
   String currentUserId = '680634a4bb1d44fb0c93aae2';
 
   bool _isLoading = false;
@@ -303,6 +285,27 @@ class _HomeScreenState extends State<HomeScreen> {
                       const BorderRadius.vertical(top: Radius.circular(12)),
                   child: GestureDetector(
                     onTap: () {
+
+                //       Navigator.push(
+                //   context,
+                //   MaterialPageRoute(
+                //     builder: (context) => PosterMakerApp(
+                //       poster: item,
+                //       isCustom: false,
+                //     ),
+                //   ),
+                // );
+
+
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => PosterMakerApp(
+                      poster: posters,
+                      isCustom: false,
+                    ),
+                  ),
+                );
                       // Navigator.push(
                       //   context,
                       //   MaterialPageRoute(
@@ -453,7 +456,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 247, 178, 29),
+      // backgroundColor: const Color.fromARGB(255, 247, 178, 29),
       body: SingleChildScrollView(
         child: SafeArea(
           child: Padding(
@@ -651,6 +654,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       // Stories Section - UPDATED
                       const StoriesWidget(),
+                     
+
 
                       // StoriesWidget(currentUserId: currentUserId),
 
@@ -781,6 +786,8 @@ class _HomeScreenState extends State<HomeScreen> {
                                             ),
                                             TextButton(
                                               onPressed: () {
+
+                                                // Navigator.push(context, MaterialPageRoute(builder: (context)=>DetailsScreen(category: category)))
                                                 Navigator.push(
                                                   context,
                                                   MaterialPageRoute(
@@ -1016,20 +1023,20 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                             );
                           },
-                          child: Image.network(
-                            poster.images[0],
-                            height: 100,
-                            width: 120,
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) {
-                              return Container(
-                                height: 100,
-                                width: 120,
-                                color: Colors.grey[300],
-                                child: const Icon(Icons.image_not_supported),
-                              );
-                            },
-                          ),
+                         child: Image.network(
+                      "https://posterbnaobackend.onrender.com/uploads/${poster['images'][0]}",
+                      height: 100,
+                      width: 120,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stackTrace) {
+                        return Container(
+                          height: 100,
+                          width: 120,
+                          color: Colors.grey[300],
+                          child: const Icon(Icons.image_not_supported),
+                        );
+                      },
+      ),
                         ),
                       ),
                       Padding(

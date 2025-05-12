@@ -1,60 +1,76 @@
+import 'package:company_project/views/presentation/pages/home/business/business_detail_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../../../../../models/business_poster_model.dart';
+import '../../../../../providers/business_poster_provider.dart';
 
-class BakeryCards extends StatelessWidget {
-  const BakeryCards({super.key});
+class AllBusinessCardsScreen extends StatelessWidget {
+  final String title;
+  
+  const AllBusinessCardsScreen({
+    super.key, 
+    required this.title,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final posterProvider = Provider.of<BusinessPosterProvider>(context);
+    
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
-            icon: const Icon(Icons.arrow_back_ios)),
-        title: const Text(
-          'Bakery & Clothing Cards',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          onPressed: () => Navigator.of(context).pop(),
+          icon: const Icon(Icons.arrow_back_ios),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Filter Chips
-            SizedBox(
-              height: 40,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: const [
-                  FilterChipWidget(label: "Business Ads", selected: true),
-                  FilterChipWidget(label: "Education"),
-                  FilterChipWidget(label: "Ugadi"),
-                  FilterChipWidget(label: "Beauty"),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            // Cards Grid
-            Expanded(
-              child: GridView.builder(
-                itemCount: 4,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 0.62,
+      body: posterProvider.isLoading 
+          ? const Center(child: CircularProgressIndicator())
+          : posterProvider.error != null
+              ? Center(child: Text('Error: ${posterProvider.error}'))
+              : Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Filter Chips
+                      // SizedBox(
+                      //   height: 40,
+                      //   child: ListView(
+                      //     scrollDirection: Axis.horizontal,
+                      //     children: const [
+                      //       FilterChipWidget(label: "All", selected: true),
+                      //       FilterChipWidget(label: "Business Ads"),
+                      //       FilterChipWidget(label: "Education"),
+                      //       FilterChipWidget(label: "Bakery"),
+                      //       FilterChipWidget(label: "Clothing"),
+                      //       FilterChipWidget(label: "Beauty"),
+                      //     ],
+                      //   ),
+                      // ),
+                      const SizedBox(height: 12),
+                      // Cards Grid
+                      Expanded(
+                        child: GridView.builder(
+                          itemCount: posterProvider.posters.length,
+                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: 0.62,
+                          ),
+                          itemBuilder: (context, index) {
+                            return BusinessCard(poster: posterProvider.posters[index]);
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                itemBuilder: (context, index) {
-                  return const BusinessCard();
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }
@@ -85,7 +101,12 @@ class FilterChipWidget extends StatelessWidget {
 }
 
 class BusinessCard extends StatelessWidget {
-  const BusinessCard({super.key});
+  final BusinessPosterModel poster;
+  
+  const BusinessCard({
+    super.key,
+    required this.poster,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -94,38 +115,78 @@ class BusinessCard extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: Colors.grey.shade300),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            blurRadius: 4,
+            offset: const Offset(2, 4),
+          ),
+        ],
+        color: Colors.white,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-    
-
           GestureDetector(
             onTap: () {
-              // Navigator.push(context, MaterialPageRoute(builder: (context)=>const BusinessDetailScreen()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BusinessDetailScreen(poster: poster),
+                ),
+              );
             },
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                'https://s3-alpha-sig.figma.com/img/4a7b/1cfa/0f786a0abe78d4b2afdba27b4863f29a?Expires=1746403200&Key-Pair-Id=APKAQ4GOSFWCW27IBOMQ&Signature=sf0T-1o1kfke-z9y738n5-VQ6ipQoapjOAGQd36kb~rMEfa51o-R6O7K4VKqFScAEuN0qpZer7XCj68DoV3PstVHrIr-K5--aorSK0LIJYKA9X-xUQ5CbN-rGizqnaLxMl9UsvkkfKkkFmD5~H4FraNGI5jToPoN~PX77~cScAzEk20OSdYePSSNqzqxJuW3YnFcr6NiCOUW7XO4jmNpy0qlqrC6k~8-OIwd9WmdGGxq46ao99HcvjE~5MSAIGu7YmykHX4Xbmjw1tC01Oc-SW7rFnRLUj82rKHnow3ruJOSTYHlEA~WVmB7cWNag6NBpHV1TVAy1F9EYQWqv9jpfA__',
-                height: 240,
-                width: double.infinity,
-                fit: BoxFit.cover,
-              ),
+              child: poster.images.isNotEmpty
+                ? Image.network(
+                    poster.images.first,
+                    height: 150,
+                    width: double.infinity,
+                    fit: BoxFit.cover,
+                  )
+                : const Placeholder(fallbackHeight: 150),
             ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            poster.name,
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          Text(
+            poster.categoryName,
+            style: const TextStyle(color: Colors.blue, fontSize: 10),
+          ),
+          Text(
+            poster.description,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 12),
+          ),
           const Spacer(),
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("₹250", style: TextStyle(fontWeight: FontWeight.bold)),
-              Text("₹350",
-                  style: TextStyle(
-                      decoration: TextDecoration.lineThrough, fontSize: 12)),
-              Text("40% Off",
-                  style: TextStyle(color: Colors.green, fontSize: 12)),
+              Text(
+                '₹${poster.price}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              Text(
+                '₹${poster.offerPrice}',
+                style: const TextStyle(
+                  color: Colors.grey,
+                  decoration: TextDecoration.lineThrough,
+                  fontSize: 12,
+                ),
+              ),
+              Text(
+                '${((1 - (poster.price / poster.offerPrice)) * 100).round()}% Off',
+                style: const TextStyle(color: Colors.green, fontSize: 12),
+              ),
             ],
-          )
+          ),
         ],
       ),
     );

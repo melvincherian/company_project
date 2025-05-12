@@ -409,7 +409,7 @@ class _ChangeIndustryScreenState extends State<BusinessIndustryScreen> {
             child: CircleAvatar(
               radius: 25,
               backgroundColor: Colors.white,
-              backgroundImage: NetworkImage(imagePath),
+              backgroundImage: NetworkImage('https://posterbnaobackend.onrender.com/${imagePath}'),
               onBackgroundImageError: (_, __) => debugPrint("Image load error"),
             ),
           ),

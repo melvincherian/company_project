@@ -3,6 +3,11 @@
 import 'package:company_project/providers/auth_provider.dart';
 import 'package:company_project/views/birthday_greeting_screen.dart';
 import 'package:company_project/views/change_industry_screen.dart';
+import 'package:company_project/views/comingsoon/auto_product_screen.dart';
+import 'package:company_project/views/comingsoon/caption_screen.dart';
+import 'package:company_project/views/comingsoon/contact_us_screen.dart';
+import 'package:company_project/views/comingsoon/rate_app.dart';
+import 'package:company_project/views/comingsoon/whatspp_sticker.dart';
 import 'package:company_project/views/cutomers/add_customers.dart';
 import 'package:company_project/views/cutomers/create_invoice_screen.dart';
 import 'package:company_project/views/cutomers/subscription_screen.dart';
@@ -65,9 +70,21 @@ class PlaningDetailsScreen extends StatelessWidget {
                                   const RemoveBackgroundScreen()));
                     },
                     child: _iconTile(Icons.layers_clear, "Remove\nBG")),
-                _iconTile(Icons.text_fields, "Caption"),
-                _iconTile(Icons.sticky_note_2, "WhatsApp\nSticker"),
-                _iconTile(Icons.sticky_note_2, "Auto\nProduct Ad"),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>const CaptionScreen()));
+                  },
+                  child: _iconTile(Icons.text_fields, "Caption")),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>const  WhatsppSticker()));
+                  },
+                  child: _iconTile(Icons.sticky_note_2, "WhatsApp\nSticker")),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(context, MaterialPageRoute(builder: (context)=>AutoProductScreen()));
+                  },
+                  child: _iconTile(Icons.sticky_note_2, "Auto\nProduct Ad")),
               ],
             ),
           ),
@@ -189,7 +206,11 @@ class PlaningDetailsScreen extends StatelessWidget {
                           Icons.receipt_long_outlined, "Create Invoice")),
 
                   const Divider(),
-                  _menuTile(Icons.mail, "Contact Us"),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>const ContactUsScreen()));
+                    },
+                    child: _menuTile(Icons.mail, "Contact Us")),
                   const Divider(),
                   GestureDetector(
                       onTap: () {
@@ -200,7 +221,11 @@ class PlaningDetailsScreen extends StatelessWidget {
                       },
                       child: _menuTile(Icons.handshake, "Partner With Us")),
                   const Divider(),
-                  _menuTile(Icons.star_rate, "Rate App"),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (context)=>RateApp()));
+                    },
+                    child: _menuTile(Icons.star_rate, "Rate App")),
                   const Divider(),
                   GestureDetector(
                       onTap: () {

@@ -1,6 +1,7 @@
 // ignore_for_file: unnecessary_null_comparison, use_build_context_synchronously
 
 import 'package:company_project/models/business_poster_model.dart';
+import 'package:company_project/views/presentation/pages/home/business/bakery_clothing_screen.dart';
 import 'package:company_project/views/presentation/pages/home/business/business_detail_screen.dart';
 import 'package:company_project/views/presentation/widgets/business_category_card.dart';
 import 'package:flutter/material.dart';
@@ -34,11 +35,13 @@ class _VirtualBusinessScreenState extends State<VirtualBusinessScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
+        centerTitle: true,
         title: const Text('Virtual Business Card',
             style: TextStyle(fontWeight: FontWeight.bold)),
-        leading: IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios)),
+        // leading: IconButton(
+        //     onPressed: () => Navigator.pop(context),
+        //     icon: const Icon(Icons.arrow_back_ios)),
       ),
       body: posterProvider.isLoading || categoryProvider.isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -53,9 +56,11 @@ class _VirtualBusinessScreenState extends State<VirtualBusinessScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           _buildCategoryCircleAvatars(categoryProvider),
-                          _sectionTitle("Bakery & Clothing Cards", context),
+                          SizedBox(height: 20,),
+                          // _sectionTitle("Bakery & Clothing Cards", context),
                           _cardList(posterProvider.posters),
-                          _sectionTitle("Trending Cards", context),
+                           SizedBox(height: 20,),
+                          // _sectionTitle("Trending Cards", context),
                           _cardList(posterProvider.posters),
                         ],
                       ),
@@ -117,6 +122,37 @@ class _VirtualBusinessScreenState extends State<VirtualBusinessScreen> {
     );
   }
 
+  // Widget _sectionTitle(String title, BuildContext context) {
+  //   return Padding(
+  //     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+  //     child: Row(
+  //       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+  //       children: [
+  //         Text(title,
+  //             style:
+  //                 const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+  //         GestureDetector(
+  //           onTap: () {
+
+  //               // Navigator.push(
+  //               //   context,
+  //               //   MaterialPageRoute(
+  //               //       builder: (_) => BusinessDetailScreen(poster: poster)));
+              
+  //           },
+  //           child: const Row(
+  //             children: [
+  //               Text('View All', style: TextStyle(color: Colors.black)),
+  //               Icon(Icons.arrow_forward_ios, size: 19),
+  //             ],
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
+
   Widget _sectionTitle(String title, BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -128,8 +164,12 @@ class _VirtualBusinessScreenState extends State<VirtualBusinessScreen> {
                   const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
           GestureDetector(
             onTap: () {
-              // Navigator.push(context,
-              //     MaterialPageRoute(builder: (_) => const BakeryCards()));
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => AllBusinessCardsScreen(title: title),
+                ),
+              );
             },
             child: const Row(
               children: [
@@ -201,8 +241,8 @@ class _VirtualBusinessScreenState extends State<VirtualBusinessScreen> {
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(fontSize: 12)),
           const SizedBox(height: 4),
-          Text(poster.createdAt.toString().split('T').first,
-              style: const TextStyle(fontSize: 12)),
+          // Text(poster.createdAt.toString().split('T').first,
+          //     style: const TextStyle(fontSize: 12)),
           const SizedBox(height: 6),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
